@@ -1,0 +1,1248 @@
+"use client";
+import React, { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePickerDemo } from "../components/DatePickerDemo";
+import Image from "next/image";
+import Swal from "sweetalert2";
+import "animate.css";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import axios from "axios";
+import SettingButton from "../components/SettingButton";
+import { jwtDecode } from "jwt-decode";
+
+export default function ReservationTable() {
+  // เพิ่มหลังจาก state declarations
+  const [open, setOpen] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reservationData, setReservationData] = useState([]);
+  const [showDate, setShowDate] = useState();
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // เพิ่มฟังก์ชัน handleFileChange ที่หายไป
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  // เพิ่ม state สำหรับ popup กฎการใช้งาน
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
+  // เพิ่ม state สำหรับโหมดแก้ไขกฎ
+  const [isEditingRules, setIsEditingRules] = useState(false);
+  // เพิ่ม state สำหรับเก็บข้อมูลกฎต่างๆ
+  const [rulesData, setRulesData] = useState({
+    bookingRules: [
+      "สามารถจองได้สูงสุด 3 ช่วงเวลาต่อวัน",
+      "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ที่ต่างกันได้",
+      "ต้องชำระเงินทันทีหลังจากทำการจอง",
+      "หากไม่มาใช้บริการตามเวลาที่จอง จะถูกปรับ 50% ของค่าบริการ",
+      "สามารถยกเลิกการจองได้ล่วงหน้าอย่างน้อย 3 ชั่วโมง",
+    ],
+    paymentRules: [
+      "ชำระผ่าน QR Code ที่แสดงในระบบ",
+      "แนบสลิปการโอนเงินเพื่อยืนยันการจอง",
+      "การจองจะสมบูรณ์เมื่อแอดมินตรวจสอบและยืนยันการชำระเงิน",
+    ],
+    statusRules: [
+      "สีเหลือง - รอการยืนยัน",
+      "สีแดง - จองแล้ว",
+      "สีเทา - ปิดให้บริการ",
+    ],
+  });
+
+  // ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
+  const saveRulesEdit = () => {
+    localStorage.setItem("rulesData", JSON.stringify(rulesData));
+    setIsEditingRules(false);
+
+    Swal.fire({
+      title: "บันทึกกฎการใช้งานเรียบร้อย",
+      icon: "success",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
+  // ฟังก์ชันสำหรับแก้ไขกฎในหมวดหมูต่างๆ
+  const handleRuleChange = (category, index, value) => {
+    setRulesData((prev) => {
+      const newData = { ...prev };
+      newData[category][index] = value;
+      return newData;
+    });
+  };
+
+  // ฟังก์ชันสำหรับเพิ่มกฎใหม่
+  const addNewRule = (category) => {
+    setRulesData((prev) => {
+      const newData = { ...prev };
+      newData[category].push("");
+      return newData;
+    });
+  };
+
+  // ฟังก์ชันสำหรับลบกฎ
+  const removeRule = (category, index) => {
+    setRulesData((prev) => {
+      const newData = { ...prev };
+      newData[category].splice(index, 1);
+      return newData;
+    });
+  };
+
+  const handleSubmitReservation = async () => {
+    if (!selectedFile) {
+      Swal.fire({
+        title: "กรุณาแนบสลิปการโอนเงิน",
+        icon: "warning",
+      });
+      return;
+    }
+
+    // เพิ่ม console.log เพื่อดูค่า showDate ที่ได้รับจาก DatePickerDemo
+    console.log("Current showDate value:", showDate);
+
+    // ตรวจสอบว่ามีการเลือกวันที่หรือไม่ และแสดงค่าที่ได้
+    if (!showDate || !showDate.from) {
+      console.log("Date validation failed:", { showDate });
+      Swal.fire({
+        title: "กรุณาเลือกวันที่",
+        icon: "warning",
+      });
+      return;
+    }
+
+    if (selectedTimeSlots.length === 0) {
+      Swal.fire({
+        title: "กรุณาเลือกช่วงเวลา",
+        text: "กรุณาเลือกช่วงเวลาที่ต้องการจองอย่างน้อย 1 ช่วงเวลา",
+        icon: "warning",
+      });
+      return;
+    }
+
+    try {
+      // สร้าง FormData สำหรับส่งไฟล์
+      const formData = new FormData();
+      formData.append("attachment", selectedFile);
+
+      // เพิ่มข้อมูลผู้ใช้
+      formData.append("userId", userData.id);
+
+      // ตรวจสอบและแปลงวันที่ให้ถูกต้อง
+      // const reservationDate = showDate.from.toISOString().split("T")[0];
+      // console.log("Formatted reservation date:", reservationDate);
+      // formData.append("reservationDate", reservationDate);
+      const reservationDate = showDate.from
+        ? `${showDate.from.getUTCFullYear()}-${String(
+            showDate.from.getUTCMonth() + 1
+          ).padStart(2, "0")}-${String(showDate.from.getUTCDate()).padStart(
+            2,
+            "0"
+          )}`
+        : new Date().toISOString().split("T")[0];
+
+      console.log("Formatted reservation date:", reservationDate);
+      formData.append("reservationDate", reservationDate);
+      // ส่ง selectedTimeSlots ทั้งหมดเป็น string
+      formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
+      // ส่ง courtId
+      formData.append("courtId", selectedTimeSlots[0].courtId);
+      // เพิ่ม statusId
+      formData.append("statusId", "2");
+
+      console.log("Sending reservation data:", {
+        userId: userData.id,
+        date: reservationDate,
+        selectedTimeSlots: selectedTimeSlots,
+        courtId: selectedTimeSlots[0].courtId,
+        statusId: 2,
+      });
+
+      // ส่งข้อมูลไปยัง API
+      const response = await axios.post(
+        "http://localhost:8000/reservation/reservations",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      );
+
+      console.log("Reservation response:", response.data);
+
+      if (response.status >= 200 && response.status < 300) {
+        console.log("About to show success message");
+        console.log("Reservation success:", response.data);
+        setOpen(false);
+        setSelectedTimeSlots([]);
+        setSelectedFile(null);
+
+        try {
+          console.log("Attempting to show Swal");
+          Swal.fire({
+            title: "จองสนามสำเร็จ",
+            text: "กรุณารอการยืนยันจากแอดมิน",
+            icon: "success",
+          }).then(() => {
+            console.log("Swal completed");
+          });
+          console.log("Swal.fire called");
+        } catch (error) {
+          console.error("Error showing Swal:", error);
+        }
+
+        // รีเฟรชข้อมูลการจอง
+        // if (showDate?.from) {
+        //   const date = showDate.from.toISOString().split("T")[0];
+        //   const reservationResponse = await axios.get(
+        //     `http://localhost:8000/timeslot/gettimeslots?date=${date}`,
+        //     { withCredentials: true }
+        //   );
+        //   setReservationData(reservationResponse.data);
+        // }
+                // รีเฟรชข้อมูลการจอง
+                if (showDate?.from) {
+                  // สร้างวันที่ที่ปรับแล้วเพื่อหลีกเลี่ยงปัญหา timezone
+                  const adjustedDate = new Date(showDate.from);
+                  adjustedDate.setHours(12, 0, 0, 0);
+                  
+                  const year = adjustedDate.getFullYear();
+                  const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
+                  const day = String(adjustedDate.getDate()).padStart(2, '0');
+                  const formattedDate = `${year}-${month}-${day}`;
+                  
+                  console.log("รีเฟรชด้วยวันที่ที่จัดรูปแบบแล้ว:", formattedDate);
+                  
+                  const reservationResponse = await axios.get(
+                    `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
+                    { withCredentials: true }
+                  );
+                  setReservationData(reservationResponse.data);
+                }
+      }
+    } catch (error) {
+      // แก้ไขการจัดการข้อผิดพลาด
+      let errorMessage = "ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง";
+
+      // ตรวจสอบว่า error และ error.response มีค่าหรือไม่ก่อนเข้าถึง properties
+      if (error && error.response) {
+        if (error.response.data) {
+          errorMessage =
+            error.response.data.message ||
+            error.response.data.error ||
+            errorMessage;
+        }
+      }
+
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: errorMessage,
+        icon: "error",
+      });
+    }
+  };
+
+  const normalizeTime = (timeStr) => {
+    if (!timeStr) return null;
+    return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
+  };
+
+  const getStartTimeBySlot = (courtId, timeSlotId) => {
+    const court = reservationData.find((c) => Number(c.id) === Number(courtId));
+    const slot = court?.timeSlots?.find(
+      (ts) => Number(ts.id) === Number(timeSlotId)
+    );
+    return slot?.startTime || null;
+  };
+
+  const handleCheckboxChange = (timeSlotId, courtId) => {
+    console.log("Checkbox clicked:", { timeSlotId, courtId });
+
+    timeSlotId = Number(timeSlotId);
+    courtId = Number(courtId);
+
+    const timeSlotStartTime = getStartTimeBySlot(courtId, timeSlotId);
+    const normalizedCurrentStartTime = normalizeTime(timeSlotStartTime);
+
+    console.log("Normalized start time:", normalizedCurrentStartTime);
+
+    const isSelected = selectedTimeSlots.some(
+      (slot) =>
+        Number(slot.timeSlotId) === timeSlotId &&
+        Number(slot.courtId) === courtId
+    );
+
+    if (isSelected) {
+      const newSelectedTimeSlots = selectedTimeSlots.filter(
+        (slot) =>
+          !(
+            Number(slot.timeSlotId) === timeSlotId &&
+            Number(slot.courtId) === courtId
+          )
+      );
+      console.log("After removal:", newSelectedTimeSlots);
+      setSelectedTimeSlots(newSelectedTimeSlots);
+    } else {
+      if (selectedTimeSlots.length >= 3) {
+        Swal.fire({
+          title: "ไม่สามารถเลือกได้",
+          text: "คุณสามารถเลือกได้สูงสุด 3 ช่วงเวลาต่อวัน",
+          icon: "warning",
+        });
+        return;
+      }
+
+      // ตรวจสอบว่าเลือกช่วงเวลาเดียวกันในคอร์ทอื่นหรือไม่
+      const hasSameTimeSlotInOtherCourt = selectedTimeSlots.some((slot) => {
+        const existingTime = normalizeTime(
+          getStartTimeBySlot(slot.courtId, slot.timeSlotId)
+        );
+        return (
+          existingTime === normalizedCurrentStartTime &&
+          Number(slot.courtId) !== courtId
+        );
+      });
+
+      if (hasSameTimeSlotInOtherCourt) {
+        Swal.fire({
+          title: "ไม่สามารถเลือกได้",
+          text: "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ทที่ต่างกันได้",
+          icon: "warning",
+        });
+        return;
+      }
+
+      const newSelectedTimeSlots = [
+        ...selectedTimeSlots,
+        { timeSlotId, courtId },
+      ];
+      console.log("After addition:", newSelectedTimeSlots);
+      setSelectedTimeSlots(newSelectedTimeSlots);
+    }
+  };
+
+  useEffect(() => {
+    console.log("showDate changed:", showDate);
+
+    // แสดง popup กฎการใช้งานเมื่อโหลดหน้าเว็บเสร็จ
+    setShowRulesPopup(true);
+
+    // โหลดข้อมูลกฎจาก localStorage (ถ้ามี)
+    const savedRules = localStorage.getItem("rulesData");
+    if (savedRules) {
+      setRulesData(JSON.parse(savedRules));
+    }
+
+    // เพิ่มการตรวจสอบว่า showDate มีค่าและมีวันที่ที่เลือกหรือไม่
+    // if (showDate && showDate.from) {
+    //   console.log("Valid date selected:", showDate.from.toISOString());
+    //   // ดึงข้อมูลการจองตามวันที่ที่เลือก
+    //   const fetchReservationData = async () => {
+    //     try {
+    //       const date = showDate.from.toISOString().split("T")[0];
+    //       const response = await axios.get(
+    //         `http://localhost:8000/timeslot/gettimeslots?date=${date}`,
+    //         { withCredentials: true }
+    //       );
+    //       setReservationData(response.data);
+    //     } catch (error) {
+    //       console.error("Error fetching reservation data:", error);
+    //     }
+    //   };
+    //   fetchReservationData();
+    // }
+        // เพิ่มการตรวจสอบว่า showDate มีค่าและมีวันที่ที่เลือกหรือไม่
+        if (showDate && showDate.from) {
+          console.log("เลือกวันที่ถูกต้อง:", showDate.from.toISOString());
+          // ดึงข้อมูลการจองตามวันที่ที่เลือก
+          const fetchReservationData = async () => {
+            try {
+              // สร้างวันที่ที่ปรับแล้วเพื่อหลีกเลี่ยงปัญหา timezone
+              const adjustedDate = new Date(showDate.from);
+              adjustedDate.setHours(12, 0, 0, 0);
+              
+              const year = adjustedDate.getFullYear();
+              const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
+              const day = String(adjustedDate.getDate()).padStart(2, '0');
+              const formattedDate = `${year}-${month}-${day}`;
+              
+              console.log("ดึงข้อมูลด้วยวันที่ที่จัดรูปแบบแล้ว:", formattedDate);
+              
+              const response = await axios.get(
+                `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
+                { withCredentials: true }
+              );
+              setReservationData(response.data);
+            } catch (error) {
+              console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
+            }
+          };
+          fetchReservationData();
+        }
+  }, [showDate]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        if (typeof window === "undefined") return;
+
+        const token = window.sessionStorage.getItem("authToken");
+        if (!token) {
+          setUserData(null);
+          return;
+        }
+
+        try {
+          const decoded = jwtDecode(token);
+          if (!decoded?.userId) {
+            window.sessionStorage.removeItem("authToken");
+            setUserData(null);
+            return;
+          }
+
+          setUserData({
+            id: decoded.userId,
+            roleId: decoded.roleId || 1,
+          });
+        } catch (decodeError) {
+          console.error("Token decode error:", decodeError.message);
+          window.sessionStorage.removeItem("authToken");
+          setUserData(null);
+        }
+      } catch (error) {
+        console.error("User data fetch error:", error.message);
+        window.sessionStorage.removeItem("authToken");
+        setUserData(null);
+      }
+    };
+    fetchUserData();
+
+    const handleStorageChange = () => {
+      fetchUserData();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  const handleOpenDrawer = () => {
+    if (!userData) {
+      setIsModalOpen(true);
+      return;
+    }
+
+    // ตรวจสอบว่ามีการเลือก TimeSlot หรือไม่
+    if (selectedTimeSlots.length === 0) {
+      Swal.fire({
+        title: "กรุณาเลือกช่วงเวลา",
+        text: "กรุณาเลือกช่วงเวลาที่ต้องการจองอย่างน้อย 1 ช่วงเวลา",
+        icon: "warning",
+        showClass: {
+          popup: `
+            animate__animated
+            animate__fadeInUp
+            animate__faster
+          `,
+        },
+        hideClass: {
+          popup: `
+            animate__animated
+            animate__fadeOutDown
+            animate__faster
+          `,
+        },
+      });
+      return;
+    }
+
+    setOpen(true);
+  };
+
+  // เพิ่ม state สำหรับ Dialog และชื่อสนาม
+  const [isAddCourtOpen, setIsAddCourtOpen] = useState(false);
+  const [newCourtName, setNewCourtName] = useState("");
+  const [courtPrice, setCourtPrice] = useState("");
+  const [courtDetail, setCourtDetail] = useState("");
+  // เพิ่มฟังก์ชันสำหรับจัดการการเพิ่มสนาม
+  const handleAddCourt = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/courts",
+        {
+          name: newCourtName,
+          price: courtPrice,
+          detail: courtDetail,
+          status: "active",
+        },
+        { withCredentials: true }
+      );
+
+      if (response.status === 200) {
+        setNewCourtName("");
+        setCourtPrice("");
+        setCourtDetail("");
+        setIsAddCourtOpen(false);
+
+        // เปลี่ยนจาก alert เป็น Swal.fire
+        Swal.fire({
+          title: "เพิ่มสนามสำเร็จ",
+          icon: "success",
+          draggable: true,
+          showClass: {
+            popup: `
+              animate__animated
+              animate__fadeInUp
+              animate__faster
+            `,
+          },
+          hideClass: {
+            popup: `
+              animate__animated
+              animate__fadeOutDown
+              animate__faster
+            `,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error adding court:", error);
+
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถเพิ่มสนามได้",
+        icon: "error",
+        draggable: true,
+      });
+    }
+  };
+
+  const handleDeleteCourt = async (courtId) => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:8000/courts/${courtId}`,
+        { withCredentials: true }
+      );
+
+      if (response.status === 200) {
+        setReservationData((prevData) =>
+          prevData.filter((court) => court.id !== courtId)
+        );
+
+        Swal.fire({
+          title: "ลบสนามสำเร็จ",
+          icon: "success",
+          draggable: true,
+          showClass: {
+            popup: `
+              animate__animated
+              animate__fadeInUp
+              animate__faster
+            `,
+          },
+          hideClass: {
+            popup: `
+              animate__animated
+              animate__fadeOutDown
+              animate__faster
+            `,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting court:", error);
+
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถลบสนามได้",
+        icon: "error",
+        draggable: true,
+      });
+    }
+  };
+
+  const redirectToLogin = () => {
+    window.location.href = "/login";
+  };
+
+  const isAdmin = userData?.roleId === 2 && !!userData?.id;
+
+  const isLoggedIn = !!userData?.id;
+
+  const calculateTotalPrice = () => {
+    let totalPrice = 0;
+
+    selectedTimeSlots.forEach((slot) => {
+      // Find the court for this slot
+      const court = reservationData.find(
+        (c) => Number(c.id) === Number(slot.courtId)
+      );
+      if (court && court.price) {
+        totalPrice += Number(court.price);
+      }
+    });
+
+    return totalPrice.toLocaleString();
+  };
+
+  return (
+    <div className="bg-white min-h-screen flex flex-col items-center">
+      <Navbar />
+
+      {/* Rules Popup */}
+      {showRulesPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl overflow-hidden max-w-lg w-full relative mx-auto my-8">
+            {/* ปุ่มปิด */}
+            <button
+              onClick={() => setShowRulesPopup(false)}
+              className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-700 transition-colors z-10"
+            >
+              ✕
+            </button>
+
+            {/* ปุ่มแก้ไขสำหรับแอดมิน */}
+            {isAdmin && !isEditingRules && (
+              <button
+                onClick={() => setIsEditingRules(true)}
+                className="absolute top-2 left-2 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700 transition-colors z-10"
+                title="แก้ไขกฎการใช้งาน"
+              >
+                ✎
+              </button>
+            )}
+
+            {/* หัวข้อและรายละเอียด */}
+            <div className="p-4 md:p-6 overflow-y-auto max-h-[80vh]">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">
+                กฎการใช้งานและการจองสนาม
+              </h3>
+
+              {!isEditingRules ? (
+                // โหมดแสดงกฎ
+                <div className="space-y-3 text-gray-700 mb-6">
+                  <p className="font-semibold text-lg text-red-600">
+                    กฎการจองสนาม:
+                  </p>
+                  <div className="pl-4 space-y-2">
+                    {rulesData.bookingRules.map((rule, index) => (
+                      <p key={`booking-${index}`}>
+                        {index + 1}. {rule}
+                      </p>
+                    ))}
+                  </div>
+
+                  <p className="font-semibold text-lg text-red-600 mt-4">
+                    การชำระเงิน:
+                  </p>
+                  <div className="pl-4 space-y-2">
+                    {rulesData.paymentRules.map((rule, index) => (
+                      <p key={`payment-${index}`}>
+                        {index + 1}. {rule}
+                      </p>
+                    ))}
+                  </div>
+
+                  <p className="font-semibold text-lg text-red-600 mt-4">
+                    สถานะการจอง:
+                  </p>
+                  <div className="pl-4 space-y-2">
+                    {rulesData.statusRules.map((rule, index) => (
+                      <p key={`status-${index}`}>
+                        <span
+                          className={`inline-block w-4 h-4 ${
+                            index === 0
+                              ? "bg-yellow-500"
+                              : index === 1
+                              ? "bg-red-500"
+                              : "bg-gray-500"
+                          } mr-2`}
+                        ></span>{" "}
+                        {rule}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                // โหมดแก้ไขกฎ
+                <div className="space-y-4 text-gray-700 mb-6">
+                  <div>
+                    <p className="font-semibold text-lg text-red-600">
+                      กฎการจองสนาม:
+                    </p>
+                    <div className="pl-4 space-y-2 mt-2">
+                      {rulesData.bookingRules.map((rule, index) => (
+                        <div
+                          key={`booking-edit-${index}`}
+                          className="flex items-center gap-2"
+                        >
+                          <input
+                            type="text"
+                            value={rule}
+                            onChange={(e) =>
+                              handleRuleChange(
+                                "bookingRules",
+                                index,
+                                e.target.value
+                              )
+                            }
+                            className="flex-1 border border-gray-300 rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={() => removeRule("bookingRules", index)}
+                            className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => addNewRule("bookingRules")}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        + เพิ่มกฎใหม่
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-lg text-red-600">
+                      การชำระเงิน:
+                    </p>
+                    <div className="pl-4 space-y-2 mt-2">
+                      {rulesData.paymentRules.map((rule, index) => (
+                        <div
+                          key={`payment-edit-${index}`}
+                          className="flex items-center gap-2"
+                        >
+                          <input
+                            type="text"
+                            value={rule}
+                            onChange={(e) =>
+                              handleRuleChange(
+                                "paymentRules",
+                                index,
+                                e.target.value
+                              )
+                            }
+                            className="flex-1 border border-gray-300 rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={() => removeRule("paymentRules", index)}
+                            className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => addNewRule("paymentRules")}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        + เพิ่มกฎใหม่
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-lg text-red-600">
+                      สถานะการจอง:
+                    </p>
+                    <div className="pl-4 space-y-2 mt-2">
+                      {rulesData.statusRules.map((rule, index) => (
+                        <div
+                          key={`status-edit-${index}`}
+                          className="flex items-center gap-2"
+                        >
+                          <span
+                            className={`inline-block w-4 h-4 ${
+                              index === 0
+                                ? "bg-yellow-500"
+                                : index === 1
+                                ? "bg-red-500"
+                                : "bg-gray-500"
+                            } mr-2`}
+                          ></span>
+                          <input
+                            type="text"
+                            value={rule}
+                            onChange={(e) =>
+                              handleRuleChange(
+                                "statusRules",
+                                index,
+                                e.target.value
+                              )
+                            }
+                            className="flex-1 border border-gray-300 rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={() => removeRule("statusRules", index)}
+                            className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => addNewRule("statusRules")}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        + เพิ่มกฎใหม่
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center">
+                {isEditingRules ? (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setIsEditingRules(false)}
+                      className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      onClick={saveRulesEdit}
+                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      บันทึก
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowRulesPopup(false)}
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    เข้าใจแล้ว
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="overflow-x-auto mt-20 w-full">
+        <table className="min-w-full border border-gray-300 text-center text-sm">
+          <caption className="text-xl font-semibold mb-6 my-6">
+            ตารางจองแบดมินตัน{" "}
+            <span>
+              {(showDate?.from || new Date()).toLocaleDateString("th-TH", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
+          </caption>
+          <thead>
+            <tr>
+              <th className="sticky left-0 bg-white border border-gray-300 py-2 px-2">
+                <DatePickerDemo
+                  setReservationData={setReservationData}
+                  setShowDate={setShowDate}
+                />
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                15:00
+                <br />-<br />
+                16:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                16:00
+                <br />-<br />
+                17:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                17:00
+                <br />-<br />
+                18:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                18:00
+                <br />-<br />
+                19:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                19:00
+                <br />-<br />
+                20:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                20:00
+                <br />-<br />
+                21:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                21:00
+                <br />-<br />
+                22:00
+              </th>
+              <th className="border border-gray-300 py-2 px-4">
+                22:00
+                <br />-<br />
+                23:00
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reservationData.map((court, rowIndex) => (
+              <tr key={court.id}>
+                <td className="flex items-center justify-around sticky left-0 bg-white border border-gray-300 py-2 px-4">
+                  <span className="font-medium">{court.name}</span>
+                  {isLoggedIn && isAdmin && (
+                    <div className="flex gap-2 items-center">
+                      <SettingButton court={court} selectedDate={showDate} />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className="group relative flex h-7 w-7 flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-red-800 bg-red-400 hover:bg-red-600">
+                            <svg
+                              viewBox="0 0 1.625 1.625"
+                              className="absolute -top-7 fill-white delay-100 group-hover:top-2 group-hover:animate-[spin_1.4s] group-hover:duration-1000"
+                              height={12}
+                              width={12}
+                            >
+                              <path d="M.471 1.024v-.52a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099h-.39c-.107 0-.195 0-.195-.195" />
+                              <path d="M1.219.601h-.163A.1.1 0 0 1 .959.504V.341A.033.033 0 0 0 .926.309h-.26a.1.1 0 0 0-.098.098v.618c0 .054.044.098.098.098h.487a.1.1 0 0 0 .098-.099v-.39a.033.033 0 0 0-.032-.033" />
+                              <path d="m1.245.465-.15-.15a.02.02 0 0 0-.016-.006.023.023 0 0 0-.023.022v.108c0 .036.029.065.065.065h.107a.023.023 0 0 0 .023-.023.02.02 0 0 0-.007-.016" />
+                            </svg>
+                            <svg
+                              width={16}
+                              fill="none"
+                              viewBox="0 0 39 7"
+                              className="origin-right duration-500 group-hover:rotate-90"
+                            >
+                              <line
+                                strokeWidth={4}
+                                stroke="white"
+                                y2={5}
+                                x2={39}
+                                y1={5}
+                              />
+                              <line
+                                strokeWidth={4}
+                                stroke="white"
+                                y2="1.5"
+                                x2="26.0357"
+                                y1="1.5"
+                                x1={12}
+                              />
+                            </svg>
+                            <svg
+                              width={12}
+                              fill="none"
+                              viewBox="0 0 33 39"
+                              className=""
+                            >
+                              <mask fill="white" id="path-1-inside-1_8_19">
+                                <path d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z" />
+                              </mask>
+                              <path
+                                mask="url(#path-1-inside-1_8_19)"
+                                fill="white"
+                                d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
+                              />
+                              <path
+                                strokeWidth={4}
+                                stroke="white"
+                                d="M12 6L12 29"
+                              />
+                              <path
+                                strokeWidth={4}
+                                stroke="white"
+                                d="M21 6V29"
+                              />
+                            </svg>
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>ยืนยันการลบสนาม</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              คุณแน่ใจหรือไม่ที่จะลบสนาม{" "}
+                              <span className="font-bold text-black">
+                                {court.name}{" "}
+                              </span>
+                              การดำเนินการนี้ไม่สามารถยกเลิกได้
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteCourt(court.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              ลบสนาม
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
+                </td>
+                {court.timeSlots.map((slot, cellIndex) => (
+                  <td
+                    key={slot.id}
+                    className={`border border-gray-300 py-2 px-4 ${
+                      slot.statusId === 2
+                        ? "bg-yellow-500 text-white"
+                        : slot.statusId === 5
+                        ? "bg-red-500 text-white"
+                        : slot.statusId === 1
+                        ? "bg-gray-500 text-white"
+                        : "bg-white"
+                    }`}
+                  >
+                    {slot.statusId !== 2 &&
+                    slot.statusId !== 5 &&
+                    slot.statusId !== 1 ? (
+                      <Checkbox
+                        id={`checkbox-${slot.id}`}
+                        checked={selectedTimeSlots.some(
+                          (selected) =>
+                            selected.timeSlotId === slot.id &&
+                            selected.courtId === court.id
+                        )}
+                        onCheckedChange={() =>
+                          handleCheckboxChange(slot.id, court.id)
+                        }
+                        disabled={
+                          slot.statusId === 2 ||
+                          slot.statusId === 5 ||
+                          slot.statusId === 1
+                        }
+                      />
+                    ) : slot.statusId === 2 ? (
+                      "Pending"
+                    ) : slot.statusId === 1 ? (
+                      "Close"
+                    ) : (
+                      "Reserved"
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Drawer */}
+      <Drawer open={open} onOpenChange={setOpen}>
+        <div className="flex flex-wrap gap-4 items-center justify-center mt-4">
+          {isLoggedIn && isAdmin && (
+            <AlertDialog open={isAddCourtOpen} onOpenChange={setIsAddCourtOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  onClick={() => setIsAddCourtOpen(true)}
+                  className="bg-green-500 text-white"
+                >
+                  เพิ่มสนาม
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>เพิ่มสนามใหม่</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    กรุณากรอกชื่อสนามที่ต้องการเพิ่ม
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4 space-y-4">
+                  <input
+                    type="text"
+                    value={newCourtName}
+                    onChange={(e) => setNewCourtName(e.target.value)}
+                    placeholder="ชื่อสนาม"
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <input
+                    type="number"
+                    value={courtPrice}
+                    onChange={(e) => setCourtPrice(e.target.value)}
+                    placeholder="ราคา"
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <textarea
+                    value={courtDetail}
+                    onChange={(e) => setCourtDetail(e.target.value)}
+                    placeholder="รายละเอียดสนาม"
+                    className="w-full px-4 py-2 border rounded-lg"
+                    rows={3}
+                  />
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setNewCourtName("")}>
+                    ยกเลิก
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleAddCourt}
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    เพิ่มสนาม
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+
+          <Button
+            onClick={handleOpenDrawer}
+            className={`${
+              selectedTimeSlots.length === 0 ? "bg-gray-400" : "bg-red-500"
+            } text-white`}
+          >
+            จองสนาม{" "}
+            {selectedTimeSlots.length > 0
+              ? `(${
+                  selectedTimeSlots.length
+                } ชั่วโมง - ${calculateTotalPrice()} บาท)`
+              : ""}
+          </Button>
+        </div>
+        {userData ? (
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle className="text-center">ชำระเงิน</DrawerTitle>
+              <DrawerDescription className="text-center">
+                เมื่อชำระเงินเสร็จแล้วกรุณาแนปสลิปการโอนเงิน
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex mt-2 justify-center">
+              <div>
+                <Image
+                  src="/Qr.png"
+                  alt="QR Code สำหรับชำระเงิน"
+                  width={300}
+                  height={200}
+                  className="rounded-lg"
+                />
+              </div>
+            </div>
+            <DrawerFooter>
+              <div className="space-y-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full"
+                />
+                <Button
+                  onClick={handleSubmitReservation}
+                  disabled={!selectedFile}
+                  className={!selectedFile ? "bg-gray-400 w-full" : ""}
+                >
+                  ยืนยันการชำระเงิน
+                </Button>
+                <DrawerClose asChild>
+                  <Button variant="outline" className="w-full">
+                    ยกเลิก
+                  </Button>
+                </DrawerClose>
+              </div>
+            </DrawerFooter>
+          </DrawerContent>
+        ) : null}
+      </Drawer>
+
+      <div
+        id="court-showcase"
+        className="mt-8 mb-12 flex justify-center w-full"
+      >
+        <img
+          src="/courtdetail.png"
+          alt="Court Details"
+          className="rounded-lg shadow-lg max-w-[90%] md:max-w-[80%] lg:max-w-[70%] xl:max-w-[60%] hover:shadow-xl transition-shadow duration-300"
+        />
+      </div>
+      {/* Modal แจ้งเตือน */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-1/3">
+            <h2 className="text-lg font-bold text-red-600 text-center">
+              กรุณาเข้าสู่ระบบ
+            </h2>
+            <p className="text-center mt-4">
+              คุณต้องเข้าสู่ระบบก่อนทำการจองสนาม
+            </p>
+            <div className="flex justify-center mt-6 space-x-4">
+              <button
+                onClick={redirectToLogin}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+              >
+                ไปยังหน้าล็อกอิน
+              </button>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="w-full bg-gray-900 text-white py-12 px-4">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 className="text-xl font-bold mb-4">เกี่ยวกับเรา</h3>
+            <p className="text-gray-300">
+              ให้บริการสนามแบดมินตันคุณภาพ พร้อมสิ่งอำนวยความสะดวกครบครัน
+              เพื่อประสบการณ์การเล่นที่ดีที่สุด
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-bold mb-4">ติดต่อเรา</h3>
+            <p className="text-gray-300 mb-2">โทร: 02-123-4567</p>
+            <p className="text-gray-300 mb-2">อีเมล: info@badminton.com</p>
+            <p className="text-gray-300">
+              ที่อยู่: 123 ถนนกีฬา เขตบางกะปิ กรุงเทพฯ
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-bold mb-4">เวลาทำการ</h3>
+            <p className="text-gray-300 mb-2">จันทร์ - ศุกร์: 08:00 - 22:00</p>
+            <p className="text-gray-300 mb-2">เสาร์ - อาทิตย์: 08:00 - 23:00</p>
+            <p className="text-gray-300">วันหยุดนักขัตฤกษ์: 09:00 - 22:00</p>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+          <p>© 2023 สนามแบดมินตัน. สงวนลิขสิทธิ์ทั้งหมด.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
