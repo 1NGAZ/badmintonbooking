@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  fname        String?
+  lname        String?
+  phone        String?
+  password     String?
+
+  userRoles    UserRoles[]   
+  reservations Reservation[] 
+}
+
+model Role {
+  id       Int           @id @default(autoincrement())
+  name     String        @unique
+
+  userRoles UserRoles[] 
+}
+
+model UserRoles {
+  userId Int
+  roleId Int
+
+  user   User @relation(fields: [userId], references: [id]) 
+  role   Role @relation(fields: [roleId], references: [id]) 
+
+  @@id([userId, roleId]) 
+}
+
+model Court {
+  id           Int       @id @default(autoincrement())
+  name         String   
+  price        Decimal   
+  detail       String    
+  status       String    
+  
+  timeSlots    TimeSlot[] 
+  reservations Reservation[] 
+}
+
+model TimeSlot {
+  id           Int                @id @default(autoincrement())
+  start_time   DateTime 
+  end_time     DateTime 
+  courtId      Int                
+  court        Court              @relation(fields: [courtId], references: [id])
+
+  statusId     Int               
+  status       Reservation_status @relation(fields: [statusId], references: [id])
+
+  reservations Reservation[] 
+}
+
+model Reservation {
+  id           Int                 @id @default(autoincrement())
+  userId       Int                
+  courtId      Int                 
+  timeSlotId   Int                
+  statusId     Int                 
+  
+  attachment  String
+  user         User                @relation(fields: [userId], references: [id]) 
+  court        Court               @relation(fields: [courtId], references: [id])   
+  status       Reservation_status  @relation(fields: [statusId], references: [id])  
+  timeSlot     TimeSlot            @relation(fields: [timeSlotId], references: [id]) 
+        
+}
+
+model Reservation_status {
+  id           Int        @id @default(autoincrement())
+  name         String      
+
+  reservations Reservation[] 
+
+  TimeSlot TimeSlot[]
+}
+
+
+
