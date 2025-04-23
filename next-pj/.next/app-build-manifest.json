@@ -6,16 +6,16 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/Reservation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/Reservation/page.css",
       "static/chunks/app/Reservation/page.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
     ],
     "/login/page": [
       "static/chunks/webpack.js",
@@ -27,6 +27,22 @@
       "static/chunks/main-app.js",
       "static/chunks/app/adminmenu/page.js"
     ],
+    "/promotion/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/promotion/page.js"
+    ],
+    "/Income/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/Income/page.css",
+      "static/chunks/app/Income/page.js"
+    ],
+    "/register/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/register/page.js"
+    ],
     "/reservationhistory/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -37,16 +53,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/adminedit/page.js"
     ],
-    "/Income/page": [
+    "/edituser/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/Income/page.css",
-      "static/chunks/app/Income/page.js"
-    ],
-    "/promotion/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/promotion/page.js"
+      "static/css/app/edituser/page.css",
+      "static/chunks/app/edituser/page.js"
     ]
   }
 }

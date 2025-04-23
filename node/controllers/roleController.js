@@ -59,7 +59,7 @@ const assignRole = async (req, res) => {
     console.log('User in request:', req.user); // ตรวจสอบข้อมูลผู้ใช้ทั้งหมด
     
     // แก้ไขการตรวจสอบให้ใช้ roleId แทน roles
-    const isAdmin = req.user && req.user.roleId === 2;
+    const isAdmin = req.user && req.user.roleId === 1;
     
     if (!isAdmin) {
       console.log('User is not admin, roleId:', req.user?.roleId);

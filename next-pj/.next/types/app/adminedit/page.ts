@@ -1,4 +1,4 @@
-// File: C:\Users\COM-GARAGE\Desktop\nextnode\next-pj\app\adminedit\page.jsx
+// File: C:\Users\COM-GARAGE\Documents\GitHub\badmintonbooking\next-pj\app\adminedit\page.jsx
 import * as entry from '../../../../app/adminedit/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

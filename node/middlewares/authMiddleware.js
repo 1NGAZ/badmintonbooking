@@ -45,8 +45,8 @@ exports.isAdmin = (req, res, next) => {
     return res.status(403).json({ error: 'ข้อมูล roleId ไม่พบใน Token' });
   }
 
-  // ตรวจสอบว่า roleId เป็น 2 หรือไม่ (Admin)
-  if (roleId !== 2) {
+  // ตรวจสอบว่า roleId เป็น 1 หรือไม่ (Admin)
+  if (roleId !== 1) {
     return res.status(403).json({ error: 'คุณไม่มีสิทธิ์ในการดำเนินการนี้' });
   }
 

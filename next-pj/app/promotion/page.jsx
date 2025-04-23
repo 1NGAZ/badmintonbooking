@@ -1,12 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [promotions, setPromotions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [currentId, setCurrentId] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -14,76 +25,132 @@ const Page = () => {
     code: "",
     startDate: "",
     endDate: "",
-    status: "active"
+    status: "active",
+    maxUses: 0,
   });
-  
-  // ข้อมูลตัวอย่างสำหรับแสดงในหน้า UI
-  const samplePromotions = [
-    {
-      id: 1,
-      title: "โปรโมชั่นสมาชิกใหม่",
-      description: "ส่วนลด 20% สำหรับสมาชิกใหม่ที่จองครั้งแรก",
-      discount: 20,
-      code: "NEW20X", // รหัสโปรโมชั่น 6 หลัก
-      startDate: "2023-12-01",
-      endDate: "2023-12-31",
-      status: "active"
-    },
-    {
-      id: 2,
-      title: "โปรโมชั่นวันหยุดสุดสัปดาห์",
-      description: "ส่วนลด 5% สำหรับสมาชิกที่จองวันหยุด เสาร์-อาทิตย์",
-      discount: 5,
-      code: "WKND05", // รหัสโปรโมชั่น 6 หลัก
-      startDate: "2023-01-01",
-      endDate: "2023-12-31",
-      status: "active"
-    },
-    {
-      id: 3,
-      title: "โปรโมชั่นช่วงเทศกาลปีใหม่",
-      description: "ส่วนลด 10% สำหรับการจองในช่วงเทศกาลปีใหม่",
-      discount: 10,
-      code: "NEWY10", // รหัสโปรโมชั่น 6 หลัก
-      startDate: "2023-12-25",
-      endDate: "2024-01-05",
-      status: "inactive"
-    }
-  ];
 
-  // กรองโปรโมชั่นตามคำค้นหา
-  const filteredPromotions = samplePromotions.filter(promo => 
-    promo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    promo.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    promo.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ตรวจสอบสถานะการเข้าสู่ระบุและสิทธิ์แอดมิน
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        if (typeof window !== "undefined") {
+          const token = sessionStorage.getItem("authToken");
+          console.log("Token:", token);
+          if (!token) {
+            console.error("No token found in sessionStorage");
+            router.push("/login");
+            return;
+          }
+          // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
+          const userResponse = await axios.get(
+            "http://localhost:8000/user/profile",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          // ตรวจสอบว่าเป็นแอดมิน (roleId = 1) หรือไม่
+          const isAdmin = userResponse.data?.roles?.some(
+            (role) => role.id === 1
+          );
 
-  // สร้างรหัสโปรโมชั่นแบบสุ่ม 6 หลัก
-  const generatePromoCode = () => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
+          if (!isAdmin) {
+            setError(
+              "คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้ (ต้องเป็นผู้ดูแลระบบเท่านั้น)"
+            );
+            setTimeout(() => router.push("/"), 2000);
+            return;
+          }
+
+          setIsAdmin(true);
+          setIsLoading(false);
+          fetchPromotions();
+        }
+      } catch (err) {
+        console.error("Error checking authentication status:", err);
+        if (typeof window !== "undefined") {
+          Swal.fire({
+            icon: "error",
+            title: "เกิดข้อผิดพลาด",
+            text: "ไม่สามารถตรวจสอบสิทธิ์ได้ กรุณาเข้าสู่ระบบใหม่",
+            confirmButtonColor: "#ef4444",
+          }).then(() => {
+            sessionStorage.removeItem("authToken");
+            router.push("/login");
+          });
+        }
+      }
+    };
+
+    checkAuthStatus();
+  }, [router]);
+
+  // ดึงข้อมูลโปรโมชั่นทั้งหมด
+  const fetchPromotions = async () => {
+    try {
+      setLoading(true);
+      if (typeof window !== "undefined") {
+        const token = sessionStorage.getItem("authToken");
+        const response = await axios.get("http://localhost:8000/promotions", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setPromotions(response.data);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error fetching promotions:", err);
+      setError("ไม่สามารถดึงข้อมูลโปรโมชั่นได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setLoading(false);
     }
-    setFormData({...formData, code: result});
   };
 
-  // จัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+  // ค้นหาโปรโมชั่น
+  const searchPromotions = async () => {
+    if (!searchTerm.trim()) {
+      fetchPromotions();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      if (typeof window !== "undefined") {
+        const token = sessionStorage.getItem("authToken");
+        const response = await axios.get(
+          `http://localhost:8000/promotions/search?term=${searchTerm}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setPromotions(response.data);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error searching promotions:", err);
+      setError("ไม่สามารถค้นหาโปรโมชั่นได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // จัดการการส่งฟอร์ม
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // ในอนาคตจะเพิ่มการบันทึกข้อมูลลงฐานข้อมูล
-    console.log("บันทึกโปรโมชั่น:", formData);
-    setShowModal(false);
-    // รีเซ็ตฟอร์ม
+  // ค้นหาเมื่อมีการเปลี่ยนแปลี่ยน
+  useEffect(() => {
+    if (isAdmin) {
+      const delaySearch = setTimeout(() => {
+        searchPromotions();
+      }, 500);
+
+      return () => clearTimeout(delaySearch);
+    }
+  }, [searchTerm, isAdmin]);
+
+  // เปิดโมดัลเพิ่มโปรโมชั่นใหม่
+  const openAddModal = () => {
+    setEditMode(false);
+    setCurrentId(null);
     setFormData({
       title: "",
       description: "",
@@ -91,14 +158,213 @@ const Page = () => {
       code: "",
       startDate: "",
       endDate: "",
-      status: "active"
+      status: "active",
+      maxUses: 0,
+    });
+    setShowModal(true);
+  };
+
+  // เปิดโหมดแก้ไข
+  // เปิดโหมดแก้ไข
+  const handleEdit = async (id) => {
+    try {
+      if (typeof window !== "undefined") {
+        const token = sessionStorage.getItem("authToken");
+        const response = await axios.get(
+          `http://localhost:8000/promotions/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const promo = response.data;
+
+        // แปลงวันที่ให้อยู่ในรูปแบบที่ input type="date" รองรับ
+        const formatDate = (dateString) => {
+          const date = new Date(dateString);
+          return date.toISOString().split("T")[0];
+        };
+
+        setFormData({
+          title: promo.title,
+          description: promo.description || "",
+          discount: promo.discount,
+          code: promo.code,
+          startDate: formatDate(promo.startDate),
+          endDate: formatDate(promo.endDate),
+          status: promo.status,
+          maxUses: promo.maxUses || 0,
+        });
+
+        setEditMode(true);
+        setCurrentId(id);
+        setShowModal(true);
+      }
+    } catch (err) {
+      console.error("Error fetching promotion details:", err);
+      Swal.fire({
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถดึงข้อมูลโปรโมชั่นได้ กรุณาลองใหม่อีกครั้ง",
+        confirmButtonColor: "#ef4444",
+      });
+    }
+  };
+
+  // ลบโปรโมชั่น
+  const handleDelete = async (id) => {
+    Swal.fire({
+      title: "คุณแน่ใจหรือไม่?",
+      text: "คุณต้องการลบโปรโมชั่นนี้ใช่หรือไม่?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "ใช่, ลบเลย!",
+      cancelButtonText: "ยกเลิก",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          if (typeof window !== "undefined") {
+            const token = sessionStorage.getItem("authToken");
+            await axios.delete(`http://localhost:8000/promotions/${id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            fetchPromotions();
+            Swal.fire({
+              icon: "success",
+              title: "ลบสำเร็จ!",
+              text: "ลบโปรโมชั่นเรียบร้อยแล้ว",
+              confirmButtonColor: "#ef4444",
+            });
+          }
+        } catch (err) {
+          console.error("Error deleting promotion:", err);
+          if (err.response && err.response.status === 400) {
+            Swal.fire({
+              icon: "error",
+              title: "เกิดข้อผิดพลาด",
+              text: `ไม่สามารถลบโปรโมชั่นได้: ${err.response.data.error}`,
+              confirmButtonColor: "#ef4444",
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "เกิดข้อผิดพลาด",
+              text: "ไม่สามารถลบโปรโมชั่นได้ กรุณาลองใหม่อีกครั้ง",
+              confirmButtonColor: "#ef4444",
+            });
+          }
+        }
+      }
+    });
+  };
+
+  // จัดการการส่งฟอร์ม
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (typeof window !== "undefined") {
+        const token = sessionStorage.getItem("authToken");
+
+        if (editMode) {
+          // 8 อัปเดตโปรโมชั่น
+          await axios.put(
+            `http://localhost:8000/promotions/${currentId}`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          Swal.fire({
+            icon: "success",
+            title: "อัปเดตสำเร็จ!",
+            text: "อัปเดตโปรโมชั่นเรียบร้อยแล้ว",
+            confirmButtonColor: "#ef4444",
+          });
+        } else {
+          // สร้างโปรโมชั่นใหม่
+          await axios.post("http://localhost:8000/promotions", formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          Swal.fire({
+            icon: "success",
+            title: "เพิ่มสำเร็จ!",
+            text: "เพิ่มโปรโมชั่นเรียบร้อยแล้ว",
+            confirmButtonColor: "#ef4444",
+          });
+        }
+
+        // รีเฟรชข้อมูล
+        fetchPromotions();
+
+        // ปิดโมดัลและรีเซ็ทฟอร์ม
+        setShowModal(false);
+        setEditMode(false);
+        setCurrentId(null);
+        setFormData({
+          title: "",
+          description: "",
+          discount: 0,
+          code: "",
+          startDate: "",
+          endDate: "",
+          status: "active",
+          maxUses: 0,
+        });
+      }
+    } catch (err) {
+      console.error("Error saving promotion:", err);
+      if (err.response && err.response.status === 400) {
+        Swal.fire({
+          icon: "error",
+          title: "เกิดข้อผิดพลาด",
+          text: `ไม่สามารถบันทึกโปรโมชั่นได้: ${err.response.data.error}`,
+          confirmButtonColor: "#ef4444",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "เกิดข้อผิดพลาด",
+          text: "ไม่สามารถบันทึกโปรโมชั่นได้ กรุณาลองใหม่อีกครั้ง",
+          confirmButtonColor: "#ef4444",
+        });
+      }
+    }
+  };
+
+  // สร้างรหัสโปรโมชั่นแบบสุ่ม 6 หลัก
+  const generatePromoCode = () => {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length)
+      );
+    }
+    setFormData({ ...formData, code: result });
+  };
+
+  // จัดการการเปลี่ยนแปลี่ยนข้อมูลในฟอร์ม
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
     });
   };
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Navbar />
-
       <div className="container mx-auto px-4 py-8 mt-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center">
@@ -113,15 +379,15 @@ const Page = () => {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
+                d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.45.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.781.929l.15-.894Z"
               />
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M6 6h.008v.008H6V6Z"
+                d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
               />
             </svg>
-            จัดการโปรโมชั่น
+            ระบบจัดการโปรโมชั่น
           </h1>
           <div className="text-sm breadcrumbs">
             <ul className="flex space-x-2">
@@ -135,6 +401,7 @@ const Page = () => {
           </div>
         </div>
         <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar - ไม่มีการเปลี่ยนแปลี่ยนข้อมูล */}
           {/* Sidebar */}
           <aside className="w-full lg:w-64 bg-white shadow-sm rounded-xl border border-gray-100 p-6 flex-shrink-0 h-fit mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
@@ -263,8 +530,19 @@ const Page = () => {
                   {/* Search Box */}
                   <div className="relative w-full sm:w-auto">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <svg className="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <svg
+                        className="w-4 h-4 text-gray-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
                       </svg>
                     </div>
                     <input
@@ -275,96 +553,260 @@ const Page = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  
+
                   {/* Add Promotion Button */}
-                  <button 
+                  <button
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center"
-                    onClick={() => setShowModal(true)}
+                    onClick={openAddModal}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-1">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5 mr-1"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
                     </svg>
                     เพิ่มโปรโมชั่น
                   </button>
                 </div>
               </div>
 
-              {/* Promotions Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ชื่อโปรโมชั่น
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        รายละเอียด
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ส่วนลด
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        วันที่
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        รหัสโปรโมชั่น
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        จัดการ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredPromotions.map((promotion) => (
-                      <tr key={promotion.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{promotion.title}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500 max-w-xs truncate">{promotion.description}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{promotion.discount}%</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
-                            {promotion.startDate} - {promotion.endDate}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded-md inline-block">
-                            {promotion.code}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button className="text-indigo-600 hover:text-indigo-900">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                              </svg>
-                            </button>
-                            <button className="text-red-600 hover:text-red-900">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m-1.022.165L4.772 5.79m14.456 0a48.112 48.112 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165M20.226 10.02a8.25 8.25 0 00-1.021-.22m-1.022.165a8.25 8.25 0 00-.177-.022m-1.022.022a8.25 8.25 0 00-.177-.022m-1.022.022a8.25 8.25 0 00-.177-.022M4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m-1.022.165L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m-1.022.165L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m-1.022.165L4.772 5.79" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Empty State */}
-              {filteredPromotions.length === 0 && (
+              {/* แสดงข้อความโหลดข้อมูล */}
+              {loading && (
                 <div className="text-center py-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
+                  <p className="mt-3 text-gray-600">กำลังโหลดข้อมูล...</p>
+                </div>
+              )}
+
+              {/* แสดงข้อความเมื่อเกิดข้อผิดพลาด */}
+              {error && !loading && (
+                <div className="text-center py-10">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-12 h-12 mx-auto text-red-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                    />
                   </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">ไม่พบโปรโมชั่น</h3>
-                  <p className="mt-1 text-sm text-gray-500">ไม่พบโปรโมชั่นที่ตรงกับคำค้นหา</p>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    เกิดข้อผิดพลาด
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">{error}</p>
+                  <button
+                    onClick={fetchPromotions}
+                    className="mt-3 text-sm text-red-600 hover:text-red-800 font-medium"
+                  >
+                    ลองใหม่อีกครั้ง
+                  </button>
+                </div>
+              )}
+
+              {/* Promotions Table - แสดงเมื่อไม่มีการโหลดและไม่มีข้อผิดพลาด */}
+              {!loading && !error && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          ชื่อโปรโมชั่น
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          รายละเอียด
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          ส่วนลด
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          วันที่
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          รหัสโปรโมชั่น
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          จำนวนใช้งาน
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          สถานะ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          จัดการ
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {promotions.length > 0 ? (
+                        promotions.map((promotion) => (
+                          <tr key={promotion.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {promotion.title}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-500 max-w-xs truncate">
+                                {promotion.description}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {promotion.discount}%
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">
+                                {new Date(
+                                  promotion.startDate
+                                ).toLocaleDateString("th-TH")}{" "}
+                                -{" "}
+                                {new Date(promotion.endDate).toLocaleDateString(
+                                  "th-TH"
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-mono bg-gray-100 px-2 py-1 rounded-md inline-block">
+                                {promotion.code}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">
+                                {promotion.usedCount || 0} /{" "}
+                                {promotion.maxUses > 0
+                                  ? promotion.maxUses
+                                  : "∞"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  promotion.status === "active"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                {promotion.status === "active"
+                                  ? "ใช้งาน"
+                                  : "ไม่ใช้งาน"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <button
+                                  className="text-indigo-600 hover:text-indigo-900"
+                                  onClick={() => handleEdit(promotion.id)}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  className="text-red-600 hover:text-red-900"
+                                  onClick={() => handleDelete(promotion.id)}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165m0 0c.34-.059.68-.114 1.022-.165M20.226 10.02a8.25 8.25 0 00-1.021-.22m-1.022.165a8.25 8.25 0 00-.177-.022m-1.022.022a8.25 8.25 0 00-.177-.022m-1.022.022a8.25 8.25 0 00-.177-.022M4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="px-6 py-10 text-center">
+                            <div className="text-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-12 h-12 mx-auto text-gray-400"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M6 6h.008v.008H6V6Z"
+                                />
+                              </svg>
+                              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                                ไม่พบโปรโมชั่น
+                              </h3>
+                              <p className="mt-1 text-sm text-gray-500">
+                                ยังไม่มีโปรโมชั่นในระบบ
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -378,21 +820,27 @@ const Page = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">เพิ่มโปรโมชั่นใหม่</h3>
-                <button 
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {editMode ? "แก้ไขโปรโมชั่น" : "เพิ่มโปรโมชั่นใหม่"}
+                </h3>
+                <button
                   onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="text-gray-400 hover:text-gray-500 p-1 rounded-full"
+                  aria-label="ปิด"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ✕
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">ชื่อโปรโมชั่น</label>
+                    <label
+                      htmlFor="title"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      ชื่อโปรโมชั่น
+                    </label>
                     <input
                       type="text"
                       id="title"
@@ -403,21 +851,58 @@ const Page = () => {
                       required
                     />
                   </div>
-                  
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">รายละเอียด</label>
+                    <label
+                      htmlFor="maxUses"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      จำนวนการใช้งานสูงสุด (0 = ไม่จำกัด)
+                    </label>
+                    <input
+                      type="number"
+                      id="maxUses"
+                      name="maxUses"
+                      min="0"
+                      value={formData.maxUses}
+                      onChange={handleChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                    />
+                  </div>
+                  {/* แสดงจำนวนการใช้งานปัจจุบันเมื่ออยู่ในโหมดแก้ไข */}
+                  {editMode && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        จำนวนการใช้งานปัจจุบัน
+                      </label>
+                      <div className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                        {formData.usedCount || 0} ครั้ง
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      รายละเอียด
+                    </label>
                     <textarea
                       id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      rows="3"
+                      rows="1"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     ></textarea>
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="discount" className="block text-sm font-medium text-gray-700">ส่วนลด (%)</label>
+                    <label
+                      htmlFor="discount"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      ส่วนลด (%)
+                    </label>
                     <input
                       type="number"
                       id="discount"
@@ -430,9 +915,14 @@ const Page = () => {
                       required
                     />
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="code" className="block text-sm font-medium text-gray-700">รหัสโปรโมชั่น (6 หลัก)</label>
+                    <label
+                      htmlFor="code"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      รหัสโปรโมชั่น (6 หลัก)
+                    </label>
                     <div className="mt-1 flex rounded-md shadow-sm">
                       <input
                         type="text"
@@ -453,12 +943,19 @@ const Page = () => {
                         สุ่ม
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">รหัสโปรโมชั่นจะใช้สำหรับกรอกตอนจองสนาม</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      รหัสโปรโมชั่นจะใช้สำหรับกรอกตอนจองสนาม
+                    </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">วันที่เริ่มต้น</label>
+                      <label
+                        htmlFor="startDate"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        วันที่เริ่มต้น
+                      </label>
                       <input
                         type="date"
                         id="startDate"
@@ -469,9 +966,14 @@ const Page = () => {
                         required
                       />
                     </div>
-                    
+
                     <div>
-                      <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">วันที่สิ้นสุด</label>
+                      <label
+                        htmlFor="endDate"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        วันที่สิ้นสุด
+                      </label>
                       <input
                         type="date"
                         id="endDate"
@@ -483,9 +985,14 @@ const Page = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
-                    <label htmlFor="status" className="block text-sm font-medium text-gray-700">สถานะ</label>
+                    <label
+                      htmlFor="status"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      สถานะ
+                    </label>
                     <select
                       id="status"
                       name="status"
@@ -498,20 +1005,20 @@ const Page = () => {
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
                     ยกเลิก
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    บันทึก
+                    {editMode ? "อัปเดต" : "เพิ่ม"}โปรโมชั่น
                   </button>
                 </div>
               </form>

@@ -12,6 +12,28 @@ const getTimeSlotsOnDate = async (date) => {
   const endOfDay = new Date(startOfDay);
   endOfDay.setUTCHours(23, 59, 59, 999); // End of the day in UTC
   // Query courts with filtered timeSlots
+  // const courts = await prisma.court.findMany({
+  //   where: {
+  //     timeSlots: {
+  //       some: {
+  //         start_time: {
+  //           gte: startOfDay,
+  //           lte: endOfDay,
+  //         },
+  //       },
+  //     },
+  //   },
+  //   include: {
+  //     timeSlots: {
+  //       where: {
+  //         start_time: {
+  //           gte: startOfDay,
+  //           lte: endOfDay,
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
   const courts = await prisma.court.findMany({
     where: {
       timeSlots: {
@@ -31,10 +53,21 @@ const getTimeSlotsOnDate = async (date) => {
             lte: endOfDay,
           },
         },
+        include: {
+          reservations: {
+            include: {
+              user: {
+                select: {
+                  fname: true,
+                },
+              },
+            },
+          },
+        },
       },
     },
   });
-
+  
   return courts;
 };
 

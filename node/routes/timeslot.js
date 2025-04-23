@@ -6,4 +6,5 @@ const { getTimeSlotsByDateController } = require('../controllers/timeSlotControl
 // POST: สร้าง TimeSlots ใหม่สำหรับหลายๆ courtId และ 7 วัน
 router.post('/timeslots', createTimeSlotsForDateController);
 router.get('/gettimeslots', getTimeSlotsByDateController);
+
 module.exports = router;

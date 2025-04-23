@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/footer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePickerDemo } from "../components/DatePickerDemo";
 import Image from "next/image";
@@ -42,7 +43,7 @@ export default function ReservationTable() {
   const [showDate, setShowDate] = useState();
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-
+  const [maxTimeSlots, setMaxTimeSlots] = useState(3);
   // เพิ่มฟังก์ชัน handleFileChange ที่หายไป
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -77,7 +78,8 @@ export default function ReservationTable() {
   const saveRulesEdit = () => {
     localStorage.setItem("rulesData", JSON.stringify(rulesData));
     setIsEditingRules(false);
-
+    localStorage.setItem("maxTimeSlots", maxTimeSlots.toString());
+    setIsEditingRules(false);
     Swal.fire({
       title: "บันทึกกฎการใช้งานเรียบร้อย",
       icon: "success",
@@ -113,28 +115,243 @@ export default function ReservationTable() {
     });
   };
 
+  // const handleSubmitReservation = async () => {
+  //   if (!userData) {
+  //     setIsModalOpen(true);
+  //     return;
+  //   }
+
+  //   if (selectedTimeSlots.length === 0) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "กรุณาเลือกช่วงเวลา",
+  //       text: "คุณยังไม่ได้เลือกช่วงเวลาที่ต้องการจอง",
+  //     });
+  //     return;
+  //   }
+
+  //   if (!selectedFile) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "กรุณาแนบสลิปการโอนเงิน",
+  //       text: "คุณต้องแนบสลิปการโอนเงินเพื่อยืนยันการจอง",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("file", selectedFile);
+  //     formData.append("userId", userData.id);
+  //     formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
+      
+  //     // เพิ่มการส่งโค้ดโปรโมชั่น (ถ้ามี)
+  //     if (appliedPromotion && appliedPromotion.code) {
+  //       formData.append("promotionCode", appliedPromotion.code);
+  //     }
+
+  //     const response = await axios.post(
+  //       "http://localhost:8000/reservations",
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       }
+  //     );
+
+  //     if (response.status === 201) {
+  //       setOpen(false);
+  //       setSelectedTimeSlots([]);
+  //       setSelectedFile(null);
+  //       setPromotionCode("");
+  //       setAppliedPromotion(null);
+
+  //       // รีเฟรชข้อมูลการจอง
+  //       if (showDate) {
+  //         fetchReservationData(showDate);
+  //       }
+
+  //       Swal.fire({
+  //         title: "จองสำเร็จ",
+  //         text: "การจองของคุณอยู่ในสถานะรอดำเนินการ",
+  //         icon: "success",
+  //         confirmButtonColor: "#3085d6",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error submitting reservation:", error);
+  //     Swal.fire({
+  //       title: "เกิดข้อผิดพลาด",
+  //       text: error.response?.data?.error || "ไม่สามารถทำการจองได้",
+  //       icon: "error",
+  //       confirmButtonColor: "#d33",
+  //     });
+  //   }
+  //   if (!selectedFile) {
+  //     Swal.fire({
+  //       title: "กรุณาแนบสลิปการโอนเงิน",
+  //       icon: "warning",
+  //     });
+  //     return;
+  //   }
+
+  //   // เพิ่ม console.log เพื่อดูค่า showDate ที่ได้รับจาก DatePickerDemo
+  //   console.log("Current showDate value:", showDate);
+
+  //   // ตรวจสอบว่ามีการเลือกวันที่หรือไม่ และแสดงค่าที่ได้
+  //   if (!showDate || !showDate.from) {
+  //     console.log("Date validation failed:", { showDate });
+  //     Swal.fire({
+  //       title: "กรุณาเลือกวันที่",
+  //       icon: "warning",
+  //     });
+  //     return;
+  //   }
+
+  //   if (selectedTimeSlots.length === 0) {
+  //     Swal.fire({
+  //       title: "กรุณาเลือกช่วงเวลา",
+  //       text: "กรุณาเลือกช่วงเวลาที่ต้องการจองอย่างน้อย 1 ช่วงเวลา",
+  //       icon: "warning",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     // สร้าง FormData สำหรับส่งไฟล์
+  //     const formData = new FormData();
+  //     formData.append("attachment", selectedFile);
+  //     // เพิ่มข้อมูลผู้ใช้
+  //     formData.append("userId", userData.id);
+  //     const reservationDate = showDate.from
+  //       ? `${showDate.from.getUTCFullYear()}-${String(
+  //           showDate.from.getUTCMonth() + 1
+  //         ).padStart(2, "0")}-${String(showDate.from.getUTCDate()).padStart(
+  //           2,
+  //           "0"
+  //         )}`
+  //       : new Date().toISOString().split("T")[0];
+
+  //     console.log("Formatted reservation date:", reservationDate);
+  //     formData.append("reservationDate", reservationDate);
+  //     // ส่ง selectedTimeSlots ทั้งหมดเป็น string
+  //     formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
+  //     // ส่ง courtId
+  //     formData.append("courtId", selectedTimeSlots[0].courtId);
+  //     // เพิ่ม statusId
+  //     formData.append("statusId", "2");
+
+  //     console.log("Sending reservation data:", {
+  //       userId: userData.id,
+  //       date: reservationDate,
+  //       selectedTimeSlots: selectedTimeSlots,
+  //       courtId: selectedTimeSlots[0].courtId,
+  //       statusId: 2,
+  //     });
+
+  //     // ส่งข้อมูลไปยัง API
+  //     const response = await axios.post(
+  //       "http://localhost:8000/reservation/reservations",
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //         withCredentials: true,
+  //       }
+  //     );
+
+  //     console.log("Reservation response:", response.data);
+
+  //     if (response.status >= 200 && response.status < 300) {
+  //       console.log("About to show success message");
+  //       console.log("Reservation success:", response.data);
+  //       setOpen(false);
+  //       setSelectedTimeSlots([]);
+  //       setSelectedFile(null);
+
+  //       try {
+  //         console.log("Attempting to show Swal");
+  //         Swal.fire({
+  //           title: "จองสนามสำเร็จ",
+  //           text: "กรุณารอการยืนยันจากแอดมิน",
+  //           icon: "success",
+  //         }).then(() => {
+  //           console.log("Swal completed");
+  //         });
+  //         console.log("Swal.fire called");
+  //       } catch (error) {
+  //         console.error("Error showing Swal:", error);
+  //       }
+
+  //       // รีเฟรชข้อมูลการจอง
+  //       // if (showDate?.from) {
+  //       //   const date = showDate.from.toISOString().split("T")[0];
+  //       //   const reservationResponse = await axios.get(
+  //       //     `http://localhost:8000/timeslot/gettimeslots?date=${date}`,
+  //       //     { withCredentials: true }
+  //       //   );
+  //       //   setReservationData(reservationResponse.data);
+  //       // }
+  //       // รีเฟรชข้อมูลการจอง
+  //       if (showDate?.from) {
+  //         // สร้างวันที่ที่ปรับแล้วเพื่อหลีกเลี่ยงปัญหา timezone
+  //         const adjustedDate = new Date(showDate.from);
+  //         adjustedDate.setHours(12, 0, 0, 0);
+
+  //         const year = adjustedDate.getFullYear();
+  //         const month = String(adjustedDate.getMonth() + 1).padStart(2, "0");
+  //         const day = String(adjustedDate.getDate()).padStart(2, "0");
+  //         const formattedDate = `${year}-${month}-${day}`;
+
+  //         console.log("รีเฟรชด้วยวันที่ที่จัดรูปแบบแล้ว:", formattedDate);
+
+  //         const reservationResponse = await axios.get(
+  //           `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
+  //           { withCredentials: true }
+  //         );
+  //         setReservationData(reservationResponse.data);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     // แก้ไขการจัดการข้อผิดพลาด
+  //     let errorMessage = "ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง";
+
+  //     // ตรวจสอบว่า error และ error.response มีค่าหรือไม่ก่อนเข้าถึง properties
+  //     if (error && error.response) {
+  //       if (error.response.data) {
+  //         errorMessage =
+  //           error.response.data.message ||
+  //           error.response.data.error ||
+  //           errorMessage;
+  //       }
+  //     }
+
+  //     Swal.fire({
+  //       title: "เกิดข้อผิดพลาด",
+  //       text: errorMessage,
+  //       icon: "error",
+  //     });
+  //   }
+  // };
   const handleSubmitReservation = async () => {
-    if (!selectedFile) {
-      Swal.fire({
-        title: "กรุณาแนบสลิปการโอนเงิน",
-        icon: "warning",
-      });
+    // ตรวจสอบข้อมูลผู้ใช้
+    if (!userData) {
+      setIsModalOpen(true);
       return;
     }
-
-    // เพิ่ม console.log เพื่อดูค่า showDate ที่ได้รับจาก DatePickerDemo
-    console.log("Current showDate value:", showDate);
-
-    // ตรวจสอบว่ามีการเลือกวันที่หรือไม่ และแสดงค่าที่ได้
+  
+    // ตรวจสอบวันที่
     if (!showDate || !showDate.from) {
-      console.log("Date validation failed:", { showDate });
       Swal.fire({
         title: "กรุณาเลือกวันที่",
         icon: "warning",
       });
       return;
     }
-
+  
+    // ตรวจสอบช่วงเวลา
     if (selectedTimeSlots.length === 0) {
       Swal.fire({
         title: "กรุณาเลือกช่วงเวลา",
@@ -143,45 +360,46 @@ export default function ReservationTable() {
       });
       return;
     }
-
-    try {
-      // สร้าง FormData สำหรับส่งไฟล์
-      const formData = new FormData();
-      formData.append("attachment", selectedFile);
-
-      // เพิ่มข้อมูลผู้ใช้
-      formData.append("userId", userData.id);
-
-      // ตรวจสอบและแปลงวันที่ให้ถูกต้อง
-      // const reservationDate = showDate.from.toISOString().split("T")[0];
-      // console.log("Formatted reservation date:", reservationDate);
-      // formData.append("reservationDate", reservationDate);
-      const reservationDate = showDate.from
-        ? `${showDate.from.getUTCFullYear()}-${String(
-            showDate.from.getUTCMonth() + 1
-          ).padStart(2, "0")}-${String(showDate.from.getUTCDate()).padStart(
-            2,
-            "0"
-          )}`
-        : new Date().toISOString().split("T")[0];
-
-      console.log("Formatted reservation date:", reservationDate);
-      formData.append("reservationDate", reservationDate);
-      // ส่ง selectedTimeSlots ทั้งหมดเป็น string
-      formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
-      // ส่ง courtId
-      formData.append("courtId", selectedTimeSlots[0].courtId);
-      // เพิ่ม statusId
-      formData.append("statusId", "2");
-
-      console.log("Sending reservation data:", {
-        userId: userData.id,
-        date: reservationDate,
-        selectedTimeSlots: selectedTimeSlots,
-        courtId: selectedTimeSlots[0].courtId,
-        statusId: 2,
+  
+    // ตรวจสอบไฟล์สลิป
+    if (!selectedFile) {
+      Swal.fire({
+        icon: "warning",
+        title: "กรุณาแนบสลิปการโอนเงิน",
+        text: "คุณต้องแนบสลิปการโอนเงินเพื่อยืนยันการจอง",
       });
-
+      return;
+    }
+  
+    try {
+      const formData = new FormData();
+  
+      // แนบไฟล์
+      formData.append("attachment", selectedFile);
+  
+      // แนบข้อมูลผู้ใช้
+      formData.append("userId", userData.id);
+  
+      // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
+      const reservationDate = `${showDate.from.getFullYear()}-${String(
+        showDate.from.getMonth() + 1
+      ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
+      formData.append("reservationDate", reservationDate);
+  
+      // แนบช่วงเวลาที่เลือก
+      formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
+  
+      // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
+      formData.append("courtId", selectedTimeSlots[0].courtId);
+  
+      // แนบสถานะ (2 = รอดำเนินการ)
+      formData.append("statusId", "2");
+  
+      // แนบรหัสโปรโมชั่นถ้ามี
+      if (appliedPromotion?.code) {
+        formData.append("promotionCode", appliedPromotion.code);
+      }
+  
       // ส่งข้อมูลไปยัง API
       const response = await axios.post(
         "http://localhost:8000/reservation/reservations",
@@ -193,73 +411,44 @@ export default function ReservationTable() {
           withCredentials: true,
         }
       );
-
-      console.log("Reservation response:", response.data);
-
+  
+      // ถ้าสำเร็จ
       if (response.status >= 200 && response.status < 300) {
-        console.log("About to show success message");
-        console.log("Reservation success:", response.data);
         setOpen(false);
         setSelectedTimeSlots([]);
         setSelectedFile(null);
-
-        try {
-          console.log("Attempting to show Swal");
-          Swal.fire({
-            title: "จองสนามสำเร็จ",
-            text: "กรุณารอการยืนยันจากแอดมิน",
-            icon: "success",
-          }).then(() => {
-            console.log("Swal completed");
-          });
-          console.log("Swal.fire called");
-        } catch (error) {
-          console.error("Error showing Swal:", error);
-        }
-
-        // รีเฟรชข้อมูลการจอง
-        // if (showDate?.from) {
-        //   const date = showDate.from.toISOString().split("T")[0];
-        //   const reservationResponse = await axios.get(
-        //     `http://localhost:8000/timeslot/gettimeslots?date=${date}`,
-        //     { withCredentials: true }
-        //   );
-        //   setReservationData(reservationResponse.data);
-        // }
-                // รีเฟรชข้อมูลการจอง
-                if (showDate?.from) {
-                  // สร้างวันที่ที่ปรับแล้วเพื่อหลีกเลี่ยงปัญหา timezone
-                  const adjustedDate = new Date(showDate.from);
-                  adjustedDate.setHours(12, 0, 0, 0);
-                  
-                  const year = adjustedDate.getFullYear();
-                  const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
-                  const day = String(adjustedDate.getDate()).padStart(2, '0');
-                  const formattedDate = `${year}-${month}-${day}`;
-                  
-                  console.log("รีเฟรชด้วยวันที่ที่จัดรูปแบบแล้ว:", formattedDate);
-                  
-                  const reservationResponse = await axios.get(
-                    `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
-                    { withCredentials: true }
-                  );
-                  setReservationData(reservationResponse.data);
-                }
+        setPromotionCode("");
+        setAppliedPromotion(null);
+  
+        Swal.fire({
+          title: "จองสนามสำเร็จ",
+          text: "กรุณารอการยืนยันจากแอดมิน",
+          icon: "success",
+        });
+  
+        // โหลดข้อมูลใหม่
+        const adjustedDate = new Date(showDate.from);
+        adjustedDate.setHours(12, 0, 0, 0);
+        const formattedDate = `${adjustedDate.getFullYear()}-${String(
+          adjustedDate.getMonth() + 1
+        ).padStart(2, "0")}-${String(adjustedDate.getDate()).padStart(2, "0")}`;
+  
+        const reservationResponse = await axios.get(
+          `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
+          { withCredentials: true }
+        );
+        setReservationData(reservationResponse.data);
       }
     } catch (error) {
-      // แก้ไขการจัดการข้อผิดพลาด
       let errorMessage = "ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง";
-
-      // ตรวจสอบว่า error และ error.response มีค่าหรือไม่ก่อนเข้าถึง properties
-      if (error && error.response) {
-        if (error.response.data) {
-          errorMessage =
-            error.response.data.message ||
-            error.response.data.error ||
-            errorMessage;
-        }
+  
+      if (error?.response?.data) {
+        errorMessage =
+          error.response.data.message ||
+          error.response.data.error ||
+          errorMessage;
       }
-
+  
       Swal.fire({
         title: "เกิดข้อผิดพลาด",
         text: errorMessage,
@@ -267,7 +456,7 @@ export default function ReservationTable() {
       });
     }
   };
-
+  
   const normalizeTime = (timeStr) => {
     if (!timeStr) return null;
     return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
@@ -309,10 +498,10 @@ export default function ReservationTable() {
       console.log("After removal:", newSelectedTimeSlots);
       setSelectedTimeSlots(newSelectedTimeSlots);
     } else {
-      if (selectedTimeSlots.length >= 3) {
+      if (selectedTimeSlots.length >= maxTimeSlots) {
         Swal.fire({
           title: "ไม่สามารถเลือกได้",
-          text: "คุณสามารถเลือกได้สูงสุด 3 ช่วงเวลาต่อวัน",
+          text: `คุณสามารถเลือกได้สูงสุด ${maxTimeSlots} ช่วงเวลาต่อวัน`,
           icon: "warning",
         });
         return;
@@ -377,34 +566,34 @@ export default function ReservationTable() {
     //   };
     //   fetchReservationData();
     // }
-        // เพิ่มการตรวจสอบว่า showDate มีค่าและมีวันที่ที่เลือกหรือไม่
-        if (showDate && showDate.from) {
-          console.log("เลือกวันที่ถูกต้อง:", showDate.from.toISOString());
-          // ดึงข้อมูลการจองตามวันที่ที่เลือก
-          const fetchReservationData = async () => {
-            try {
-              // สร้างวันที่ที่ปรับแล้วเพื่อหลีกเลี่ยงปัญหา timezone
-              const adjustedDate = new Date(showDate.from);
-              adjustedDate.setHours(12, 0, 0, 0);
-              
-              const year = adjustedDate.getFullYear();
-              const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
-              const day = String(adjustedDate.getDate()).padStart(2, '0');
-              const formattedDate = `${year}-${month}-${day}`;
-              
-              console.log("ดึงข้อมูลด้วยวันที่ที่จัดรูปแบบแล้ว:", formattedDate);
-              
-              const response = await axios.get(
-                `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
-                { withCredentials: true }
-              );
-              setReservationData(response.data);
-            } catch (error) {
-              console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
-            }
-          };
-          fetchReservationData();
+    // เพิ่มการตรวจสอบว่า showDate มีค่าและมีวันที่ที่เลือกหรือไม่
+    if (showDate && showDate.from) {
+      console.log("เลือกวันที่ถูกต้อง:", showDate.from.toISOString());
+      // ดึงข้อมูลการจองตามวันที่ที่เลือก
+      const fetchReservationData = async () => {
+        try {
+          // สร้างวันที่ที่ปรับแล้วเพื่อหลีกเลี่ยงปัญหา timezone
+          const adjustedDate = new Date(showDate.from);
+          adjustedDate.setHours(12, 0, 0, 0);
+
+          const year = adjustedDate.getFullYear();
+          const month = String(adjustedDate.getMonth() + 1).padStart(2, "0");
+          const day = String(adjustedDate.getDate()).padStart(2, "0");
+          const formattedDate = `${year}-${month}-${day}`;
+
+          console.log("ดึงข้อมูลด้วยวันที่ที่จัดรูปแบบแล้ว:", formattedDate);
+
+          const response = await axios.get(
+            `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`,
+            { withCredentials: true }
+          );
+          setReservationData(response.data);
+        } catch (error) {
+          console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
         }
+      };
+      fetchReservationData();
+    }
   }, [showDate]);
 
   useEffect(() => {
@@ -416,6 +605,10 @@ export default function ReservationTable() {
         if (!token) {
           setUserData(null);
           return;
+        }
+        const savedMaxTimeSlots = localStorage.getItem("maxTimeSlots");
+        if (savedMaxTimeSlots) {
+          setMaxTimeSlots(Number(savedMaxTimeSlots));
         }
 
         try {
@@ -592,25 +785,95 @@ export default function ReservationTable() {
   const redirectToLogin = () => {
     window.location.href = "/login";
   };
-
-  const isAdmin = userData?.roleId === 2 && !!userData?.id;
-
+  //role id =1 (แอดมิน)
+  const isAdmin = userData?.roleId === 1 && !!userData?.id;
   const isLoggedIn = !!userData?.id;
 
   const calculateTotalPrice = () => {
     let totalPrice = 0;
 
     selectedTimeSlots.forEach((slot) => {
-      // Find the court for this slot
       const court = reservationData.find(
         (c) => Number(c.id) === Number(slot.courtId)
       );
-      if (court && court.price) {
-        totalPrice += Number(court.price);
+      console.log("Court found:", court);
+      console.log("Court price:", court?.price);
+
+      // Ensure price is a valid number
+      if (court?.price != null) {
+        const price = Number(court.price);
+        if (!isNaN(price)) {
+          totalPrice += price;
+        }
       }
     });
 
-    return totalPrice.toLocaleString();
+    console.log("Before discount:", totalPrice);
+    console.log("Applied promotion:", appliedPromotion);
+
+    if (appliedPromotion && appliedPromotion.discount != null) {
+      const discountAmount = Number(appliedPromotion.discount);
+      if (!isNaN(discountAmount)) {
+        const discount = (totalPrice * discountAmount) / 100;
+        totalPrice = Math.max(0, totalPrice - discount); // Prevent negative prices
+      }
+    }
+
+    return isNaN(totalPrice) ? "0" : totalPrice.toLocaleString();
+  };
+
+  const [promotionCode, setPromotionCode] = useState("");
+  const [appliedPromotion, setAppliedPromotion] = useState(null);
+
+  // ปรับฟังก์ชัน validatePromotionCode ให้ตรวจสอบข้อจำกัดการใช้งาน
+  const validatePromotionCode = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/promotions/validate/${promotionCode}`
+      );
+
+      console.log("Promotion response:", response.data);
+
+      // ตรวจสอบข้อมูลโปรโมชั่น
+      const promotion = response.data?.promotion || response.data;
+
+      // ตรวจสอบว่าโปรโมชั่นยังใช้งานได้หรือไม่ (ไม่เกินจำนวนครั้งที่กำหนด)
+      if (
+        promotion &&
+        promotion.maxUses > 0 &&
+        promotion.usedCount >= promotion.maxUses
+      ) {
+        throw new Error("โปรโมชั่นนี้ถูกใช้งานครบตามจำนวนที่กำหนดแล้ว");
+      }
+
+      // ตรวจสอบว่า discount เป็นตัวเลขที่ถูกต้อง
+      if (
+        promotion &&
+        promotion.discount != null &&
+        !isNaN(Number(promotion.discount))
+      ) {
+        setAppliedPromotion(promotion);
+        Swal.fire({
+          icon: "success",
+          title: "ใช้โค้ดสำเร็จ",
+          text: `ส่วนลด ${promotion.discount}% (เหลือ ${
+            promotion.maxUses > 0
+              ? promotion.maxUses - promotion.usedCount
+              : "ไม่จำกัด"
+          } ครั้ง)`,
+        });
+      } else {
+        throw new Error("ข้อมูลส่วนลดไม่ถูกต้อง");
+      }
+    } catch (error) {
+      // console.error("Failed to apply promotion:", error);
+      setAppliedPromotion(null);
+      Swal.fire({
+        icon: "error",
+        title: "ไม่สามารถใช้โค้ดได้",
+        text: "รหัสโปรโมชั่นไม่ถูกต้องหรือหมดอายุ",
+      });
+    }
   };
 
   return (
@@ -650,6 +913,11 @@ export default function ReservationTable() {
                 // โหมดแสดงกฎ
                 <div className="space-y-3 text-gray-700 mb-6">
                   <p className="font-semibold text-lg text-red-600">
+                    จำนวนช่วงเวลาสูงสุดที่จองได้:
+                  </p>
+                  <p className="pl-4">{maxTimeSlots} ช่วงเวลาต่อวัน</p>
+
+                  <p className="font-semibold text-lg text-red-600">
                     กฎการจองสนาม:
                   </p>
                   <div className="pl-4 space-y-2">
@@ -660,7 +928,7 @@ export default function ReservationTable() {
                     ))}
                   </div>
 
-                  <p className="font-semibold text-lg text-red-600 mt-4">
+                  <p className="font-semibold text-lg text-red-600">
                     การชำระเงิน:
                   </p>
                   <div className="pl-4 space-y-2">
@@ -671,7 +939,7 @@ export default function ReservationTable() {
                     ))}
                   </div>
 
-                  <p className="font-semibold text-lg text-red-600 mt-4">
+                  <p className="font-semibold text-lg text-red-600">
                     สถานะการจอง:
                   </p>
                   <div className="pl-4 space-y-2">
@@ -685,7 +953,7 @@ export default function ReservationTable() {
                               ? "bg-red-500"
                               : "bg-gray-500"
                           } mr-2`}
-                        ></span>{" "}
+                        ></span>
                         {rule}
                       </p>
                     ))}
@@ -694,6 +962,26 @@ export default function ReservationTable() {
               ) : (
                 // โหมดแก้ไขกฎ
                 <div className="space-y-4 text-gray-700 mb-6">
+                  {/* เพิ่มส่วนนี้เป็นส่วนแรกในโหมดแก้ไข */}
+                  <div className="mb-4">
+                    <p className="font-semibold text-lg text-red-600">
+                      จำนวนช่วงเวลาสูงสุดที่จองได้:
+                    </p>
+                    <div className="pl-4 mt-2 flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={maxTimeSlots}
+                        onChange={(e) =>
+                          setMaxTimeSlots(Number(e.target.value))
+                        }
+                        className="border border-gray-300 rounded px-2 py-1 w-20"
+                      />
+                      <span className="text-gray-600">ช่วงเวลาต่อวัน</span>
+                    </div>
+                  </div>
+
                   <div>
                     <p className="font-semibold text-lg text-red-600">
                       กฎการจองสนาม:
@@ -1045,6 +1333,11 @@ export default function ReservationTable() {
                       "Pending"
                     ) : slot.statusId === 1 ? (
                       "Close"
+                    ) : // ✅ แสดงชื่อผู้จองอย่างถูกต้อง
+                    slot.reservations &&
+                      slot.reservations.length > 0 &&
+                      slot.reservations[0]?.user?.fname ? (
+                      slot.reservations[0].user.fname
                     ) : (
                       "Reserved"
                     )}
@@ -1114,19 +1407,37 @@ export default function ReservationTable() {
             </AlertDialog>
           )}
 
-          <Button
-            onClick={handleOpenDrawer}
-            className={`${
-              selectedTimeSlots.length === 0 ? "bg-gray-400" : "bg-red-500"
-            } text-white`}
-          >
-            จองสนาม{" "}
-            {selectedTimeSlots.length > 0
-              ? `(${
-                  selectedTimeSlots.length
-                } ชั่วโมง - ${calculateTotalPrice()} บาท)`
-              : ""}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleOpenDrawer}
+              className={`${
+                selectedTimeSlots.length === 0 ? "bg-gray-400" : "bg-red-500"
+              } text-white`}
+            >
+              จองสนาม{" "}
+              {selectedTimeSlots.length > 0
+                ? `(${
+                    selectedTimeSlots.length
+                  } ชั่วโมง - ${calculateTotalPrice()} บาท)`
+                : ""}
+            </Button>
+            <div className="flex gap-1">
+              <input
+                type="text"
+                placeholder="รหัสโปรโมชั่น"
+                value={promotionCode}
+                onChange={(e) => setPromotionCode(e.target.value)}
+                className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 w-28"
+              />
+              <Button
+                onClick={validatePromotionCode}
+                disabled={!promotionCode}
+                className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1"
+              >
+                ใช้โค้ด
+              </Button>
+            </div>
+          </div>
         </div>
         {userData ? (
           <DrawerContent>
@@ -1212,37 +1523,7 @@ export default function ReservationTable() {
       )}
 
       {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white py-12 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-4">เกี่ยวกับเรา</h3>
-            <p className="text-gray-300">
-              ให้บริการสนามแบดมินตันคุณภาพ พร้อมสิ่งอำนวยความสะดวกครบครัน
-              เพื่อประสบการณ์การเล่นที่ดีที่สุด
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-bold mb-4">ติดต่อเรา</h3>
-            <p className="text-gray-300 mb-2">โทร: 02-123-4567</p>
-            <p className="text-gray-300 mb-2">อีเมล: info@badminton.com</p>
-            <p className="text-gray-300">
-              ที่อยู่: 123 ถนนกีฬา เขตบางกะปิ กรุงเทพฯ
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-bold mb-4">เวลาทำการ</h3>
-            <p className="text-gray-300 mb-2">จันทร์ - ศุกร์: 08:00 - 22:00</p>
-            <p className="text-gray-300 mb-2">เสาร์ - อาทิตย์: 08:00 - 23:00</p>
-            <p className="text-gray-300">วันหยุดนักขัตฤกษ์: 09:00 - 22:00</p>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
-          <p>© 2023 สนามแบดมินตัน. สงวนลิขสิทธิ์ทั้งหมด.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

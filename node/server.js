@@ -2,6 +2,9 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 require("dotenv").config();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const bcrypt = require("bcrypt");
 const path = require('path');
 const authRouter = require("./routes/auth");
 const userRoutes = require("./routes/user");
@@ -13,6 +16,8 @@ const historyRoutes = require('./routes/historyRoutes');
 const courtRoutes = require("./routes/courtRoutes");
 const courteditname = require("./routes/courteditname");
 const roleRoutes = require('./routes/roleRoutes'); 
+const promotionRoutes = require('./routes/promotion');
+
 const app = express();
 const port = 8000;
 const reportsRouter = require('./routes/reports');
@@ -35,6 +40,7 @@ app.use("/courts", courtRoutes);
 app.use("/courteditname", courteditname);
 app.use('/roles', roleRoutes); 
 app.use('/reports', reportsRouter);
+app.use('/promotions', promotionRoutes);
 // ให้บริการไฟล์จากโฟลเดอร์ uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Custom error handling for Multer
@@ -64,15 +70,15 @@ app.get('/uploads/:filename', (req, res) => {
 const cron = require('node-cron');
 
 // เรียกฟังก์ชันทันทีเมื่อเริ่มต้นแอปพลิเคชัน
-(async () => {
-  try {
-    console.log('กำลังสร้าง time slots สำหรับ 7 วันถัดไปเป็นครั้งแรก...');
-    await createTimeSlotsForDateController();
-    console.log('สร้าง time slots ครั้งแรกสำเร็จ');
-  } catch (error) {
-    console.error('Initial timeslot creation failed:', error);
-  }
-})();
+// (async () => {
+//   try {
+//     console.log('กำลังสร้าง time slots สำหรับ 7 วันถัดไปเป็นครั้งแรก...');
+//     await createTimeSlotsForDateController();
+//     console.log('สร้าง time slots ครั้งแรกสำเร็จ');
+//   } catch (error) {
+//     console.error('Initial timeslot creation failed:', error);
+//   }
+// })();
 
 // ตั้งเวลาให้ทำงานทุกวันตอนเที่ยงคืน
 cron.schedule('0 0 * * *', async () => {
@@ -86,6 +92,76 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 
+// ฟังก์ชันสำหรับสมัครแอดมิน
+const ensureAdminExists = async () => {
+  const email = process.env.USER;
+  const password = process.env.PASS;
+
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      console.log(`✔️ Admin user (${email}) already exists`);
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.$transaction(async (prisma) => {
+      const newUser = await prisma.user.create({
+        data: { email, password: hashedPassword },
+      });
+
+      let memberRole = await prisma.role.findUnique({
+        where: { name: 'แอดมิน' },
+      });
+
+      if (!memberRole) {
+        memberRole = await prisma.role.create({
+          data: { name: 'แอดมิน' },
+        });
+      }
+
+      await prisma.userRoles.create({
+        data: {
+          userId: newUser.id,
+          roleId: memberRole.id,
+        },
+      });
+
+      console.log(`✅ Created admin user: ${email}`);
+    });
+  } catch (err) {
+    console.error('❌ Error ensuring admin exists:', err);
+  }
+};
+ensureAdminExists();
+
+// ฟังก์ชันสำหรับสร้างสถานะ
+const ensureReservationStatuses = async () => {
+  const statuses = [
+    process.env.STATUS_1,
+    process.env.STATUS_2,
+    process.env.STATUS_3,
+    process.env.STATUS_4,
+    process.env.STATUS_5,
+  ];
+
+  try {
+    for (const name of statuses) {
+      const existing = await prisma.reservation_status.findFirst({ where: { name } });
+      if (!existing) {
+        await prisma.reservation_status.create({ data: { name } });
+        console.log(`✅ สร้างสถานะใหม่: ${name}`);
+      } else {
+        console.log(`✔️ มีสถานะอยู่แล้ว: ${name}`);
+      }
+    }
+  } catch (err) {
+    console.error("❌ เกิดข้อผิดพลาดในการสร้างสถานะ:", err);
+  }
+};
+ensureReservationStatuses();
 
 
 

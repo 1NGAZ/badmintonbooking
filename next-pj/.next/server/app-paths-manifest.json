@@ -1,7 +1,8 @@
 {
+  "/Reservation/page": "app/Reservation/page.js",
+  "/adminmenu/page": "app/adminmenu/page.js",
+  "/edituser/page": "app/edituser/page.js",
   "/adminedit/page": "app/adminedit/page.js",
   "/promotion/page": "app/promotion/page.js",
-  "/adminmenu/page": "app/adminmenu/page.js",
-  "/Income/page": "app/Income/page.js",
-  "/Reservation/page": "app/Reservation/page.js"
+  "/Income/page": "app/Income/page.js"
 }

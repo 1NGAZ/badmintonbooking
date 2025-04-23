@@ -127,6 +127,7 @@ router.delete("/:courtId", async (req, res) => {
         res.status(500).json({ error: "ไม่สามารถลบสนามได้" });
     }
 });
+
 router.post("/", async (req, res) => {
   try {
     const { name, price, detail } = req.body;
@@ -197,4 +198,7 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "ไม่สามารถสร้างสนามได้" });
   }
 });
+
+
+
 module.exports = router;

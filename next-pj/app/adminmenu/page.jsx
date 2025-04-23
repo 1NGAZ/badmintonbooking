@@ -31,8 +31,8 @@ const Page = () => {
           }
         );
 
-        // ตรวจสอบว่าเป็น admin (roleId === 2) หรือไม่
-        const isAdmin = userResponse.data?.roles?.some((role) => role.id === 2);
+        // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
+        const isAdmin = userResponse.data?.roles?.some((role) => role.id === 1);
 
         if (!isAdmin) {
           setError(
@@ -53,7 +53,19 @@ const Page = () => {
           throw new Error(response.data.error);
         }
 
-        setReservations(response.data.groupedReservations || []);
+        // ตรวจสอบข้อมูลที่ได้รับจาก API
+        console.log("Reservation data:", response.data.groupedReservations);
+
+        // ปรับปรุงข้อมูลราคาถ้าจำเป็น
+        const updatedReservations = response.data.groupedReservations.map(reservation => {
+          // ถ้ามีข้อมูลส่วนลดแต่ไม่มีราคาหลังส่วนลด ให้คำนวณราคาหลังส่วนลด
+          if (reservation.discountAmount > 0 && reservation.discountedPrice === undefined) {
+            reservation.discountedPrice = reservation.totalPrice - reservation.discountAmount;
+          }
+          return reservation;
+        });
+
+        setReservations(updatedReservations || []);
       } catch (error) {
         if (error?.response?.status === 401) {
           router.push("/login");
@@ -281,7 +293,6 @@ const Page = () => {
               </li>
               <li className="text-red-600 font-medium">คำขอที่รออนุมัติ</li>
             </ul>
-            
           </div>
         </div>
 
@@ -311,8 +322,19 @@ const Page = () => {
                   href="/adminedit"
                   className="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors duration-200"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 mr-2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
+                    />
                   </svg>
                   จัดการสิทธิ์ผู้ใช้งาน
                 </Link>
@@ -322,8 +344,19 @@ const Page = () => {
                   href="/adminmenu"
                   className="flex items-center p-3 rounded-lg bg-red-50 text-red-600 font-medium transition-colors duration-200"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 mr-2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"
+                    />
                   </svg>
                   คำขอที่รออนุมัติ
                 </Link>
@@ -333,8 +366,19 @@ const Page = () => {
                   href="/Income"
                   className="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors duration-200"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 mr-2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                    />
                   </svg>
                   รายงาน
                 </Link>
@@ -344,9 +388,24 @@ const Page = () => {
                   href="/promotion"
                   className="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors duration-200"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 mr-2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                   จัดการโปรโมชั่น
                 </Link>
@@ -460,12 +519,20 @@ const Page = () => {
                         <tr>
                           <th className="px-4 py-3 w-12 text-center">#</th>
                           <th className="px-4 py-3">สนาม</th>
-                          <th className="hidden sm:table-cell px-4 py-3">ผู้จอง</th>
-                          <th className="hidden md:table-cell px-4 py-3">เบอร์โทร</th>
+                          <th className="hidden sm:table-cell px-4 py-3">
+                            ผู้จอง
+                          </th>
+                          <th className="hidden md:table-cell px-4 py-3">
+                            เบอร์โทร
+                          </th>
                           <th className="px-4 py-3">ช่วงเวลา</th>
-                          <th className="hidden sm:table-cell px-4 py-3 text-center">ชั่วโมง</th>
+                          <th className="hidden sm:table-cell px-4 py-3 text-center">
+                            ชั่วโมง
+                          </th>
                           <th className="px-4 py-3 text-right">ราคา</th>
-                          <th className="hidden sm:table-cell px-4 py-3 text-center">หลักฐาน</th>
+                          <th className="hidden sm:table-cell px-4 py-3 text-center">
+                            หลักฐาน
+                          </th>
                           <th className="px-4 py-3 text-center">จัดการ</th>
                         </tr>
                       </thead>
@@ -499,7 +566,7 @@ const Page = () => {
                                   {new Date(item.start_time).toLocaleString(
                                     "th-TH",
                                     {
-                                      timeZone: "UTC",
+                                      timeZone: "Asia/Bangkok",
                                       year: "numeric",
                                       month: "short",
                                       day: "numeric",
@@ -513,7 +580,7 @@ const Page = () => {
                                   {new Date(item.end_time).toLocaleString(
                                     "th-TH",
                                     {
-                                      timeZone: "UTC",
+                                      timeZone: "Asia/Bangkok",
                                       hour: "2-digit",
                                       minute: "2-digit",
                                     }
@@ -525,10 +592,40 @@ const Page = () => {
                               {item.totalHours}
                             </td>
                             <td className="px-4 py-3 text-right text-xs sm:text-sm font-medium">
-                              {new Intl.NumberFormat("th-TH", {
-                                style: "currency",
-                                currency: "THB",
-                              }).format(item.totalPrice)}
+                              {item.discountedPrice !== undefined && item.discountedPrice !== item.totalPrice ? (
+                                <>
+                                  <div className="line-through text-gray-400">
+                                    {new Intl.NumberFormat("th-TH", {
+                                      style: "currency",
+                                      currency: "THB",
+                                    }).format(item.totalPrice)}
+                                  </div>
+                                  <div className="text-red-600 font-semibold">
+                                    {new Intl.NumberFormat("th-TH", {
+                                      style: "currency",
+                                      currency: "THB",
+                                    }).format(item.discountedPrice)}
+                                  </div>
+                                </>
+                              ) : (
+                                new Intl.NumberFormat("th-TH", {
+                                  style: "currency",
+                                  currency: "THB",
+                                }).format(item.totalPrice)
+                              )}
+                              {item.discountAmount > 0 && (
+                                <div className="text-green-600 text-xs">
+                                  ส่วนลด: {new Intl.NumberFormat("th-TH", {
+                                    style: "currency",
+                                    currency: "THB",
+                                  }).format(item.discountAmount)}
+                                </div>
+                              )}
+                              {item.promotionCode && (
+                                <div className="text-xs text-gray-500">
+                                  โค้ด: {item.promotionCode}
+                                </div>
+                              )}
                             </td>
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm">
                               <a
@@ -569,11 +666,14 @@ const Page = () => {
                                   อนุมัติ
                                 </button>
                                 <button
-                                  onClick={() => handleReject(item.reservationId)}
+                                  onClick={() =>
+                                    handleReject(item.reservationId)
+                                  }
                                   className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors duration-200 text-xs sm:text-sm"
                                   disabled={loading}
                                 >
                                   ปฏิเสธ
+��
                                 </button>
                               </div>
                             </td>

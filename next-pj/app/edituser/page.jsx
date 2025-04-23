@@ -373,56 +373,6 @@ const Page = () => {
                 </div>
               </div>
             </div>
-
-            {/* Change Password */}
-            <div className="mt-8">
-              <div className="flex items-center mb-6">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-gray-600"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
-                  />
-                </svg>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">เปลี่ยนรหัสผ่าน</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">รหัสผ่านปัจจุบัน</label>
-                  <input
-                    type="password"
-                    placeholder="กรอกรหัสผ่านปัจจุบัน"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">รหัสผ่านใหม่</label>
-                  <input
-                    type="password"
-                    placeholder="กรอกรหัสผ่านใหม่"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">ยืนยันรหัสผ่านใหม่</label>
-                  <input
-                    type="password"
-                    placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-              </div>
-              <button className="mt-6 w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition-colors duration-200">
-                เปลี่ยนรหัสผ่าน
-              </button>
-            </div>
           </main>
         </div>
       </div>

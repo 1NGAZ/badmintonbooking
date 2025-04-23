@@ -1,4 +1,4 @@
-// File: C:\Users\COM-GARAGE\Desktop\nextnode\next-pj\app\Income\page.jsx
+// File: C:\Users\COM-GARAGE\Documents\GitHub\badmintonbooking\next-pj\app\Income\page.jsx
 import * as entry from '../../../../app/Income/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

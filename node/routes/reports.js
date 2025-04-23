@@ -39,6 +39,7 @@ router.get('/income', authenticateUser, isAdmin, async (req, res) => {
     console.log('Query Params:', { startDate, endDate });
     console.log('Date Condition:', dateCondition);
 
+    // Update the promotion include section to use the correct field names
     const bookings = await prisma.reservation.findMany({
       where: {
         statusId: 3,
@@ -65,6 +66,17 @@ router.get('/income', authenticateUser, isAdmin, async (req, res) => {
             start_time: true,
             end_time: true
           }
+        },
+        // Fix the promotion fields to match your schema
+        promotion: {
+          select: {
+            id: true,
+            code: true,
+            // Replace with your actual field names
+            discount: true,  // Instead of discountValue
+            title: true,
+            description: true
+          }
         }
       },
       orderBy: {
@@ -86,6 +98,7 @@ router.get('/income', authenticateUser, isAdmin, async (req, res) => {
         bookingGroups[key] = {
           bookings: [],
           totalAmount: 0,
+          discountedAmount: 0,
           earliestStartTime: booking.timeSlot?.start_time,
           latestEndTime: booking.timeSlot?.end_time
         };
@@ -101,7 +114,22 @@ router.get('/income', authenticateUser, isAdmin, async (req, res) => {
       }
       
       bookingGroups[key].bookings.push(booking);
-      bookingGroups[key].totalAmount += Number(booking.court.price);
+      
+      // คำนวณราคาปกติ
+      const regularPrice = Number(booking.court.price);
+      bookingGroups[key].totalAmount += regularPrice;
+      
+      // คำนวณราคาหลังส่วนลด (ถ้ามีโปรโมชัน)
+      let finalPrice = regularPrice;
+      if (booking.promotion) {
+        // Check if the promotion has a discount
+        if (booking.promotion.discount) {
+          // Assuming discount is stored as a percentage value
+          const discountPercentage = Number(booking.promotion.discount);
+          finalPrice = regularPrice * (1 - discountPercentage / 100);
+        }
+      }
+      bookingGroups[key].discountedAmount += finalPrice;
     });
     
     // สร้าง transactions จากกลุ่มการจอง
@@ -112,7 +140,8 @@ router.get('/income', authenticateUser, isAdmin, async (req, res) => {
         reservationId: firstBooking.id,
         type: 'income',
         category: 'booking',
-        amount: group.totalAmount, // ใช้ยอดรวมของกลุ่ม
+        amount: group.totalAmount, // ราคาปกติ
+        discountedAmount: group.discountedAmount, // ราคาหลังส่วนลด
         description: `การจองสนาม ${firstBooking.court?.name || ''} (${group.bookings.length} รายการ)`,
         status: 'อนุมัติ',
         createdAt: firstBooking.timeSlot?.start_time || new Date(),
@@ -122,7 +151,9 @@ router.get('/income', authenticateUser, isAdmin, async (req, res) => {
           start_time: group.earliestStartTime,
           end_time: group.latestEndTime
         },
-        utcDate: firstBooking.timeSlot?.start_time
+        utcDate: firstBooking.timeSlot?.start_time,
+        // เพิ่มข้อมูลโปรโมชัน (ถ้ามี)
+        promotion: firstBooking.promotion
       };
     });
 

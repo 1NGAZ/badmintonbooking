@@ -73,13 +73,14 @@ model Reservation {
   courtId      Int                 
   timeSlotId   Int                
   statusId     Int                 
-  
+  promotionId  Int?
+
   attachment  String
   user         User                @relation(fields: [userId], references: [id]) 
   court        Court               @relation(fields: [courtId], references: [id])   
   status       Reservation_status  @relation(fields: [statusId], references: [id])  
   timeSlot     TimeSlot            @relation(fields: [timeSlotId], references: [id]) 
-        
+  promotion    Promotion?          @relation(fields: [promotionId], references: [id])  // ความสัมพันธ์กับโปรโมชั่น
 }
 
 model Reservation_status {
@@ -91,5 +92,19 @@ model Reservation_status {
   TimeSlot TimeSlot[]
 }
 
+model Promotion {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  discount    Decimal
+  code        String    @unique
+  startDate   DateTime
+  endDate     DateTime
+  status      String    // 'active' หรือ 'inactive'
+  maxUses     Int       @default(0) // จำนวนครั้งสูงสุดที่สามารถใช้คูปองได้ (0 = ไม่จำกัด)
+  usedCount   Int       @default(0) // จำนวนครั้งที่คูปองถูกใช้ไปแล้ว
 
+  // ความสัมพันธ์กับการจอง
+  reservations Reservation[]
+}
 

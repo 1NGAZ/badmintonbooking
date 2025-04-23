@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -48,106 +47,120 @@ const Page = () => {
   useEffect(() => {
     const checkLoginAndFetchData = async () => {
       try {
-        const token = sessionStorage.getItem("authToken");
-        console.log("Token:", token);
-        if (!token) {
-          console.error("No token found in sessionStorage");
-          router.push("/login");
-          return;
-        }
-
-        console.log("Token ที่จะใช้:", token);
-
-        // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
-        const userResponse = await axios.get(
-          "http://localhost:8000/user/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
+        if (typeof window !== "undefined") {
+          const token = sessionStorage.getItem("authToken");
+          console.log("Token:", token);
+          if (!token) {
+            console.error("No token found in sessionStorage");
+            router.push("/login");
+            return;
           }
-        );
 
-        // ตรวจสอบว่าเป็น admin (roleId === 2) หรือไม่
-        const isAdmin = userResponse.data?.roles?.some((role) => role.id === 2);
+          console.log("Token ที่จะใช้:", token);
 
-        if (!isAdmin) {
-          Swal.fire({
-            title: "ไม่มีสิทธิ์เข้าถึง",
-            text: "คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้ (ต้องเป็นผู้ดูแลระบบเท่านั้น)",
-            icon: "error",
-            confirmButtonText: "กลับไปหน้าหลัก",
-          });
-          setTimeout(() => router.push("/"), 2000);
-          return;
-        }
-
-        console.log(
-          "กำลังเรียก API reports/income ด้วย token:",
-          token.substring(0, 20) + "..."
-        ); // เพิ่มบรรทัดนี้
-
-        // สร้าง headers object แยกเพื่อให้แน่ใจว่าถูกต้อง
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        };
-
-        console.log("Headers ที่ส่งไป:", headers); // เพิ่มบรรทัดนี้
-
-        const response = await axios.get(
-          "http://localhost:8000/reports/income",
-          {
-            headers: headers,
-            params: {
-              startDate: dateRange.from
-                ? new Date(dateRange.from).toISOString().split("T")[0]
-                : undefined,
-              endDate: dateRange.to
-                ? new Date(dateRange.to).toISOString().split("T")[0]
-                : undefined,
-            },
-          }
-        );
-
-        if (response.data.error) {
-          throw new Error(response.data.error);
-        }
-
-        setTransactions(response.data.transactions || []);
-
-        // คำนวณสรุปข้อมูล
-        const totalIncome = response.data.transactions
-          .filter((item) => item.type === "income")
-          .reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-
-        // กำหนดให้รายจ่ายเป็น 0
-        const totalExpense = 0;
-
-        const totalBookings = response.data.transactions.filter(
-          (item) => item.type === "income" && item.category === "booking"
-        ).length;
-
-        setSummary({
-          totalIncome,
-          totalExpense,
-          netIncome: totalIncome - totalExpense,
-          totalBookings,
-        });
-
-        // สร้างข้อมูลสำหรับกราฟ
-        processChartData(response.data.transactions);
-      } catch (error) {
-        if (error?.response?.status === 401) {
-          router.push("/login");
-        } else {
-          setError(
-            error?.response?.data?.message ||
-              error.message ||
-              "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"
+          // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
+          const userResponse = await axios.get(
+            "http://localhost:8000/user/profile",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
           );
+
+          // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
+          const isAdmin = userResponse.data?.roles?.some(
+            (role) => role.id === 1
+          );
+
+          if (!isAdmin) {
+            Swal.fire({
+              title: "ไม่มีสิทธิ์เข้าถึง",
+              text: "คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้ (ต้องเป็นผู้ดูแลระบบเท่านั้น)",
+              icon: "error",
+              confirmButtonText: "กลับไปหน้าหลัก",
+            });
+            setTimeout(() => router.push("/"), 2000);
+            return;
+          }
+
+          console.log(
+            "กำลังเรียก API reports/income ด้วย token:",
+            token.substring(0, 20) + "..."
+          );
+
+          // สร้าง headers object แยกเพื่อให้แน่ใจว่าถูกต้อง
+          const headers = {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          };
+
+          console.log("Headers ที่ส่งไป:", headers);
+
+          const response = await axios.get(
+            "http://localhost:8000/reports/income",
+            {
+              headers: headers,
+              params: {
+                startDate: dateRange.from
+                  ? new Date(dateRange.from).toISOString().split("T")[0]
+                  : undefined,
+                endDate: dateRange.to
+                  ? new Date(dateRange.to).toISOString().split("T")[0]
+                  : undefined,
+              },
+            }
+          );
+
+          if (response.data.error) {
+            throw new Error(response.data.error);
+          }
+
+          setTransactions(response.data.transactions || []);
+
+          // คำนวณสรุปข้อมูล
+          const totalIncome = response.data.transactions
+            .filter((item) => item.type === "income")
+            .reduce((sum, item) => {
+              // ใช้ discountedAmount ถ้ามี หรือใช้ amount ถ้าไม่มี
+              const finalAmount =
+                item.discountedAmount !== undefined &&
+                item.discountedAmount !== null
+                  ? parseFloat(item.discountedAmount)
+                  : parseFloat(item.amount || 0);
+              return sum + finalAmount;
+            }, 0);
+          // กำหนดให้รายจ่ายเป็น 0
+          const totalExpense = 0;
+
+          const totalBookings = response.data.transactions.filter(
+            (item) => item.type === "income" && item.category === "booking"
+          ).length;
+
+          setSummary({
+            totalIncome,
+            totalExpense,
+            netIncome: totalIncome - totalExpense,
+            totalBookings,
+          });
+
+          // สร้างข้อมูลสำหรับกราฟ
+          processChartData(response.data.transactions);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        if (typeof window !== "undefined") {
+          if (error?.response?.status === 401) {
+            router.push("/login");
+          } else {
+            setError(
+              error?.response?.data?.message ||
+                error.message ||
+                "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้"
+            );
+          }
         }
       } finally {
         setLoading(false);
@@ -156,7 +169,6 @@ const Page = () => {
 
     checkLoginAndFetchData();
   }, [router, dateRange]);
-
   // ฟังก์ชันสำหรับประมวลผลข้อมูลกราฟ
   const processChartData = (transactions) => {
     // สร้างแผนที่วันที่
@@ -247,28 +259,38 @@ const Page = () => {
 
     // ส่วนที่เหลือยยยังคงเหมือนเดิม
     filtered.forEach((item) => {
+      // ใช้ discountedAmount ถ้ามี หรือใช้ amount ถ้าไม่มี
+      const finalAmount =
+        item.discountedAmount !== undefined && item.discountedAmount !== null
+          ? parseFloat(item.discountedAmount)
+          : parseFloat(item.amount || 0);
+
       if (item.reservationId) {
         if (!reservationMap.has(item.reservationId)) {
           reservationMap.set(item.reservationId, {
             ...item,
-            totalAmount: parseFloat(item.amount || 0),
+            // ใช้ราคาหลังหักส่วนลดเป็นยอดเงินที่แสดง
+            totalAmount: finalAmount,
+            // เก็บค่าเดิมไว้ด้วยเผื่อต้องใช้
+            originalAmount: parseFloat(item.amount || 0),
           });
         } else {
           const existingItem = reservationMap.get(item.reservationId);
-          existingItem.totalAmount += parseFloat(item.amount || 0);
+          existingItem.totalAmount += finalAmount;
+          existingItem.originalAmount += parseFloat(item.amount || 0);
         }
       } else {
         // ถ้าไม่มี reservationId ให้ใช้ id ของรายการเป็น key
         reservationMap.set(item.id, {
           ...item,
-          totalAmount: parseFloat(item.amount || 0),
+          totalAmount: finalAmount,
+          originalAmount: parseFloat(item.amount || 0),
         });
       }
     });
 
     return Array.from(reservationMap.values());
   }, [transactions, searchTerm]);
-
   // คำนวณข้อมูลสำหรับหน้าปัจจุบัน
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -867,14 +889,26 @@ const Page = () => {
                           <table className="min-w-full text-sm text-left text-gray-700">
                             <thead className="text-xs uppercase bg-gray-50 text-gray-700 border-t border-b">
                               <tr>
-                                <th className="px-4 py-3 w-12 text-center">#</th>
+                                <th className="px-4 py-3 w-12 text-center">
+                                  #
+                                </th>
                                 <th className="px-4 py-3">วันที่</th>
-                                <th className="hidden sm:table-cell px-4 py-3">เวลาเริ่ม</th>
-                                <th className="hidden sm:table-cell px-4 py-3">เวลาสิ้นสุด</th>
+                                <th className="hidden sm:table-cell px-4 py-3">
+                                  เวลาเริ่ม
+                                </th>
+                                <th className="hidden sm:table-cell px-4 py-3">
+                                  เวลาสิ้นสุด
+                                </th>
                                 <th className="px-4 py-3">ประเภท</th>
-                                <th className="hidden md:table-cell px-4 py-3">สนาม</th>
-                                <th className="hidden md:table-cell px-4 py-3">ผู้ทำรายการ</th>
-                                <th className="px-4 py-3 text-right">จำนวนเงิน</th>
+                                <th className="hidden md:table-cell px-4 py-3">
+                                  สนาม
+                                </th>
+                                <th className="hidden md:table-cell px-4 py-3">
+                                  ผู้ทำรายการ
+                                </th>
+                                <th className="px-4 py-3 text-right">
+                                  จำนวนเงิน
+                                </th>
                                 <th className="px-4 py-3 text-center">สถานะ</th>
                               </tr>
                             </thead>
@@ -891,7 +925,8 @@ const Page = () => {
                                   </td>
                                   <td className="px-4 py-3 text-xs sm:text-sm">
                                     {formatDate(
-                                      item.createdAt || item.timeSlot?.start_time
+                                      item.createdAt ||
+                                        item.timeSlot?.start_time
                                     )}
                                   </td>
                                   <td className="hidden sm:table-cell px-4 py-3 text-xs sm:text-sm">
@@ -902,7 +937,7 @@ const Page = () => {
                                           hour: "2-digit",
                                           minute: "2-digit",
                                           hour12: false,
-                                          timeZone: "UTC",
+                                          timeZone: "Asia/Bangkok",
                                         })
                                       : "-"}
                                   </td>
@@ -914,7 +949,7 @@ const Page = () => {
                                           hour: "2-digit",
                                           minute: "2-digit",
                                           hour12: false,
-                                          timeZone: "UTC",
+                                          timeZone: "Asia/Bangkok",
                                         })
                                       : "-"}
                                   </td>
@@ -976,7 +1011,10 @@ const Page = () => {
                             </tbody>
                             <tfoot className="bg-gray-50 font-medium text-gray-900 border-t border-b">
                               <tr>
-                                <td colSpan="6" className="px-4 py-3 text-right text-xs sm:text-sm">
+                                <td
+                                  colSpan="6"
+                                  className="px-4 py-3 text-right text-xs sm:text-sm"
+                                >
                                   รวมทั้งสิ้น:
                                 </td>
                                 <td className="px-4 py-3 text-right text-xs sm:text-sm">

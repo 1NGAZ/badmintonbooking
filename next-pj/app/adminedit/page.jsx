@@ -38,7 +38,7 @@ const Page = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const isAdmin = userResponse.data?.roles?.some((role) => role.id === 2);
+        const isAdmin = userResponse.data?.roles?.some((role) => role.id === 1);
         
         if (!isAdmin) {
           setError("คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้ (ต้องเป็นผู้ดูแลระบบเท่านั้น)");
@@ -61,8 +61,8 @@ const Page = () => {
         
         // กำหนดค่า roles เริ่มต้น
         setRoles([
-          { id: 1, name: "User" },
-          { id: 2, name: "Admin" }
+          { id: 1, name: "Admin" },
+          { id: 2, name: "User" }
         ]);
       } catch (error) {
         if (error?.response?.status === 401) {

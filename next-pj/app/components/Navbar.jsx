@@ -55,20 +55,19 @@ export default function Navbar() {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // ตรวจสอบว่าเป็น admin (roleId === 2) หรือไม่
-  const isAdmin = userData?.userRoles?.some((userRole) => userRole.roleId === 2);
+  // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
+  const isAdmin = userData?.userRoles?.some((userRole) => userRole.roleId === 1);
 
   return (
     <nav className="flex justify-between items-center bg-gradient-to-r from-red-600 to-red-800 p-2 md:p-4 w-full fixed top-0 z-50 shadow-md">
       <div className="flex items-center">
         <Link
-          href="/home"
+          href="/"
           className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold ml-2 text-shadow-lg hover:text-[#f0f0f0] transition-colors duration-300"
         >
           BADMINTON CLUB
         </Link>
       </div>
-      
       {/* Mobile Menu Button */}
       <button 
         className="md:hidden text-white p-2 rounded-md hover:bg-red-700 transition-colors duration-300"

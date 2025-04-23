@@ -112,18 +112,6 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-end gap-4 mt-6">
-                <div>
-                  <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()} // ป้องกันการรีเฟรชหน้าจากการคลิก
-                    className="text-blue-600 font-semibold text-sm hover:underline"
-                  >
-                    ลืมรหัสผ่าน?
-                  </a>
-                </div>
-              </div>
-
               <div className="mt-12">
                 <button
                   type="submit"
