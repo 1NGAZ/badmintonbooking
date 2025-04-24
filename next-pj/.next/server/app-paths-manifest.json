@@ -1,11 +1,9 @@
 {
-  "/reservationhistory/page": "app/reservationhistory/page.js",
-  "/page": "app/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/Reservation/page": "app/Reservation/page.js",
+  "/promotion/page": "app/promotion/page.js",
   "/login/page": "app/login/page.js",
   "/edituser/page": "app/edituser/page.js",
-  "/Reservation/page": "app/Reservation/page.js",
-  "/adminmenu/page": "app/adminmenu/page.js",
-  "/adminedit/page": "app/adminedit/page.js",
-  "/Income/page": "app/Income/page.js",
-  "/promotion/page": "app/promotion/page.js"
+  "/adminmenu/page": "app/adminmenu/page.js"
 }

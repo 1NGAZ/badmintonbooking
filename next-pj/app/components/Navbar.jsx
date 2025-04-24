@@ -23,7 +23,7 @@ export default function Navbar() {
       console.log({ message: error });
     }
   };
-
+  
   const handleLogout = async () => {
     try {
       // เรียก API logout
@@ -47,6 +47,7 @@ export default function Navbar() {
   useEffect(() => {
     fetchUserData();
   }, []);
+  console.log(userData);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);

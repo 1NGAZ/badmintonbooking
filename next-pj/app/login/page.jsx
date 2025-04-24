@@ -38,7 +38,6 @@ export default function LoginPage() {
         throw new Error("เกิดข้อผิดพลาดในระบบ");
       } 
   
-      // ใช้ sessionStorage แทน localStorage
       sessionStorage.setItem("authToken", response.data.token); // เก็บ token ใน sessionStorage
       window.location.href = "/Reservation"; // เปลี่ยนหน้าไปที่ Reservation
     } catch (error) {
