@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 export function DatePickerDemo({ className, setReservationData, setShowDate }) {
   const [date, setDate] = useState({
@@ -22,34 +23,6 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
     to: addDays(new Date(), 7),
   });
 
-  // useEffect(() => {
-  //   setShowDate(date);
-  //   // ตรวจสอบว่า date มีค่าหรือไม่
-  //   if (date && (date.from || date.to)) {
-  //     // Fix timezone issues by explicitly setting the date parts
-  //     const selectedDate = date.from || date.to;
-  //     const year = selectedDate.getFullYear();
-  //     const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-  //     const day = String(selectedDate.getDate()).padStart(2, "0");
-  //     const formattedDate = `${year}-${month}-${day}`;
-
-  //     console.log("Selected date:", selectedDate);
-  //     console.log("Formatted date for API:", formattedDate);
-
-  //     const fetchData = async () => {
-  //       try {
-  //         const response = await axios.get(
-  //           `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`
-  //         );
-  //         setReservationData(response.data);
-  //       } catch (error) {
-  //         console.error("Error fetching data:", error);
-  //       }
-  //     };
-
-  //     fetchData();
-  //   }
-  // }, [date, setReservationData, setShowDate]);
   useEffect(() => {
     setShowDate(date);
     // ตรวจสอบว่า date มีค่าหรือไม่
@@ -69,7 +42,7 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
       const fetchData = async () => {
         try {
           const response = await axios.get(
-            `http://localhost:8000/timeslot/gettimeslots?date=${formattedDate}`
+            `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`
           );
           setReservationData(response.data);
         } catch (error) {

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import axios from 'axios';
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 export default function Page() {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ export default function Page() {
     setSuccess(null);
 
     try {
-      const res = await axios.post('http://localhost:8000/auth/register', {
+      const res = await axios.post(`${API_URL}/auth/register'`, {
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,

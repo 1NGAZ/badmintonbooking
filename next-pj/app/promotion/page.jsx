@@ -6,6 +6,7 @@ import Link from "next/link";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 const Page = () => {
   const router = useRouter();
@@ -43,7 +44,7 @@ const Page = () => {
           }
           // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
           const userResponse = await axios.get(
-            "http://localhost:8000/user/profile",
+            `${API_URL}/user/profile`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -90,7 +91,7 @@ const Page = () => {
       setLoading(true);
       if (typeof window !== "undefined") {
         const token = sessionStorage.getItem("authToken");
-        const response = await axios.get("http://localhost:8000/promotions", {
+        const response = await axios.get(`${API_URL}/promotions`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -118,7 +119,7 @@ const Page = () => {
       if (typeof window !== "undefined") {
         const token = sessionStorage.getItem("authToken");
         const response = await axios.get(
-          `http://localhost:8000/promotions/search?term=${searchTerm}`,
+          `${API_URL}/promotions/search?term=${searchTerm}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -171,7 +172,7 @@ const Page = () => {
       if (typeof window !== "undefined") {
         const token = sessionStorage.getItem("authToken");
         const response = await axios.get(
-          `http://localhost:8000/promotions/${id}`,
+          `${API_URL}/promotions/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -228,7 +229,7 @@ const Page = () => {
         try {
           if (typeof window !== "undefined") {
             const token = sessionStorage.getItem("authToken");
-            await axios.delete(`http://localhost:8000/promotions/${id}`, {
+            await axios.delete(`${API_URL}/promotions/${id}`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -274,7 +275,7 @@ const Page = () => {
         if (editMode) {
           // 8 อัปเดตโปรโมชั่น
           await axios.put(
-            `http://localhost:8000/promotions/${currentId}`,
+            `${API_URL}/promotions/${currentId}`,
             formData,
             {
               headers: {
@@ -290,7 +291,7 @@ const Page = () => {
           });
         } else {
           // สร้างโปรโมชั่นใหม่
-          await axios.post("http://localhost:8000/promotions", formData, {
+          await axios.post(`${API_URL}/promotions`, formData, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

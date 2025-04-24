@@ -47,6 +47,61 @@ const selectUserId = async (req, res) => {
   }
 };
 
+// const updateUser = async (req, res) => {
+//   try {
+//     const userId = req.user?.userId;
+
+//     if (!userId) {
+//       return res.status(400).json({
+//         error: 'ไม่พบ ID ผู้ใช้'
+//       });
+//     }
+
+//     const { fname, lname, phone } = req.body;
+
+//     // สร้างอ็อบเจกต์ data สำหรับอัปเดต
+//     const data = {};
+//     if (fname) data.fname = fname.trim();
+//     if (lname) data.lname = lname.trim();
+//     if (phone) data.phone = phone.trim();
+
+//     // ตรวจสอบว่ามีฟิลด์ที่ต้องการอัปเดตหรือไม่
+//     if (Object.keys(data).length === 0) {
+//       return res.status(400).json({
+//         error: 'ไม่มีข้อมูลสำหรับอัปเดต'
+//       });
+//     }
+
+//     // อัปเดตข้อมูล
+//     const updatedUser = await prisma.user.update({
+//       where: {
+//         id: userId
+//       },
+//       data,
+//       select: {
+//         id: true,
+//         fname: true,
+//         lname: true,
+//         email: true,
+//         phone: true
+//       }
+//     });
+
+//     return res.status(200).json({
+//       message: 'อัปเดตข้อมูลผู้ใช้สำเร็จ',
+//       user: updatedUser
+//     });
+
+//   } catch (error) {
+//     console.error('Update user error:', error);
+//     return res.status(500).json({
+//       error: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล'
+//     });
+//   }
+// };
+
+// ... existing code ...
+
 const updateUser = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -63,7 +118,21 @@ const updateUser = async (req, res) => {
     const data = {};
     if (fname) data.fname = fname.trim();
     if (lname) data.lname = lname.trim();
-    if (phone) data.phone = phone.trim();
+    
+    // ตรวจสอบรูปแบบเบอร์โทรศัพท์
+    if (phone) {
+      // ลบช่องว่างและอักขระพิเศษออก
+      const cleanedPhone = phone.trim().replace(/[- .]/g, '');
+      
+      // ตรวจสอบว่าเป็นตัวเลขทั้งหมดและมีความยาว 10 หลัก
+      if (!/^\d{10}$/.test(cleanedPhone)) {
+        return res.status(400).json({
+          error: 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์โทรศัพท์ 10 หลัก'
+        });
+      }
+      
+      data.phone = cleanedPhone;
+    }
 
     // ตรวจสอบว่ามีฟิลด์ที่ต้องการอัปเดตหรือไม่
     if (Object.keys(data).length === 0) {
@@ -99,6 +168,8 @@ const updateUser = async (req, res) => {
     });
   }
 };
+
+
 
 const getProfile = async (req, res) => {
   try {

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 const SettingButton = ({ court, selectedDate }) => {
   const [courtName, setCourtName] = useState(court.name);
@@ -48,7 +49,7 @@ const SettingButton = ({ court, selectedDate }) => {
             );
 
         const response = await axios.get(
-          `http://localhost:8000/courts/${court.id}/timeslots?date=${formattedDate}`
+          `${API_URL}/courts/${court.id}/timeslots?date=${formattedDate}`
         );
 
         // แปลงเวลาให้อยู่ในโซนเวลาไทย
@@ -97,14 +98,14 @@ const SettingButton = ({ court, selectedDate }) => {
       }));
 
       const response = await axios.put(
-        `http://localhost:8000/courts/${court.id}/timeslots`,
+        `${API_URL}/courts/${court.id}/timeslots`,
         { timeSlots: updatedTimeSlots }
       );
       console.log("บันทึกสถานะสำเร็จ:", response.data);
 
       // เปิดใช้งานการอัปเดตชื่อสนาม
       if (courtName !== court.name) {
-        await axios.put(`http://localhost:8000/courteditname/${court.id}`, {
+        await axios.put(`${API_URL}/courteditname/${court.id}`, {
           name: courtName,
         });
         console.log("บันทึกชื่อสนามสำเร็จ");

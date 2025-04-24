@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 const Page = () => {
   const [users, setUsers] = useState([]);
@@ -34,7 +35,7 @@ const Page = () => {
         }
 
         // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
-        const userResponse = await axios.get("http://localhost:8000/user/profile", {
+        const userResponse = await axios.get(`${API_URL}/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -48,7 +49,7 @@ const Page = () => {
 
         // ดึงข้อมูลหลังจากตรวจสอบสิทธิ์แล้ว
         try {
-          const usersResponse = await axios.get("http://localhost:8000/roles/users", {
+          const usersResponse = await axios.get(`${API_URL}/roles/users`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUsers(usersResponse.data || []);
@@ -84,7 +85,7 @@ const Page = () => {
       if (!token) throw new Error("กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
   
       // ตรวจสอบว่าผู้ใช้พยายามเปลี่ยนแปลงสิทธิ์ของตัวเองหรือไม่
-      const profileResponse = await axios.get("http://localhost:8000/user/profile", {
+      const profileResponse = await axios.get(`${API_URL}/user/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -99,7 +100,7 @@ const Page = () => {
   
       // ส่งคำขอเปลี่ยนแปลง role แบบง่าย
       const response = await axios.post(
-        "http://localhost:8000/roles/assign",
+       `${API_URL}/roles/assign`,
         {
           userId: parseInt(userId),
           roleId: parseInt(newRoleIds[0])
@@ -116,7 +117,7 @@ const Page = () => {
   
       // ดึงข้อมูลผู้ใช้ใหม่หลังจากอัพเดต
       const updatedUsersResponse = await axios.get(
-        "http://localhost:8000/roles/users",
+        `${API_URL}/roles/users`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       

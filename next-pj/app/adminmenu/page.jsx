@@ -5,6 +5,7 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 const Page = () => {
   const [reservations, setReservations] = useState([]);
@@ -25,7 +26,7 @@ const Page = () => {
 
         // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
         const userResponse = await axios.get(
-          "http://localhost:8000/user/profile",
+          `${API_URL}/user/profile`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -43,7 +44,7 @@ const Page = () => {
         }
 
         const response = await axios.get(
-          "http://localhost:8000/approval/approvals/pending",
+          `${API_URL}/approval/approvals/pending`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -95,7 +96,7 @@ const Page = () => {
       });
 
       const response = await axios.post(
-        "http://localhost:8000/approval/approvals/approve",
+       `${API_URL}/approval/approvals/approve`,
         { reservationId, timeSlotIds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -137,7 +138,7 @@ const Page = () => {
       });
 
       const response = await axios.post(
-        "http://localhost:8000/approval/approvals/reject",
+        `${API_URL}/approval/approvals/reject`,
         { reservationId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -629,7 +630,7 @@ const Page = () => {
                             </td>
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm">
                               <a
-                                href={`http://localhost:8000/uploads/${item.attachment}`}
+                                href={`${API_URL}/uploads/${item.attachment}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center text-blue-600 hover:text-blue-800"
@@ -673,7 +674,6 @@ const Page = () => {
                                   disabled={loading}
                                 >
                                   ปฏิเสธ
-��
                                 </button>
                               </div>
                             </td>

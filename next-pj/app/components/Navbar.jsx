@@ -3,6 +3,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 export default function Navbar() {
   const [userData, setUserData] = useState();
@@ -12,7 +13,7 @@ export default function Navbar() {
   const fetchUserData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/user/selectuserid",
+        `${API_URL}/user/selectuserid`,
         {
           withCredentials: true,
         }
@@ -27,7 +28,7 @@ export default function Navbar() {
     try {
       // เรียก API logout
       const response = await axios.post(
-        "http://localhost:8000/auth/logout",
+       ` ${API_URL}/auth/logout`,
         {},
         { withCredentials: true }
       );

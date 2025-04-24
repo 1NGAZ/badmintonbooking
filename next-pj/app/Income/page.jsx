@@ -18,6 +18,7 @@ import { Overview } from "../components/Overview";
 import { RecentSales } from "../components/RecentSales";
 import Swal from "sweetalert2";
 import "animate.css";
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 const Page = () => {
   const [transactions, setTransactions] = useState([]);
@@ -60,7 +61,7 @@ const Page = () => {
 
           // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
           const userResponse = await axios.get(
-            "http://localhost:8000/user/profile",
+            `${API_URL}/user/profile`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -100,7 +101,7 @@ const Page = () => {
           console.log("Headers ที่ส่งไป:", headers);
 
           const response = await axios.get(
-            "http://localhost:8000/reports/income",
+            `${API_URL}/reports/income`,
             {
               headers: headers,
               params: {

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import axios from "axios";
 import Cookies from 'js-cookie';
+const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -30,7 +31,7 @@ export default function LoginPage() {
   
     try {
       // ส่งคำขอเข้าสู่ระบบไปที่ API
-      const response = await axios.post('http://localhost:8000/auth/login', formData, { withCredentials: true });
+      const response = await axios.post(`${API_URL}/auth/login`, formData, { withCredentials: true });
       console.log(response);
   
       if (!response) {

@@ -11,6 +11,7 @@ const Page = () => {
   const [notification, setNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 10;
+  const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
 
   const token =
     typeof window !== "undefined" ? sessionStorage.getItem("authToken") : null;
@@ -33,7 +34,7 @@ const Page = () => {
         }
 
         const response = await axios.get(
-          "http://localhost:8000/history/history",
+          `${API_URL}/history/history`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
