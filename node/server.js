@@ -19,7 +19,7 @@ const roleRoutes = require('./routes/roleRoutes');
 const promotionRoutes = require('./routes/promotion');
 
 const app = express();
-const port = 8000;
+const port = process.env.PORT || 8000;
 const reportsRouter = require('./routes/reports');
 app.use(express.json());
 app.use(cookieParser());
@@ -162,7 +162,6 @@ const ensureReservationStatuses = async () => {
   }
 };
 ensureReservationStatuses();
-
 
 
 
