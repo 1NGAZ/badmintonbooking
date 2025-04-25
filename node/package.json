@@ -19,6 +19,7 @@
     "prisma": "^6.0.0"
   },
   "scripts": {
-    "start": "node node/server.js"
+    "migrate": "prisma migrate deploy",
+    "start": "npm run migrate && node server.js"
   }
 }
