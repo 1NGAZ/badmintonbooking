@@ -4,7 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const path = require('path');
 const authRouter = require("./routes/auth");
 const userRoutes = require("./routes/user");

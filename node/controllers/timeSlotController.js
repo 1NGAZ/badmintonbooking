@@ -1,6 +1,6 @@
 const { createTimeSlotsForDate } = require("../models/timeSlotModel");
 const { getTimeSlotsOnDate } = require("../services/timeSlotService");
-const { getCourtIdsFromDatabase } = require("../models/databasemodel");
+const { getCourtIdsFromDatabase } = require("../models/databaseModel");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
