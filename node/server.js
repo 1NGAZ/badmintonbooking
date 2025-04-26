@@ -21,56 +21,28 @@ const multer = require('multer');
 const app = express();
 const port = process.env.PORT || 3000;
 const reportsRouter = require('./routes/reports');
+const cron = require('node-cron');
 
-
-async function main() {
-  try {
-    await prisma.$connect();
-    
-    // เรียกใช้ฟังก์ชันสร้างข้อมูลเริ่มต้น
-    await ensureAdminExists();
-    await ensureReservationStatuses();
-    
-    // เริ่มต้น server เพียงครั้งเดียว
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`Server is running on port ${port}`);
-    });
-  } catch (error) {
-    console.error('Server startup error:', error);
-    process.exit(1);
-  }
-}
-// เพิ่มการจัดการข้อผิดพลาดที่ไม่คาดคิด
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-main().catch((error) => {
-  console.error('Server startup error:', error);
-});
-
-
-
+// กำหนด middleware และ routes ก่อนเริ่ม server
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://badmintonbooking-production.up.railway.app"],
     credentials: true,
   })
 );
-app.get('/health', (req, res) => res.status(200).send('OK'));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-
-
-app.use("/history",historyRoutes);
+app.use("/history", historyRoutes);
 app.use("/auth", authRouter);
 app.use("/user", userRoutes);
 app.use('/reservation', reservationRoutes);
@@ -81,8 +53,10 @@ app.use("/courteditname", courteditname);
 app.use('/roles', roleRoutes); 
 app.use('/reports', reportsRouter);
 app.use('/promotions', promotionRoutes);
+
 // ให้บริการไฟล์จากโฟลเดอร์ uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Custom error handling for Multer
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -94,6 +68,7 @@ app.use((err, req, res, next) => {
   }
   next();
 });
+
 // API สำหรับแสดงไฟล์ (ใช้ GET method)
 app.get('/uploads/:filename', (req, res) => {
   const { filename } = req.params;
@@ -106,20 +81,6 @@ app.get('/uploads/:filename', (req, res) => {
   });
 });
 
-
-const cron = require('node-cron');
-
-// เรียกฟังก์ชันทันทีเมื่อเริ่มต้นแอปพลิเคชัน
-// (async () => {
-//   try {
-//     console.log('กำลังสร้าง time slots สำหรับ 7 วันถัดไปเป็นครั้งแรก...');
-//     await createTimeSlotsForDateController();
-//     console.log('สร้าง time slots ครั้งแรกสำเร็จ');
-//   } catch (error) {
-//     console.error('Initial timeslot creation failed:', error);
-//   }
-// })();
-
 // ตั้งเวลาให้ทำงานทุกวันตอนเที่ยงคืน
 cron.schedule('0 0 * * *', async () => {
   try {
@@ -130,7 +91,6 @@ cron.schedule('0 0 * * *', async () => {
     console.error('Daily timeslot creation failed:', error);
   }
 });
-
 
 // ฟังก์ชันสำหรับสมัครแอดมิน
 const ensureAdminExists = async () => {
@@ -175,7 +135,6 @@ const ensureAdminExists = async () => {
     console.error('❌ Error ensuring admin exists:', err);
   }
 };
-ensureAdminExists();
 
 // ฟังก์ชันสำหรับสร้างสถานะ
 const ensureReservationStatuses = async () => {
@@ -201,7 +160,38 @@ const ensureReservationStatuses = async () => {
     console.error("❌ เกิดข้อผิดพลาดในการสร้างสถานะ:", err);
   }
 };
-ensureReservationStatuses();
+
+// เพิ่มการจัดการข้อผิดพลาดที่ไม่คาดคิด
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// ฟังก์ชันหลักสำหรับเริ่มต้น server
+async function main() {
+  try {
+    await prisma.$connect();
+    console.log('Connected to database successfully');
+    
+    // เรียกใช้ฟังก์ชันสร้างข้อมูลเริ่มต้น
+    await ensureAdminExists();
+    await ensureReservationStatuses();
+    
+    // เริ่มต้น server
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  } catch (error) {
+    console.error('Server startup error:', error);
+    process.exit(1);
+  }
+}
+
+// เริ่มต้นแอปพลิเคชัน
+main();
 
 
 
