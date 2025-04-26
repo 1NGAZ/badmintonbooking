@@ -1,24 +1,27 @@
 FROM node:20-alpine
 
-# ติดตั้ง openssl สำหรับ Prisma บน alpine
+# Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# copy package.json และ lock file
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# ติดตั้ง dependencies
+# Install dependencies
 RUN npm install
 
-# copy โค้ดทั้งหมด
+# Copy all files
 COPY . .
 
-# generate Prisma client
+# Generate Prisma Client
 RUN npx prisma generate
 
-# เปิด port 3000
+# Expose port 3000
 EXPOSE 3000
 
-# คำสั่งเริ่มต้นเมื่อ container start
-CMD ["npm", "run", "start"]
+# Set environment variable to listen on all interfaces
+ENV HOST=0.0.0.0
+
+# Start command
+CMD ["node", "server.js"]

@@ -180,12 +180,15 @@ async function main() {
     await ensureAdminExists();
     await ensureReservationStatuses();
     
-    // เริ่มต้น server
+    // เริ่มต้น server - make sure to bind to 0.0.0.0
     app.listen(port, '0.0.0.0', () => {
-      console.log(`Server is running on port ${port}`);
+      console.log(`Server is running on port ${port} and bound to all network interfaces`);
     });
   } catch (error) {
     console.error('Server startup error:', error);
+    // Log more details about the error
+    console.error('Error details:', error.message);
+    if (error.stack) console.error('Stack trace:', error.stack);
     process.exit(1);
   }
 }
