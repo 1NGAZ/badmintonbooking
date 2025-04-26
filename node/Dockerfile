@@ -18,69 +18,44 @@ COPY . .
 RUN npx prisma generate
 
 # สร้างไฟล์สคริปต์สำหรับเริ่มต้นแอปพลิเคชัน
-COPY <<EOF /app/docker-entrypoint.sh
-#!/bin/sh
-echo "==== Environment Information ===="
-echo "NODE_ENV: \$NODE_ENV"
-echo "DATABASE_URL: \$(echo \$DATABASE_URL | sed 's/:.*/:*****@/')"
-echo "MYSQLHOST: \$MYSQLHOST"
-echo "MYSQLPORT: \$MYSQLPORT"
-echo "MYSQLDATABASE: \$MYSQLDATABASE"
-echo "MYSQLUSER: \$MYSQLUSER"
-echo "==============================="
-
-# แยกข้อมูลจาก DATABASE_URL
-DB_HOST=\$(echo \$DATABASE_URL | sed -E 's/.*@([^:]+):.*/\1/')
-DB_PORT=\$(echo \$DATABASE_URL | sed -E 's/.*:([0-9]+)\/.*/\1/')
-DB_USER=\$(echo \$DATABASE_URL | sed -E 's/mysql:\/\/([^:]+).*/\1/')
-DB_PASS=\$(echo \$DATABASE_URL | sed -E 's/mysql:\/\/[^:]+:([^@]+).*/\1/')
-DB_NAME=\$(echo \$DATABASE_URL | sed -E 's/.*\/([^?]+).*/\1/')
-
-echo "Extracted database connection info:"
-echo "Host: \$DB_HOST"
-echo "Port: \$DB_PORT"
-echo "User: \$DB_USER"
-echo "Database: \$DB_NAME"
-
-echo "Testing network connectivity to MySQL..."
-ping -c 3 \$DB_HOST || echo "Cannot ping MySQL host"
-
-echo "Testing port connectivity to MySQL..."
-nc -zv \$DB_HOST \$DB_PORT || echo "Cannot connect to MySQL port"
-
-echo "Testing MySQL connection with credentials..."
-mysql -u\$DB_USER -p\$DB_PASS -h\$DB_HOST -P\$DB_PORT -e "SHOW DATABASES;" || echo "MySQL connection test failed"
-
-# เริ่ม health check server ก่อน
-echo "Starting health check server on port 3000..."
-(while true; do { echo -e "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK"; } | nc -l -p 3000; done) &
-HEALTH_PID=\$!
-
-# รอสักครู่เพื่อให้ health check server เริ่มทำงาน
-sleep 2
-echo "Health check server started with PID \$HEALTH_PID"
-
-# ลองเชื่อมต่อกับฐานข้อมูลหลายครั้ง
-echo "Waiting for MySQL to be ready..."
-for i in \$(seq 1 30); do
-  if mysql -u\$DB_USER -p\$DB_PASS -h\$DB_HOST -P\$DB_PORT -e "SELECT 1;" >/dev/null 2>&1; then
-    echo "MySQL is ready! (attempt \$i)"
-    break
-  fi
-  echo "MySQL not ready yet... (attempt \$i/30)"
-  sleep 5
-  if [ \$i -eq 30 ]; then
-    echo "Could not connect to MySQL after 30 attempts. Continuing anyway..."
-  fi
-done
-
-# ทำ migration และเริ่มแอปพลิเคชัน
-echo "Running Prisma migrations..."
-npx prisma migrate deploy
-
-echo "Starting main application..."
-node server.js
-EOF
+RUN echo '#!/bin/sh' > /app/docker-entrypoint.sh && \
+    echo 'echo "==== Environment Information ===="' >> /app/docker-entrypoint.sh && \
+    echo 'echo "NODE_ENV: $NODE_ENV"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "DATABASE_URL: $(echo $DATABASE_URL | sed '"'"'s/:.*/:*****@/'"'"')"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "MYSQLHOST: $MYSQLHOST"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "MYSQLPORT: $MYSQLPORT"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "MYSQLDATABASE: $MYSQLDATABASE"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "MYSQLUSER: $MYSQLUSER"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "==============================="' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo '# แยกข้อมูลจาก DATABASE_URL' >> /app/docker-entrypoint.sh && \
+    echo 'DB_HOST=$(echo $DATABASE_URL | sed -E '"'"'s/.*@([^:]+):.*/\1/'"'"')' >> /app/docker-entrypoint.sh && \
+    echo 'DB_PORT=$(echo $DATABASE_URL | sed -E '"'"'s/.*:([0-9]+)\/.*/\1/'"'"')' >> /app/docker-entrypoint.sh && \
+    echo 'DB_USER=$(echo $DATABASE_URL | sed -E '"'"'s/mysql:\/\/([^:]+).*/\1/'"'"')' >> /app/docker-entrypoint.sh && \
+    echo 'DB_PASS=$(echo $DATABASE_URL | sed -E '"'"'s/mysql:\/\/[^:]+:([^@]+).*/\1/'"'"')' >> /app/docker-entrypoint.sh && \
+    echo 'DB_NAME=$(echo $DATABASE_URL | sed -E '"'"'s/.*\/([^?]+).*/\1/'"'"')' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Extracted database connection info:"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Host: $DB_HOST"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Port: $DB_PORT"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "User: $DB_USER"' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Database: $DB_NAME"' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo '# เริ่ม health check server ก่อน' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Starting health check server on port 3000..."' >> /app/docker-entrypoint.sh && \
+    echo '(while true; do { echo -e "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK"; } | nc -l -p 3000; done) &' >> /app/docker-entrypoint.sh && \
+    echo 'HEALTH_PID=$!' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo '# รอสักครู่เพื่อให้ health check server เริ่มทำงาน' >> /app/docker-entrypoint.sh && \
+    echo 'sleep 2' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Health check server started with PID $HEALTH_PID"' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo '# ทำ migration และเริ่มแอปพลิเคชัน' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Running Prisma migrations..."' >> /app/docker-entrypoint.sh && \
+    echo 'npx prisma migrate deploy' >> /app/docker-entrypoint.sh && \
+    echo '' >> /app/docker-entrypoint.sh && \
+    echo 'echo "Starting main application..."' >> /app/docker-entrypoint.sh && \
+    echo 'node server.js' >> /app/docker-entrypoint.sh
 
 RUN chmod +x /app/docker-entrypoint.sh
 
