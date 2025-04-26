@@ -17,7 +17,7 @@ const courtRoutes = require("./routes/courtRoutes");
 const courteditname = require("./routes/courteditname");
 const roleRoutes = require('./routes/roleRoutes'); 
 const promotionRoutes = require('./routes/promotion');
-
+const multer = require('multer');
 const app = express();
 const port = process.env.PORT || 3000;
 const reportsRouter = require('./routes/reports');
@@ -63,6 +63,7 @@ app.use(
     credentials: true,
   })
 );
+app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
@@ -205,4 +206,3 @@ ensureReservationStatuses();
 
 
 
-app.get('/health', (req, res) => res.status(200).send('OK'));
