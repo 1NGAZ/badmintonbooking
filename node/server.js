@@ -24,12 +24,30 @@ const reportsRouter = require('./routes/reports');
 
 
 async function main() {
-  await prisma.$connect();
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  try {
+    await prisma.$connect();
+    
+    // เรียกใช้ฟังก์ชันสร้างข้อมูลเริ่มต้น
+    await ensureAdminExists();
+    await ensureReservationStatuses();
+    
+    // เริ่มต้น server เพียงครั้งเดียว
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  } catch (error) {
+    console.error('Server startup error:', error);
+    process.exit(1);
+  }
 }
+// เพิ่มการจัดการข้อผิดพลาดที่ไม่คาดคิด
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 main().catch((error) => {
   console.error('Server startup error:', error);
@@ -188,11 +206,3 @@ ensureReservationStatuses();
 
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
-try {
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`Server is running on port ${port}`)
-  })
-} catch (error) {
-  console.error('Server error:', error);
-}
-
