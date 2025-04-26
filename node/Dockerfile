@@ -21,4 +21,4 @@ RUN npx prisma generate
 EXPOSE 3000
 
 # คำสั่งเริ่มต้นเมื่อ container start
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
