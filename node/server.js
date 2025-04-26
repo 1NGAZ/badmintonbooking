@@ -19,8 +19,24 @@ const roleRoutes = require('./routes/roleRoutes');
 const promotionRoutes = require('./routes/promotion');
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 3000;
 const reportsRouter = require('./routes/reports');
+
+
+async function main() {
+  await prisma.$connect();
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+main().catch((error) => {
+  console.error('Server startup error:', error);
+});
+
+
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -29,6 +45,11 @@ app.use(
     credentials: true,
   })
 );
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
+
+
 
 app.use("/history",historyRoutes);
 app.use("/auth", authRouter);
@@ -167,6 +188,11 @@ ensureReservationStatuses();
 
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+try {
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on port ${port}`)
+  })
+} catch (error) {
+  console.error('Server error:', error);
+}
+
