@@ -18,14 +18,14 @@ COPY . .
 RUN npx prisma generate
 
 # Create a script to wait for MySQL and then start the application
-RUN echo '#!/bin/sh \n\
-echo "Waiting for MySQL to be ready..." \n\
-while ! nc -z $MYSQLHOST $MYSQLPORT; do \n\
-  echo "MySQL not ready yet..." \n\
-  sleep 2 \n\
-done \n\
-echo "MySQL is ready!" \n\
-npx prisma migrate deploy \n\
+RUN printf '#!/bin/sh\n\
+echo "Waiting for MySQL to be ready..."\n\
+while ! nc -z $MYSQLHOST $MYSQLPORT; do\n\
+  echo "MySQL not ready yet..."\n\
+  sleep 2\n\
+done\n\
+echo "MySQL is ready!"\n\
+npx prisma migrate deploy\n\
 node server.js' > /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # Expose port 3000
