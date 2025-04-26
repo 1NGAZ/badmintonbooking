@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import axios from "axios";
 import Cookies from 'js-cookie';
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.PUBLIC_NEXT_API_URL; 
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({

@@ -1,24 +1,25 @@
-FROM node:20-alpine
+# Use Node.js on Alpine 3.17
+FROM node:18-alpine3.17
 
-# ติดตั้ง openssl สำหรับ Prisma บน alpine
-RUN apk add --no-cache openssl
-
+# Set working directory
 WORKDIR /app
 
-# copy package.json และ lock file
+# Copy only package.json and package-lock.json
 COPY package*.json ./
 
-# ติดตั้ง dependencies
+# Install dependencies
 RUN npm install
 
-# copy โค้ดทั้งหมด
+# ติดตั้ง openssl และ libssl-dev
+# RUN apk add --no-cache openssl libssl-dev build-base
+RUN apk add --no-cache libressl-dev build-base
+
+
+# Copy the rest of the code
 COPY . .
 
-# generate Prisma client
+# Build Prisma client
 RUN npx prisma generate
 
-# เปิด port 3000
-EXPOSE 3000
-
-# คำสั่งเริ่มต้นเมื่อ container start
-CMD ["npm", "start"]
+# Start the app
+CMD ["npm", "run", "start"]

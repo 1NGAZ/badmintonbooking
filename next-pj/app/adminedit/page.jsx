@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.PUBLIC_NEXT_API_URL; 
 
 const Page = () => {
   const [users, setUsers] = useState([]);
