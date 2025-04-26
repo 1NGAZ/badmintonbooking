@@ -3,7 +3,13 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 require("dotenv").config();
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 const bcrypt = require("bcryptjs");
 const path = require('path');
 const authRouter = require("./routes/auth");
@@ -32,6 +38,8 @@ app.use(
     credentials: true,
   })
 );
+
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {

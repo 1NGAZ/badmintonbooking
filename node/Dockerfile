@@ -23,5 +23,5 @@ EXPOSE 3000
 # Set environment variable to listen on all interfaces
 ENV HOST=0.0.0.0
 
-# Start command
-CMD ["node", "server.js"]
+# Start command with a delay to ensure MySQL is ready
+CMD sh -c "sleep 10 && npx prisma migrate deploy && node server.js"
