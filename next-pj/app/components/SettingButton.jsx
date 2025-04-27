@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
 
 const SettingButton = ({ court, selectedDate }) => {
   const [courtName, setCourtName] = useState(court.name);
@@ -32,43 +33,24 @@ const SettingButton = ({ court, selectedDate }) => {
   useEffect(() => {
     const fetchTimeSlots = async () => {
       try {
+        // ปรับปรุงการจัดการวันที่ให้เรียบง่ายขึ้น
         const formattedDate = selectedDate?.from
-          ? format(
-              new Date(
-                selectedDate.from.toLocaleString("en-US", {
-                  timeZone: "Asia/Bangkok",
-                })
-              ),
-              "yyyy-MM-dd"
-            )
-          : format(
-              new Date(
-                new Date().toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
-              ),
-              "yyyy-MM-dd"
-            );
+          ? format(new Date(selectedDate.from), "yyyy-MM-dd")
+          : format(new Date(), "yyyy-MM-dd");
 
         const response = await axios.get(
           `${API_URL}/courts/${court.id}/timeslots?date=${formattedDate}`
         );
 
-        // แปลงเวลาให้อยู่ในโซนเวลาไทย
+        // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
         const fetchedSlots = response.data.map((slot) => {
           const startTime = new Date(slot.start_time);
           const endTime = new Date(slot.end_time);
 
-          // ปรับเวลาให้อยู่ในโซนเวลาไทย
-          const startInThai = new Date(
-            startTime.toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
-          );
-          const endInThai = new Date(
-            endTime.toLocaleString("en-US", { timeZone: "Asia/Bangkok" })
-          );
-
           return {
             id: slot.id,
-            start: format(startInThai, "HH:mm"),
-            end: format(endInThai, "HH:mm"),
+            start: format(startTime, "HH:mm"),
+            end: format(endTime, "HH:mm"),
             statusId: slot.statusId,
             checked: slot.statusId === 4,
           };
