@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import axios from "axios";
+import { getUserData } from "../utils/auth"; // เพิ่มการ import getUserData
+
 const Page = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,10 +13,11 @@ const Page = () => {
   const [notification, setNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 10;
-  const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
 
-  const token =
-    typeof window !== "undefined" ? sessionStorage.getItem("authToken") : null;
+  // แทนที่การดึง token โดยตรงด้วยการใช้ getUserData
+  const userData = typeof window !== "undefined" ? getUserData() : null;
+  const token = userData ? window.sessionStorage.getItem("authToken") : null;
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -22,7 +25,8 @@ const Page = () => {
         setLoading(true);
         setError(null);
 
-        if (!token) {
+        // ตรวจสอบว่ามีข้อมูลผู้ใช้หรือไม่
+        if (!userData || !token) {
           setNotification({
             type: "error",
             message: "กรุณาเข้าสู่ระบบก่อนใช้งาน",
