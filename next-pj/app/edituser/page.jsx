@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Navbar from '../components/Navbar';
-
+import { getUserData } from "../utils/auth";
 import Link from "next/link";
 import axios from "axios";
 import {
@@ -62,11 +62,19 @@ const Page = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setUserData({
+      // อัปเดตข้อมูลใน state
+      const updatedUserData = {
         ...userData,
         fname: response.data.user.fname,
         lname: response.data.user.lname,
-      });
+      };
+      setUserData(updatedUserData);
+      
+      // อัปเดตข้อมูลใน sessionStorage
+      const storedUserData = JSON.parse(sessionStorage.getItem("userData") || "{}");
+      const newUserData = { ...storedUserData, fname, lname };
+      sessionStorage.setItem("userData", JSON.stringify(newUserData));
+      
       toast.success("อัพเดทชื่อสำเร็จ");
       setIsOpen(false);
     } catch (error) {
@@ -79,25 +87,6 @@ const Page = () => {
 
   const handleUpdatePhone = async () => {
     try {
-      if (!phone.trim()) {
-        toast.error("กรุณากรอกเบอร์โทรศัพท์");
-        return;
-      }
-
-      // ตรวจสอบรูปแบบเบอร์โทรศัพท์
-      const cleanedPhone = phone.trim().replace(/[- .]/g, "");
-      if (!/^\d{10}$/.test(cleanedPhone)) {
-        toast.error(
-          "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์โทรศัพท์ 10 หลัก"
-        );
-        return;
-      }
-
-      const token = sessionStorage.getItem("authToken");
-      if (!token) {
-        toast.error("กรุณาเข้าสู่ระบบใหม่");
-        return;
-      }
 
       const response = await axios.patch(
         `${API_URL}/user/users/profile`,
@@ -105,32 +94,33 @@ const Page = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setUserData({ ...userData, phone: response.data.user.phone });
+      // อัปเดตข้อมูลใน state
+      const updatedUserData = { ...userData, phone: response.data.user.phone };
+      setUserData(updatedUserData);
+      
+      // อัปเดตข้อมูลใน sessionStorage
+      const storedUserData = JSON.parse(sessionStorage.getItem("userData") || "{}");
+      const newUserData = { ...storedUserData, phone: cleanedPhone };
+      sessionStorage.setItem("userData", JSON.stringify(newUserData));
+      
       toast.success("อัพเดทเบอร์โทรศัพท์สำเร็จ");
       setIsOpen1(false);
     } catch (error) {
-      console.error("Update error:", error);
-      toast.error(
-        error.response?.data?.error || "เกิดข้อผิดพลาดในการอัพเดทเบอร์โทรศัพท์"
-      );
     }
   };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(
-          `${API_URL}/user/selectuserid`,
-          {
-            withCredentials: true,
-          }
-        );
-        setUserData(response.data);
-      } catch (error) {
-        console.log({ message: error });
-      }
-    };
-    fetchUserData();
+    // แทนที่ fetchUserData ด้วยการเรียกใช้ getUserData จาก auth.js
+    const userDataFromToken = getUserData();
+    if (userDataFromToken) {
+      setUserData(userDataFromToken);
+      // ตั้งค่าเริ่มต้นสำหรับฟอร์มแก้ไข
+      setName(`${userDataFromToken.fname || ""} ${userDataFromToken.lname || ""}`);
+      setPhone(userDataFromToken.phone || "");
+    } else {
+      // ถ้าไม่มีข้อมูลผู้ใช้ (ไม่ได้ login) ให้ redirect ไปหน้า login
+      window.location.href = "/login";
+    }
   }, []);
 
   if (!userData) return <div className="text-center py-10">Loading...</div>;
