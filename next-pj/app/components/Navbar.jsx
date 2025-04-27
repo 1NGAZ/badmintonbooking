@@ -22,8 +22,8 @@ export default function Navbar() {
   //     console.log({ message: error });
   //   }
   // };
-  const fetchUserData = async () => {
-  try {
+  const fetchUserData =  () => {
+
     // ดึง token จาก sessionStorage
     const token = window.sessionStorage.getItem("authToken");
     
@@ -33,11 +33,7 @@ export default function Navbar() {
       return;
     }
     console.log(token);
-    
-  } catch (error) {
-    console.log({ message: error });
   }
-}
 fetchUserData();
 
   const handleLogout = async () => {
