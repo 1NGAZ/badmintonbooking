@@ -22,28 +22,55 @@ export default function Navbar() {
   //     console.log({ message: error });
   //   }
   // };
-  const fetchUserData =  () => {
-
-   // ดึง token จาก sessionStorage
-   const token = window.sessionStorage.getItem("authToken");
+  const fetchUserData = () => {
+    try {
+      // ดึง token จาก sessionStorage
+      const token = window.sessionStorage.getItem("authToken");
       
-   // ถ้าไม่มี token ให้ return ออกไปเลย
-   if (!token) {
-     console.log("ไม่พบ token ในระบบ");
-     return;
-   }
-   
-   // แกะข้อมูลจาก token (ไม่ต้องใช้ library เพิ่ม)
-   const tokenParts = token.split('.');
-   if (tokenParts.length !== 3) {
-     console.log("รูปแบบ token ไม่ถูกต้อง");
-     return;
-   }
-   
-   // แปลง base64 ส่วนที่ 2 (payload) เป็น JSON
-   const payload = JSON.parse(atob(tokenParts[1]));
-   console.log("Token payload:", payload);
-  }
+      // ถ้าไม่มี token ให้ return ออกไปเลย
+      if (!token) {
+        console.log("ไม่พบ token ในระบบ");
+        return;
+      }
+      
+      // แกะข้อมูลจาก token (ไม่ต้องใช้ library เพิ่ม)
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        console.log("รูปแบบ token ไม่ถูกต้อง");
+        return;
+      }
+      
+      // แปลง base64 ส่วนที่ 2 (payload) เป็น JSON
+      const payload = JSON.parse(atob(tokenParts[1]));
+      console.log("Token payload:", payload);
+      
+      // ตรวจสอบว่า token หมดอายุหรือไม่
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < currentTime) {
+        console.log("Token หมดอายุแล้ว");
+        window.sessionStorage.removeItem("authToken");
+        window.location.href = "/login";
+        return;
+      }
+      
+      // สร้างข้อมูลผู้ใช้จาก payload
+      const userData = {
+        id: payload.userId,
+        email: payload.email,
+        fname: payload.fname || "ผู้ใช้งาน", // ถ้าไม่มีชื่อใน token ให้ใช้ค่าเริ่มต้น
+        lname: payload.lname || "",
+        userRoles: [{ roleId: payload.roleId }] // สร้าง userRoles เพื่อให้ isAdmin ทำงานได้
+      };
+      // เก็บข้อมูลผู้ใช้ลงใน sessionStorage
+      window.sessionStorage.setItem("userData", JSON.stringify(userData));
+      // เซ็ตข้อมูลผู้ใช้
+      setUserData(userData);
+    } catch (error) {
+      console.log("Error parsing token:", error);
+      // ถ้าเกิด error ในการแกะ token ให้ลบ token และ redirect ไปหน้า login
+      window.sessionStorage.removeItem("authToken");
+    }
+  };
 fetchUserData();
 
   const handleLogout = async () => {
