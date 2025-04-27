@@ -24,15 +24,25 @@ export default function Navbar() {
   // };
   const fetchUserData =  () => {
 
-    // ดึง token จาก sessionStorage
-    const token = window.sessionStorage.getItem("authToken");
-    
-    // ถ้าไม่มี token ให้ return ออกไปเลย
-    if (!token) {
-      console.log("ไม่พบ token ในระบบ");
-      return;
-    }
-    console.log(token);
+   // ดึง token จาก sessionStorage
+   const token = window.sessionStorage.getItem("authToken");
+      
+   // ถ้าไม่มี token ให้ return ออกไปเลย
+   if (!token) {
+     console.log("ไม่พบ token ในระบบ");
+     return;
+   }
+   
+   // แกะข้อมูลจาก token (ไม่ต้องใช้ library เพิ่ม)
+   const tokenParts = token.split('.');
+   if (tokenParts.length !== 3) {
+     console.log("รูปแบบ token ไม่ถูกต้อง");
+     return;
+   }
+   
+   // แปลง base64 ส่วนที่ 2 (payload) เป็น JSON
+   const payload = JSON.parse(atob(tokenParts[1]));
+   console.log("Token payload:", payload);
   }
 fetchUserData();
 
