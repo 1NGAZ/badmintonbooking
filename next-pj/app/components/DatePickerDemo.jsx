@@ -15,7 +15,8 @@ import {
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export function DatePickerDemo({ className, setReservationData, setShowDate }) {
   const [date, setDate] = useState({
@@ -27,17 +28,14 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
     setShowDate(date);
     // ตรวจสอบว่า date มีค่าหรือไม่
     if (date && (date.from || date.to)) {
-
       const selectedDate = date.from || date.to;
-      const adjustedDate = new Date(selectedDate);
-      adjustedDate.setHours(12, 0, 0, 0);
-      const year = selectedDate.getUTCFullYear();
-      const month = String(selectedDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getUTCDate()).padStart(2, '0');
+      // ใช้วันที่ในเขตเวลาท้องถิ่นแทน UTC เพื่อป้องกันปัญหาเรื่องเขตเวลา
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const day = String(selectedDate.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
-      
-      console.log("Selected date object:", selectedDate);
-      console.log("Formatted date for API:", formattedDate);
+
+      // ลบ console.log ที่ไม่จำเป็น
 
       const fetchData = async () => {
         try {
@@ -53,6 +51,7 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
       fetchData();
     }
   }, [date, setReservationData, setShowDate]);
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -86,13 +85,39 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
             mode="range"
             defaultMonth={date?.from}
             selected={date}
+            // onSelect={(selectedDate) => {
+            //   if (selectedDate?.from && !selectedDate?.to) {
+            //     const maxDate = addDays(selectedDate.from, 7);
+            //     if (isBefore(selectedDate.from, maxDate)) {
+            //       setDate(selectedDate);
+            //       setShowDate(selectedDate);
+            //     }
+            //   } else {
+            //     setDate(selectedDate);
+            //     setShowDate(selectedDate);
+            //   }
+            // }}
+            // numberOfMonths={1}
+            // disabled={(currentDate) => {
+            //   if (isBefore(startOfDay(currentDate), startOfDay(new Date()))) {
+            //     return true;
+            //   }
+
+            //   if (date?.from) {
+            //     const maxDate = addDays(date.from, 7);
+            //     if (!isBefore(currentDate, maxDate)) {
+            //       return true;
+            //     }
+            //   }
+
+            //   return false;
+            // }}
+
             onSelect={(selectedDate) => {
               if (selectedDate?.from && !selectedDate?.to) {
-                const maxDate = addDays(selectedDate.from, 7);
-                if (isBefore(selectedDate.from, maxDate)) {
-                  setDate(selectedDate);
-                  setShowDate(selectedDate);
-                }
+                // ถ้ามีการเลือกวันเริ่มต้นแล้ว แต่ยังไม่มีวันสิ้นสุด
+                setDate(selectedDate);
+                setShowDate(selectedDate);
               } else {
                 setDate(selectedDate);
                 setShowDate(selectedDate);
@@ -100,15 +125,15 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
             }}
             numberOfMonths={1}
             disabled={(currentDate) => {
+              // ปิดใช้งานวันที่ในอดีต
               if (isBefore(startOfDay(currentDate), startOfDay(new Date()))) {
                 return true;
               }
 
-              if (date?.from) {
-                const maxDate = addDays(date.from, 7);
-                if (!isBefore(currentDate, maxDate)) {
-                  return true;
-                }
+              // ปิดใช้งานวันที่เกิน 7 วันจากวันปัจจุบัน
+              const maxAllowedDate = addDays(startOfDay(new Date()), 7);
+              if (!isBefore(currentDate, maxAllowedDate)) {
+                return true;
               }
 
               return false;
