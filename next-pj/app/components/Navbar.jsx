@@ -71,7 +71,6 @@ export default function Navbar() {
       window.sessionStorage.removeItem("authToken");
     }
   };
-fetchUserData();
 
   const handleLogout = async () => {
     try {
