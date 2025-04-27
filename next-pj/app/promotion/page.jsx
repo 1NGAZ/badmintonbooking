@@ -6,7 +6,8 @@ import Link from "next/link";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const Page = () => {
   const router = useRouter();
@@ -36,19 +37,15 @@ const Page = () => {
       try {
         if (typeof window !== "undefined") {
           const token = sessionStorage.getItem("authToken");
-          console.log("Token:", token);
+          // ลบ console.log ที่ไม่จำเป็น
           if (!token) {
-            console.error("No token found in sessionStorage");
             router.push("/login");
             return;
           }
           // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
-          const userResponse = await axios.get(
-            `${API_URL}/user/profile`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          const userResponse = await axios.get(`${API_URL}/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
           // ตรวจสอบว่าเป็นแอดมิน (roleId = 1) หรือไม่
           const isAdmin = userResponse.data?.roles?.some(
             (role) => role.id === 1
@@ -171,14 +168,11 @@ const Page = () => {
     try {
       if (typeof window !== "undefined") {
         const token = sessionStorage.getItem("authToken");
-        const response = await axios.get(
-          `${API_URL}/promotions/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${API_URL}/promotions/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const promo = response.data;
 
         // แปลงวันที่ให้อยู่ในรูปแบบที่ input type="date" รองรับ
@@ -268,21 +262,74 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // เพิ่มการตรวจสอบความถูกต้องของข้อมูล
+    if (!formData.title.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "กรุณากรอกชื่อโปรโมชั่น",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
+    if (!formData.code.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "กรุณากรอกรหัสโปรโมชั่น",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
+    if (formData.discount <= 0 || formData.discount > 100) {
+      Swal.fire({
+        icon: "error",
+        title: "ส่วนลดต้องมีค่าระหว่าง 1-100",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
+    if (!formData.startDate || !formData.endDate) {
+      Swal.fire({
+        icon: "error",
+        title: "กรุณากำหนดวันเริ่มต้นและวันสิ้นสุด",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
+    // ตรวจสอบว่าวันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด
+    if (new Date(formData.startDate) > new Date(formData.endDate)) {
+      Swal.fire({
+        icon: "error",
+        title: "วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
     try {
       if (typeof window !== "undefined") {
         const token = sessionStorage.getItem("authToken");
 
+        // แสดง loading indicator
+        Swal.fire({
+          title: "กำลังดำเนินการ",
+          text: "โปรดรอสักครู่...",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
         if (editMode) {
-          // 8 อัปเดตโปรโมชั่น
-          await axios.put(
-            `${API_URL}/promotions/${currentId}`,
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          // อัปเดตโปรโมชั่น
+          await axios.put(`${API_URL}/promotions/${currentId}`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           Swal.fire({
             icon: "success",
             title: "อัปเดตสำเร็จ!",
@@ -840,7 +887,7 @@ const Page = () => {
                       htmlFor="title"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      ชื่อโปรโมชั่น
+                      ชื่อโปรโมชั่น <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -854,34 +901,6 @@ const Page = () => {
                   </div>
                   <div>
                     <label
-                      htmlFor="maxUses"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      จำนวนการใช้งานสูงสุด (0 = ไม่จำกัด)
-                    </label>
-                    <input
-                      type="number"
-                      id="maxUses"
-                      name="maxUses"
-                      min="0"
-                      value={formData.maxUses}
-                      onChange={handleChange}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-                    />
-                  </div>
-                  {/* แสดงจำนวนการใช้งานปัจจุบันเมื่ออยู่ในโหมดแก้ไข */}
-                  {editMode && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        จำนวนการใช้งานปัจจุบัน
-                      </label>
-                      <div className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
-                        {formData.usedCount || 0} ครั้ง
-                      </div>
-                    </div>
-                  )}
-                  <div>
-                    <label
                       htmlFor="description"
                       className="block text-sm font-medium text-gray-700"
                     >
@@ -892,23 +911,22 @@ const Page = () => {
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      rows="1"
+                      rows="3"
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     ></textarea>
                   </div>
-
                   <div>
                     <label
                       htmlFor="discount"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      ส่วนลด (%)
+                      ส่วนลด (%) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       id="discount"
                       name="discount"
-                      min="0"
+                      min="1"
                       max="100"
                       value={formData.discount}
                       onChange={handleChange}
@@ -916,13 +934,12 @@ const Page = () => {
                       required
                     />
                   </div>
-
                   <div>
                     <label
                       htmlFor="code"
                       className="block text-sm font-medium text-gray-700"
                     >
-                      รหัสโปรโมชั่น (6 หลัก)
+                      รหัสโปรโมชั่น <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1 flex rounded-md shadow-sm">
                       <input
@@ -931,31 +948,25 @@ const Page = () => {
                         name="code"
                         value={formData.code}
                         onChange={handleChange}
-                        maxLength="6"
                         className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md border border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500"
-                        placeholder="ABCD12"
                         required
                       />
                       <button
                         type="button"
                         onClick={generatePromoCode}
-                        className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 rounded-r-md hover:bg-gray-100"
+                        className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 rounded-r-md hover:bg-gray-100 focus:outline-none"
                       >
-                        สุ่ม
+                        สร้างรหัส
                       </button>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
-                      รหัสโปรโมชั่นจะใช้สำหรับกรอกตอนจองสนาม
-                    </p>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label
                         htmlFor="startDate"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        วันที่เริ่มต้น
+                        วันที่เริ่มต้น <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -967,13 +978,12 @@ const Page = () => {
                         required
                       />
                     </div>
-
                     <div>
                       <label
                         htmlFor="endDate"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        วันที่สิ้นสุด
+                        วันที่สิ้นสุด <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
