@@ -86,7 +86,25 @@ const Page = () => {
   };
 
   const handleUpdatePhone = async () => {
-    try {
+    try {if (!phone.trim()) {
+      toast.error("กรุณากรอกเบอร์โทรศัพท์");
+      return;
+    }
+
+    // ตรวจสอบรูปแบบเบอร์โทรศัพท์
+    const cleanedPhone = phone.trim().replace(/[- .]/g, "");
+    if (!/^\d{10}$/.test(cleanedPhone)) {
+      toast.error(
+        "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์โทรศัพท์ 10 หลัก"
+      );
+      return;
+    }
+
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      toast.error("กรุณาเข้าสู่ระบบใหม่");
+      return;
+    }
 
       const response = await axios.patch(
         `${API_URL}/user/users/profile`,
@@ -106,6 +124,10 @@ const Page = () => {
       toast.success("อัพเดทเบอร์โทรศัพท์สำเร็จ");
       setIsOpen1(false);
     } catch (error) {
+      console.error("Update error:", error);
+      toast.error(
+        error.response?.data?.message || "เกิดข้อผิดพลาดในการอัพเดทเบอร์โทรศัพท์"
+      );
     }
   };
 
