@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
 
 const Page = () => {
   const [userData, setUserData] = useState({
