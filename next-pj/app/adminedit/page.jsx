@@ -5,6 +5,7 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getUserData } from "../utils/auth"; // เพิ่มการ import getUserData
 import {
   Select,
   SelectContent,
@@ -14,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-const API_URL = process.env.PUBLIC_NEXT_API_URL; 
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -28,8 +29,11 @@ const Page = () => {
   useEffect(() => {
     const checkLoginAndFetchData = async () => {
       try {
+        // ใช้ getUserData แทนการดึง token โดยตรง
+        const userData = getUserData();
         const token = sessionStorage.getItem("authToken");
-        if (!token) {
+        
+        if (!userData || !token) {
           router.push("/login");
           return;
         }
@@ -139,18 +143,21 @@ const Page = () => {
       
       if (error.response?.status === 403) {
         errorMessage = "คุณไม่มีสิทธิ์ในการเปลี่ยนแปลงสิทธิ์ผู้ใช้";
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("userData");
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       setNotification({
         type: "error",
-        message: errorMessage
+        message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่",
       });
   
       setTimeout(() => {
-        setNotification(null);
+        router.push("/login");
       }, 3000);
+      return;
     }
   };
 
