@@ -43,6 +43,15 @@ export default function Page() {
       return;
     }
 
+    // ตรวจสอบรูปแบบรหัสผ่าน (ต้องมีตัวอักษรภาษาอังกฤษและตัวเลข)
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError(
+        "รหัสผ่านต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขอย่างน้อย 1 ตัว"
+      );
+      return;
+    }
+
     // เพิ่มการตรวจสอบความถูกต้องของข้อมูล
     if (formData.password !== formData.confirmPassword) {
       setError("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
@@ -183,6 +192,10 @@ export default function Page() {
                     placeholder="รหัสผ่าน"
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร
+                  ประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขอย่างน้อย 1 ตัว
+                </p>
               </div>
 
               <div className="mt-4">
