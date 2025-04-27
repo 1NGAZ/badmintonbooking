@@ -5,7 +5,9 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+import { getUserData } from "../utils/auth"; // เพิ่มการ import getUserData
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
 
 const Page = () => {
   const [reservations, setReservations] = useState([]);
@@ -18,8 +20,10 @@ const Page = () => {
   useEffect(() => {
     const checkLoginAndFetchData = async () => {
       try {
+        const userData = getUserData();
         const token = sessionStorage.getItem("authToken");
-        if (!token) {
+        
+        if (!userData || !token) {
           router.push("/login");
           return;
         }
@@ -68,7 +72,11 @@ const Page = () => {
 
         setReservations(updatedReservations || []);
       } catch (error) {
-        if (error?.response?.status === 401) {
+        console.error("Fetch data error:", error);
+        // จัดการกรณี token หมดอายุหรือไม่ถูกต้อง
+        if (error?.response?.status === 401 || error?.response?.status === 403) {
+          sessionStorage.removeItem("authToken");
+          sessionStorage.removeItem("userData");
           router.push("/login");
         } else {
           setError(
