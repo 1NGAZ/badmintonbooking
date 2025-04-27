@@ -119,7 +119,6 @@ const Page = () => {
 
         return;
       }
-
       setNotification({
         type: "loading",
         message: "กำลังอัพเดตสิทธิ์...",
@@ -544,45 +543,9 @@ const Page = () => {
                               {index + 1}
                             </td>
                             <td className="px-4 py-3">
-                              {parseInt(user.id) === currentUserId ? (
-                                <div className="w-full max-w-xs mx-auto">
-                                  <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50 text-gray-500 text-sm flex items-center justify-between">
-                                    <span>
-                                      {user.roles?.[0]?.name || "User"}
-                                    </span>
-                                    <span className="text-xs text-red-500 ml-2">
-                                      (ไม่สามารถเปลี่ยนสิทธิ์ตัวเองได้)
-                                    </span>
-                                  </div>
-                                </div>
-                              ) : (
-                                <Select
-                                  defaultValue={
-                                    user.roles?.[0]?.id.toString() || "2"
-                                  }
-                                  onValueChange={(value) =>
-                                    handleRoleChange(user.id, [parseInt(value)])
-                                  }
-                                  className="w-full max-w-xs mx-auto"
-                                >
-                                  <SelectTrigger className="w-full text-xs sm:text-sm">
-                                    <SelectValue placeholder="เลือกสิทธิ์การใช้งาน" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectGroup>
-                                      <SelectLabel>สิทธิ์การใช้งาน</SelectLabel>
-                                      {roles.map((role) => (
-                                        <SelectItem
-                                          key={role.id}
-                                          value={role.id.toString()}
-                                        >
-                                          {role.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectGroup>
-                                  </SelectContent>
-                                </Select>
-                              )}
+                              <div className="font-medium text-gray-900">
+                                {user.email}
+                              </div>
                             </td>
                             <td className="hidden sm:table-cell px-4 py-3">
                               {user.fname && user.lname
