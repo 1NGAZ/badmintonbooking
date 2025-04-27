@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import axios from "axios";
 import Cookies from 'js-cookie';
-const API_URL = process.env.PUBLIC_NEXT_API_URL; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL; 
+console.log(API_URL);
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -10,11 +11,6 @@ export default function LoginPage() {
     password: "",
   });
   const [error, setError] = useState("");
- 
-
-
-
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
