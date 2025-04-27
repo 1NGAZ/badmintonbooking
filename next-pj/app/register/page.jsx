@@ -1,16 +1,16 @@
-'use client';
-import React, { useState } from 'react';
-import axios from 'axios';
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+"use client";
+import React, { useState } from "react";
+import axios from "axios";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function Page() {
   const [formData, setFormData] = useState({
-    email: '',
-    firstname: '',
-    lastname: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
+    email: "",
+    firstname: "",
+    lastname: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
     terms: false,
   });
 
@@ -21,7 +21,7 @@ export default function Page() {
     const { name, value, type, checked } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -30,23 +30,49 @@ export default function Page() {
     setError(null);
     setSuccess(null);
 
+    // ตรวจสอบรูปแบบอีเมล
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("รูปแบบอีเมลไม่ถูกต้อง");
+      return;
+    }
+
+    // ตรวจสอบความยาวของรหัสผ่าน
+    if (formData.password.length < 6) {
+      setError("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
+    // เพิ่มการตรวจสอบความถูกต้องของข้อมูล
+    if (formData.password !== formData.confirmPassword) {
+      setError("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
+      return;
+    }
+
+    // ตรวจสอบรูปแบบเบอร์โทรศัพท์
+    const cleanedPhone = formData.phone.trim().replace(/[- .]/g, "");
+    if (!/^\d{10}$/.test(cleanedPhone)) {
+      setError("รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์โทรศัพท์ 10 หลัก");
+      return;
+    }
+
     try {
-      const res = await axios.post(`${API_URL}/auth/register'`, {
+      const res = await axios.post(`${API_URL}/auth/register`, {
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
         fname: formData.firstname,
         lname: formData.lastname,
-        phone: formData.phone,
+        phone: cleanedPhone,
       });
 
-      setSuccess('สมัครสมาชิกสำเร็จ!!!');
- 
+      setSuccess("สมัครสมาชิกสำเร็จ!!!");
+
       setTimeout(() => {
         window.location.href = "/login";
-      }, 3000);
+      }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'เกิดข้อผิดพลาดในระบบ');
+      setError(err.response?.data?.error || "เกิดข้อผิดพลาดในระบบ");
     }
   };
 
@@ -57,9 +83,11 @@ export default function Page() {
           <div className="md:max-w-md w-full px-4 py-4">
             <form onSubmit={handleSubmit}>
               <div className="mb-5">
-                <h3 className="text-gray-800 text-3xl font-extrabold">สมัครสมาชิก</h3>
+                <h3 className="text-gray-800 text-3xl font-extrabold">
+                  สมัครสมาชิก
+                </h3>
                 <p className="text-sm mt-4 text-gray-800">
-                    มีบัญชีอยู่แล้วใช่ไหม?{' '}
+                  มีบัญชีอยู่แล้วใช่ไหม?{" "}
                   <a
                     href="/login"
                     className="text-blue-600 font-semibold hover:underline ml-1 whitespace-nowrap"
@@ -73,7 +101,9 @@ export default function Page() {
               {success && <div className="text-green-500 mb-4">{success}</div>}
 
               <div>
-                <label className="text-gray-800 text-xs block mb-2">Email</label>
+                <label className="text-gray-800 text-xs block mb-2">
+                  Email
+                </label>
                 <div className="relative flex items-center">
                   <input
                     name="email"
@@ -88,7 +118,9 @@ export default function Page() {
               </div>
 
               <div>
-                <label className="text-gray-800 text-xs block mb-2">Firstname</label>
+                <label className="text-gray-800 text-xs block mb-2">
+                  Firstname
+                </label>
                 <div className="relative flex items-center">
                   <input
                     name="firstname"
@@ -103,7 +135,9 @@ export default function Page() {
               </div>
 
               <div>
-                <label className="text-gray-800 text-xs block mb-2">Lastname</label>
+                <label className="text-gray-800 text-xs block mb-2">
+                  Lastname
+                </label>
                 <div className="relative flex items-center">
                   <input
                     name="lastname"
@@ -118,7 +152,9 @@ export default function Page() {
               </div>
 
               <div>
-                <label className="text-gray-800 text-xs block mb-2">Phone</label>
+                <label className="text-gray-800 text-xs block mb-2">
+                  Phone
+                </label>
                 <div className="relative flex items-center">
                   <input
                     name="phone"
@@ -133,7 +169,9 @@ export default function Page() {
               </div>
 
               <div className="mt-4">
-                <label className="text-gray-800 text-xs block mb-2">Password</label>
+                <label className="text-gray-800 text-xs block mb-2">
+                  Password
+                </label>
                 <div className="relative flex items-center">
                   <input
                     name="password"
@@ -148,7 +186,9 @@ export default function Page() {
               </div>
 
               <div className="mt-4">
-                <label className="text-gray-800 text-xs block mb-2">Confirm Password</label>
+                <label className="text-gray-800 text-xs block mb-2">
+                  Confirm Password
+                </label>
                 <div className="relative flex items-center">
                   <input
                     name="confirmPassword"
