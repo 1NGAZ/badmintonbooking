@@ -34,7 +34,7 @@ import axios from "axios";
 import SettingButton from "../components/SettingButton";
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function ReservationTable() {
   // เพิ่มหลังจาก state declarations
@@ -123,7 +123,7 @@ export default function ReservationTable() {
       setIsModalOpen(true);
       return;
     }
-  
+
     // ตรวจสอบวันที่
     if (!showDate || !showDate.from) {
       Swal.fire({
@@ -132,7 +132,7 @@ export default function ReservationTable() {
       });
       return;
     }
-  
+
     // ตรวจสอบช่วงเวลา
     if (selectedTimeSlots.length === 0) {
       Swal.fire({
@@ -142,7 +142,7 @@ export default function ReservationTable() {
       });
       return;
     }
-  
+
     // ตรวจสอบไฟล์สลิป
     if (!selectedFile) {
       Swal.fire({
@@ -152,36 +152,36 @@ export default function ReservationTable() {
       });
       return;
     }
-  
+
     try {
       const formData = new FormData();
-  
+
       // แนบไฟล์
       formData.append("attachment", selectedFile);
-  
+
       // แนบข้อมูลผู้ใช้
       formData.append("userId", userData.id);
-  
+
       // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
       const reservationDate = `${showDate.from.getFullYear()}-${String(
         showDate.from.getMonth() + 1
       ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
       formData.append("reservationDate", reservationDate);
-  
+
       // แนบช่วงเวลาที่เลือก
       formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
-  
+
       // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
       formData.append("courtId", selectedTimeSlots[0].courtId);
-  
+
       // แนบสถานะ (2 = รอดำเนินการ)
       formData.append("statusId", "2");
-  
+
       // แนบรหัสโปรโมชั่นถ้ามี
       if (appliedPromotion?.code) {
         formData.append("promotionCode", appliedPromotion.code);
       }
-  
+
       // ส่งข้อมูลไปยัง API
       const response = await axios.post(
         `${API_URL}/reservation/reservations`,
@@ -193,7 +193,7 @@ export default function ReservationTable() {
           withCredentials: true,
         }
       );
-  
+
       // ถ้าสำเร็จ
       if (response.status >= 200 && response.status < 300) {
         setOpen(false);
@@ -201,20 +201,20 @@ export default function ReservationTable() {
         setSelectedFile(null);
         setPromotionCode("");
         setAppliedPromotion(null);
-  
+
         Swal.fire({
           title: "จองสนามสำเร็จ",
           text: "กรุณารอการยืนยันจากแอดมิน",
           icon: "success",
         });
-  
+
         // โหลดข้อมูลใหม่
         const adjustedDate = new Date(showDate.from);
         adjustedDate.setHours(12, 0, 0, 0);
         const formattedDate = `${adjustedDate.getFullYear()}-${String(
           adjustedDate.getMonth() + 1
         ).padStart(2, "0")}-${String(adjustedDate.getDate()).padStart(2, "0")}`;
-  
+
         const reservationResponse = await axios.get(
           `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
           { withCredentials: true }
@@ -223,14 +223,14 @@ export default function ReservationTable() {
       }
     } catch (error) {
       let errorMessage = "ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง";
-  
+
       if (error?.response?.data) {
         errorMessage =
           error.response.data.message ||
           error.response.data.error ||
           errorMessage;
       }
-  
+
       Swal.fire({
         title: "เกิดข้อผิดพลาด",
         text: errorMessage,
@@ -238,7 +238,7 @@ export default function ReservationTable() {
       });
     }
   };
-  
+
   const normalizeTime = (timeStr) => {
     if (!timeStr) return null;
     return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
@@ -351,6 +351,18 @@ export default function ReservationTable() {
             `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
             { withCredentials: true }
           );
+          // เรียงลำดับข้อมูลสนามตาม id
+          const sortedData = [...response.data].sort((a, b) => {
+            // แปลง id เป็นตัวเลขเพื่อเปรียบเทียบ
+            const idA = Number(a.id);
+            const idB = Number(b.id);
+            // เรียงจากน้อยไปมาก
+            return idA - idB;
+          });
+
+          console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
+          setReservationData(sortedData);
+
           setReservationData(response.data);
         } catch (error) {
           console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
@@ -453,7 +465,7 @@ export default function ReservationTable() {
   const handleAddCourt = async () => {
     try {
       const response = await axios.post(
-       `${API_URL}/courts`,
+        `${API_URL}/courts`,
         {
           name: newCourtName,
           price: courtPrice,
@@ -504,10 +516,9 @@ export default function ReservationTable() {
 
   const handleDeleteCourt = async (courtId) => {
     try {
-      const response = await axios.delete(
-        `${API_URL}/courts/${courtId}`,
-        { withCredentials: true }
-      );
+      const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
+        withCredentials: true,
+      });
 
       if (response.status === 200) {
         setReservationData((prevData) =>
