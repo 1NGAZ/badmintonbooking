@@ -9,20 +9,37 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // const fetchUserData = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${API_URL}/user/selectuserid`,
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
+  //     setUserData(response.data);
+  //   } catch (error) {
+  //     console.log({ message: error });
+  //   }
+  // };
   const fetchUserData = async () => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/user/selectuserid`,
-        {
-          withCredentials: true,
-        }
-      );
-      setUserData(response.data);
-    } catch (error) {
-      console.log({ message: error });
+  try {
+    // ดึง token จาก sessionStorage
+    const token = window.sessionStorage.getItem("authToken");
+    
+    // ถ้าไม่มี token ให้ return ออกไปเลย
+    if (!token) {
+      console.log("ไม่พบ token ในระบบ");
+      return;
     }
-  };
-  
+    console.log(token);
+    
+  } catch (error) {
+    console.log({ message: error });
+  }
+}
+fetchUserData();
+
   const handleLogout = async () => {
     try {
       // เรียก API logout
