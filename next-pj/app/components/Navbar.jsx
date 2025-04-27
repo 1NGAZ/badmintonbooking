@@ -1,101 +1,27 @@
 "use client";
-import axios from "axios";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-const API_URL = process.env.NEXT_PUBLIC_API_URL; 
+import { getUserData, logout, isAdmin as checkIsAdmin } from "../utils/auth";
+
 export default function Navbar() {
   const [userData, setUserData] = useState();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // const fetchUserData = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `${API_URL}/user/selectuserid`,
-  //       {
-  //         withCredentials: true,
-  //       }
-  //     );
-  //     setUserData(response.data);
-  //   } catch (error) {
-  //     console.log({ message: error });
-  //   }
-  // };
   const fetchUserData = () => {
-    try {
-      // ดึง token จาก sessionStorage
-      const token = window.sessionStorage.getItem("authToken");
-      
-      // ถ้าไม่มี token ให้ return ออกไปเลย
-      if (!token) {
-        console.log("ไม่พบ token ในระบบ");
-        return;
-      }
-      
-      // แกะข้อมูลจาก token (ไม่ต้องใช้ library เพิ่ม)
-      const tokenParts = token.split('.');
-      if (tokenParts.length !== 3) {
-        console.log("รูปแบบ token ไม่ถูกต้อง");
-        return;
-      }
-      
-      // แปลง base64 ส่วนที่ 2 (payload) เป็น JSON
-      const payload = JSON.parse(atob(tokenParts[1]));
-      console.log("Token payload:", payload);
-      
-      // ตรวจสอบว่า token หมดอายุหรือไม่
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (payload.exp && payload.exp < currentTime) {
-        console.log("Token หมดอายุแล้ว");
-        window.sessionStorage.removeItem("authToken");
-        window.location.href = "/login";
-        return;
-      }
-      
-      // สร้างข้อมูลผู้ใช้จาก payload
-      const userData = {
-        id: payload.userId,
-        email: payload.email,
-        fname: payload.fname || "ผู้ใช้งาน", // ถ้าไม่มีชื่อใน token ให้ใช้ค่าเริ่มต้น
-        lname: payload.lname || "",
-        userRoles: [{ roleId: payload.roleId }] // สร้าง userRoles เพื่อให้ isAdmin ทำงานได้
-      };
-      // เก็บข้อมูลผู้ใช้ลงใน sessionStorage
-      window.sessionStorage.setItem("userData", JSON.stringify(userData));
-      // เซ็ตข้อมูลผู้ใช้
-      setUserData(userData);
-    } catch (error) {
-      console.log("Error parsing token:", error);
-      // ถ้าเกิด error ในการแกะ token ให้ลบ token และ redirect ไปหน้า login
-      window.sessionStorage.removeItem("authToken");
-    }
+    const data = getUserData();
+    setUserData(data);
   };
 
-  const handleLogout = async () => {
-    try {
-      // เรียก API logout
-      const response = await axios.post(
-       ` ${API_URL}/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-
-      // ล้าง token จาก sessionStorage
-      window.sessionStorage.removeItem("authToken");
-      
-      console.log(response.data.message);
+  const handleLogout = () => {
+    logout(() => {
       window.location.href = "/login";
-    } catch (error) {
-      console.error("Error during logout:", error);
-      alert("ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง");
-    }
+    });
   };
 
   useEffect(() => {
     fetchUserData();
   }, []);
-  console.log(userData);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -106,7 +32,7 @@ export default function Navbar() {
   };
 
   // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
-  const isAdmin = userData?.userRoles?.some((userRole) => userRole.roleId === 1);
+  const isAdmin = userData ? checkIsAdmin() : false;
 
   return (
     <nav className="flex justify-between items-center bg-gradient-to-r from-red-600 to-red-800 p-2 md:p-4 w-full fixed top-0 z-50 shadow-md">
