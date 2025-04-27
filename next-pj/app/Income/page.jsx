@@ -18,7 +18,8 @@ import { Overview } from "../components/Overview";
 import { RecentSales } from "../components/RecentSales";
 import Swal from "sweetalert2";
 import "animate.css";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const Page = () => {
   const [transactions, setTransactions] = useState([]);
@@ -50,25 +51,19 @@ const Page = () => {
       try {
         if (typeof window !== "undefined") {
           const token = sessionStorage.getItem("authToken");
-          console.log("Token:", token);
+          // ลบ console.log ที่ไม่จำเป็น
           if (!token) {
-            console.error("No token found in sessionStorage");
             router.push("/login");
             return;
           }
 
-          console.log("Token ที่จะใช้:", token);
-
           // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
-          const userResponse = await axios.get(
-            `${API_URL}/user/profile`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const userResponse = await axios.get(`${API_URL}/user/profile`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
 
           // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
           const isAdmin = userResponse.data?.roles?.some(
@@ -86,11 +81,6 @@ const Page = () => {
             return;
           }
 
-          console.log(
-            "กำลังเรียก API reports/income ด้วย token:",
-            token.substring(0, 20) + "..."
-          );
-
           // สร้าง headers object แยกเพื่อให้แน่ใจว่าถูกต้อง
           const headers = {
             Authorization: `Bearer ${token}`,
@@ -98,22 +88,17 @@ const Page = () => {
             Accept: "application/json",
           };
 
-          console.log("Headers ที่ส่งไป:", headers);
-
-          const response = await axios.get(
-            `${API_URL}/reports/income`,
-            {
-              headers: headers,
-              params: {
-                startDate: dateRange.from
-                  ? new Date(dateRange.from).toISOString().split("T")[0]
-                  : undefined,
-                endDate: dateRange.to
-                  ? new Date(dateRange.to).toISOString().split("T")[0]
-                  : undefined,
-              },
-            }
-          );
+          const response = await axios.get(`${API_URL}/reports/income`, {
+            headers: headers,
+            params: {
+              startDate: dateRange.from
+                ? new Date(dateRange.from).toISOString().split("T")[0]
+                : undefined,
+              endDate: dateRange.to
+                ? new Date(dateRange.to).toISOString().split("T")[0]
+                : undefined,
+            },
+          });
 
           if (response.data.error) {
             throw new Error(response.data.error);
@@ -861,7 +846,7 @@ const Page = () => {
                           />
                         </svg>
                         <p className="text-gray-500 mt-4">
-                          ยังไม่มีรายการรายรับรายจ่าย
+                        ไม่พบรายการในช่วงเวลาที่เลือก
                         </p>
                       </div>
                     ) : filteredTransactions.length === 0 ? (
