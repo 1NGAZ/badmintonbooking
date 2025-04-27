@@ -351,15 +351,27 @@ export default function ReservationTable() {
             `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
             { withCredentials: true }
           );
-          // เรียงลำดับข้อมูลสนามตาม id
+          
+          //เรียงลำดับข้อมูลสนามโดยใช้ทั้งตัวเลขในชื่อและ ID
           const sortedData = [...response.data].sort((a, b) => {
-            // แปลง id เป็นตัวเลขเพื่อเปรียบเทียบ
-            const idA = Number(a.id);
-            const idB = Number(b.id);
-            // เรียงจากน้อยไปมาก
-            return idA - idB;
+            // ดึงตัวเลขจากชื่อสนาม (เช่น "สนามแบดมินตัน 1" จะได้ 1)
+            const getCourtNumber = (name) => {
+              const match = name.match(/\d+/);
+              return match ? parseInt(match[0]) : -1; // ถ้าไม่มีตัวเลขให้ค่าเป็น -1
+            };
+            
+            const numA = getCourtNumber(a.name);
+            const numB = getCourtNumber(b.name);
+            
+            // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
+            if (numA >= 0 && numB >= 0) {
+              return numA - numB;
+            }
+            // ถ้าอันใดอันหนึ่งไม่มีตัวเลข ให้เรียงตาม ID
+            else {
+              return Number(a.id) - Number(b.id);
+            }
           });
-
           console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
           setReservationData(sortedData);
 
