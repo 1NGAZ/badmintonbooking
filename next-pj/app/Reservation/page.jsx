@@ -33,7 +33,8 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import SettingButton from "../components/SettingButton";
 import { jwtDecode } from "jwt-decode";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
 
 export default function ReservationTable() {
   // เพิ่มหลังจาก state declarations
