@@ -915,6 +915,26 @@ const Page = () => {
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     ></textarea>
                   </div>
+                             {/* เพิ่มส่วนกำหนดจำนวนการใช้งานสูงสุด */}
+                             <div>
+                    <label
+                      htmlFor="maxUses"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      จำนวนการใช้งานสูงสุด
+                      <span className="text-xs text-gray-500 ml-1">(0 = ไม่จำกัด)</span>
+                    </label>
+                    <input
+                      type="number"
+                      id="maxUses"
+                      name="maxUses"
+                      min="0"
+                      value={formData.maxUses}
+                      onChange={handleChange}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                    />
+                  </div>
+                </div>
                   <div>
                     <label
                       htmlFor="discount"
