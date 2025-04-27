@@ -281,6 +281,15 @@ const Page = () => {
       return;
     }
 
+    if (formData.maxUses < 0) {
+      Swal.fire({
+        icon: "error",
+        title: "จำนวนการใช้งานสูงสุดต้องไม่น้อยกว่า 0",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
+
     if (formData.discount <= 0 || formData.discount > 100) {
       Swal.fire({
         icon: "error",
@@ -915,8 +924,8 @@ const Page = () => {
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     ></textarea>
                   </div>
-                             {/* เพิ่มส่วนกำหนดจำนวนการใช้งานสูงสุด */}
-                             <div>
+                  
+                  <div>
                     <label
                       htmlFor="maxUses"
                       className="block text-sm font-medium text-gray-700"
@@ -934,7 +943,7 @@ const Page = () => {
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
-                </div>
+                  
                   <div>
                     <label
                       htmlFor="discount"
