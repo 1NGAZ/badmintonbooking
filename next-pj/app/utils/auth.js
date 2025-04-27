@@ -1,5 +1,7 @@
 "use client";
 
+import { Phone } from 'lucide-react';
+
 /**
  * ฟังก์ชันสำหรับแกะข้อมูลจาก JWT token
  * @returns {Object|null} ข้อมูลผู้ใช้หรือ null ถ้าไม่มี token
@@ -45,6 +47,7 @@ export const getUserDataFromToken = () => {
       email: payload.email,
       fname: payload.fname || "ผู้ใช้งาน",
       lname: payload.lname || "",
+      phone: payload.phone || "",
       userRoles: [{ roleId: payload.roleId }]
     };
     
