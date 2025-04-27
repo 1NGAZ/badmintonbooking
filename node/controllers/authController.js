@@ -63,9 +63,9 @@ const login = async (req, res) => {
     // ส่ง token ใน cookie
     res.cookie("token", token, {
       maxAge: 60 * 60 * 1000,  // 10 นาที
-      secure: false, // ใช้ false สำหรับการทดสอบใน localhost (ไม่ใช้ HTTPS)
+      secure: true, // ใช้ false สำหรับการทดสอบใน localhost (ไม่ใช้ HTTPS)
       httpOnly: true,
-      sameSite: "Strict",
+      sameSite: "None",
     });
 
     // ส่งผลลัพธ์กลับ

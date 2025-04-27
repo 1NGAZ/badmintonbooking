@@ -33,7 +33,7 @@ const HOST = '0.0.0.0';
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://main.d1zj9mx63gh4d9.amplifyapp.com",
+  origin: "https://fix-old-version.dugk5u7droojn.amplifyapp.com",
   credentials: true,
 }));
 

@@ -3,8 +3,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-const API_URL = process.env.PUBLIC_NEXT_API_URL || "http://localhost:8000"; 
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL; 
 export default function Navbar() {
   const [userData, setUserData] = useState();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
