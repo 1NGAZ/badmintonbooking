@@ -111,6 +111,9 @@ const SettingButton = ({ court, selectedDate }) => {
         pauseOnHover: true,
         draggable: true,
       });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึก:", error);
 
@@ -138,9 +141,6 @@ const SettingButton = ({ court, selectedDate }) => {
         pauseOnHover: true,
         draggable: true,
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     }
   };
 
