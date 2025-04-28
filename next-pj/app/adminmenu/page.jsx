@@ -575,32 +575,30 @@ const Page = () => {
                             <td className="hidden md:table-cell px-4 py-3">
                               {item.user.phone || "-"}
                             </td>
-                            {/* <td className="px-4 py-3">
+                            <td className="px-4 py-3">
                               <div className="text-gray-600">
-                                <div>
-                                  {new Date(item.start_time).toLocaleString(
-                                    "th-TH",
-                                    {
-                                      timeZone: "Asia/Bangkok",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )}
+                                <div className="font-semibold">
+                                  {(() => {
+                                    const date = new Date(item.start_time);
+                                    const day = date.getDate();
+                                    const month = date.toLocaleString("th-TH", {
+                                      month: "short",
+                                    }); // เม.ย.
+                                    const year = date.getFullYear();
+                                    return `${day} ${month} ${year}`;
+                                  })()}
                                 </div>
-                                <div className="text-gray-400 text-xs">
+                                <div className="text-sm">
+                                  {item.start_time
+                                    .split("T")[1]
+                                    .substring(0, 5)}{" "}
                                   ถึง{" "}
-                                  {new Date(item.end_time).toLocaleString(
-                                    "th-TH",
-                                    {
-                                      timeZone: "Asia/Bangkok",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )}
+                                  {item.end_time.split("T")[1].substring(0, 5)}
                                 </div>
                               </div>
-                            </td> */}
-                            <td className="px-4 py-3">
+                            </td>
+
+                            {/* <td className="px-4 py-3">
                               <div className="text-gray-600">
                                 <div>
                                   {item.start_time
@@ -612,7 +610,7 @@ const Page = () => {
                                   {item.end_time.split("T")[1].substring(0, 5)}
                                 </div>
                               </div>
-                            </td>
+                            </td> */}
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm font-medium">
                               {item.totalHours}
                             </td>
