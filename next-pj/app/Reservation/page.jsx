@@ -306,9 +306,7 @@ export default function ReservationTable() {
       }
 
       // แนบวันจอง (format YYYY-MM-DD)
-      const reservationDate = `${showDate.from.getFullYear()}-${String(
-        showDate.from.getMonth() + 1
-      ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
+      const reservationDate = `${showDate.from.getFullYear()}-${String(showDate.from.getMonth() + 1).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
       formData.append("reservationDate", reservationDate);
 
       console.log("ส่งข้อมูล:", {
@@ -349,9 +347,7 @@ export default function ReservationTable() {
         // รีโหลดข้อมูลการจองใหม่
         const adjustedDate = new Date(showDate.from);
         adjustedDate.setHours(12, 0, 0, 0);
-        const formattedDate = `${adjustedDate.getFullYear()}-${String(
-          adjustedDate.getMonth() + 1
-        ).padStart(2, "0")}-${String(adjustedDate.getDate()).padStart(2, "0")}`;
+        const formattedDate = `${adjustedDate.getFullYear()}-${String(adjustedDate.getMonth() + 1).padStart(2, "0")}-${String(adjustedDate.getDate()).padStart(2, "0")}`;
 
         const reservationResponse = await axios.get(
           `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
@@ -376,6 +372,7 @@ export default function ReservationTable() {
       });
     }
   };
+
   const normalizeTime = (timeStr) => {
     if (!timeStr) return null;
     return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
