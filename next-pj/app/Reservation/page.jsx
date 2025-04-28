@@ -191,8 +191,8 @@ export default function ReservationTable() {
         return {
           timeSlotId: slot.timeSlotId,
           courtId: slot.courtId,
-          startTime: timeSlot?.startTime,
-          endTime: timeSlot?.endTime,
+          startTime: timeSlot?.start_time || null,
+          endTime: timeSlot?.end_time || null,
         };
       });
 
