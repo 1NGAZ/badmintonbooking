@@ -350,99 +350,6 @@ export default function ReservationTable() {
     }
   };
 
-  ///////////////////////
-  
-  // const handleCheckboxChange = (timeSlotId, courtId) => {
-  //   console.log("Checkbox clicked:", { timeSlotId, courtId });
-  
-  //   timeSlotId = Number(timeSlotId);
-  //   courtId = Number(courtId);
-  
-  //   // หาคอร์ทและช่วงเวลา
-  //   const court = reservationData.find((c) => Number(c.id) === courtId);
-  //   const slot = court?.timeSlots?.find((ts) => Number(ts.id) === timeSlotId);
-  
-  //   // ถ้าไม่เจอ slot หรือ slot ไม่มีเวลา start/end
-  //   if (!slot || !slot.startTime || !slot.endTime) {
-  //     Swal.fire({
-  //       title: "ไม่สามารถเลือกช่วงเวลานี้ได้",
-  //       text: "ข้อมูลช่วงเวลาไม่สมบูรณ์ กรุณาติดต่อผู้ดูแลระบบ",
-  //       icon: "warning",
-  //     });
-  //     return;
-  //   }
-  
-  //   // เช็คว่ากดเลือกหรือยกเลิก
-  //   const isSelected = selectedTimeSlots.some(
-  //     (selected) =>
-  //       Number(selected.timeSlotId) === timeSlotId &&
-  //       Number(selected.courtId) === courtId
-  //   );
-  
-  //   if (isSelected) {
-  //     // ถ้ายกเลิกการเลือก
-  //     const updatedSelected = selectedTimeSlots.filter(
-  //       (selected) =>
-  //         !(
-  //           Number(selected.timeSlotId) === timeSlotId &&
-  //           Number(selected.courtId) === courtId
-  //         )
-  //     );
-  //     console.log("After removal:", updatedSelected);
-  //     setSelectedTimeSlots(updatedSelected);
-  //   } else {
-  //     // ถ้าเลือกใหม่
-  
-  //     if (selectedTimeSlots.length >= maxTimeSlots) {
-  //       Swal.fire({
-  //         title: "ไม่สามารถเลือกได้",
-  //         text: `คุณสามารถเลือกได้สูงสุด ${maxTimeSlots} ช่วงเวลาต่อวัน`,
-  //         icon: "warning",
-  //       });
-  //       return;
-  //     }
-  
-  //     // ตรวจสอบว่ามีการเลือกช่วงเวลาเดียวกันในคอร์ทอื่นไหม
-  //     const normalizedCurrentStartTime = normalizeTime(slot.startTime);
-  
-  //     const hasSameTimeSlotInOtherCourt = selectedTimeSlots.some((selected) => {
-  //       const existingStartTime = normalizeTime(
-  //         getStartTimeBySlot(selected.courtId, selected.timeSlotId)
-  //       );
-  //       return (
-  //         existingStartTime === normalizedCurrentStartTime &&
-  //         Number(selected.courtId) !== courtId
-  //       );
-  //     });
-  
-  //     if (hasSameTimeSlotInOtherCourt) {
-  //       Swal.fire({
-  //         title: "ไม่สามารถเลือกได้",
-  //         text: "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ทที่ต่างกันได้",
-  //         icon: "warning",
-  //       });
-  //       return;
-  //     }
-  
-  //     // เพิ่มใหม่
-  //     const updatedSelected = [
-  //       ...selectedTimeSlots,
-  //       {
-  //         timeSlotId,
-  //         courtId,
-  //         startTime: slot.startTime,
-  //         endTime: slot.endTime,
-  //       },
-  //     ];
-  //     console.log("After addition:", updatedSelected);
-  //     setSelectedTimeSlots(updatedSelected);
-  //   }
-  // };
-  
-
-
-
-
   useEffect(() => {
     console.log("showDate changed:", showDate);
 
@@ -476,32 +383,34 @@ export default function ReservationTable() {
             `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
             { withCredentials: true }
           );
-          setReservationData(response.data);
+          // setReservationData(response.data);
 
           //เรียงลำดับข้อมูลสนามโดยใช้ทั้งตัวเลขในชื่อและ ID
           // ดึงตัวเลขจากชื่อสนาม (เช่น "สนามแบดมินตัน 1" จะได้ 1)
-          // const sortedData = [...response.data].sort((a, b) => {
-          //   const getCourtNumber = (name) => {
-          //     const match = name.match(/\d+/);
-          //     return match ? parseInt(match[0]) : -1;
-          //   };
+          const sortedData = [...response.data].sort((a, b) => {
+            const getCourtNumber = (name) => {
+              const match = name.match(/\d+/);
+              return match ? parseInt(match[0]) : -1;
+            };
 
-          //   const numA = getCourtNumber(a.name);
-          //   const numB = getCourtNumber(b.name);
+            const numA = getCourtNumber(a.name);
+            const numB = getCourtNumber(b.name);
+console.log(numA);
+console.log(numB);
 
-          //   // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
-          //   if (numA >= 0 && numB >= 0) {
-          //     return numA - numB;
-          //   }
-          //   // ถ้าอันใดอันหนึ่งไม่มีตัวเลข ให้เรียงตาม ID
-          //   else {
-          //     return Number(a.id) - Number(b.id);
-          //   }
-          // });
-          // console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
-          // setReservationData(sortedData);
+            // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
+            if (numA >= 0 && numB >= 0) {
+              return numA - numB;
+            }
+            // ถ้าอันใดอันหนึ่งไม่มีตัวเลข ให้เรียงตาม ID
+            else {
+              return Number(a.id) - Number(b.id);
+            }
+          });
+          console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
+          setReservationData(sortedData);
 
-          // setReservationData(response.data);
+          setReservationData(response.data);
         } catch (error) {
           console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
         }
