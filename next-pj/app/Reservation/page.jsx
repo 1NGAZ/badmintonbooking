@@ -172,18 +172,11 @@ export default function ReservationTable() {
       const enhancedTimeSlots = selectedTimeSlots.map(slot => {
         const court = reservationData.find(c => Number(c.id) === Number(slot.courtId));
         const timeSlot = court?.timeSlots?.find(ts => Number(ts.id) === Number(slot.timeSlotId));
-        
-        // ตรวจสอบว่ามีข้อมูล timeSlot และมี startTime และ endTime หรือไม่
-        if (!timeSlot || !timeSlot.startTime || !timeSlot.endTime) {
-          console.error(`ข้อมูลไม่สมบูรณ์สำหรับ timeSlot ${slot.timeSlotId} ในสนาม ${slot.courtId}`);
-          throw new Error("ข้อมูลช่วงเวลาไม่สมบูรณ์ กรุณาลองใหม่อีกครั้ง");
-        }
-        
         return {
           timeSlotId: slot.timeSlotId,
           courtId: slot.courtId,
-          startTime: timeSlot.startTime,
-          endTime: timeSlot.endTime
+          startTime: timeSlot?.startTime,
+          endTime: timeSlot?.endTime
         };
       });
       
@@ -268,80 +261,18 @@ export default function ReservationTable() {
 
 
 
-  // const normalizeTime = (timeStr) => {
-  //   if (!timeStr) return null;
-  //   return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
-  // };
-
-  // const getStartTimeBySlot = (courtId, timeSlotId) => {
-  //   const court = reservationData.find((c) => Number(c.id) === Number(courtId));
-  //   const slot = court?.timeSlots?.find(
-  //     (ts) => Number(ts.id) === Number(timeSlotId)
-  //   );
-  //   return slot?.startTime || null;
-  // };
-
-  const getStartTimeBySlot = (courtId, timeSlotId) => {
-    const court = reservationData.find((c) => Number(c.id) === Number(courtId));
-    if (!court) {
-      console.warn(`Court with ID ${courtId} not found in reservationData`);
-      return null;
-    }
-    
-    if (!court.timeSlots || !Array.isArray(court.timeSlots)) {
-      console.warn(`No timeSlots array found for court ${courtId}`);
-      return null;
-    }
-    
-    const slot = court.timeSlots.find(
-      (ts) => Number(ts.id) === Number(timeSlotId)
-    );
-    
-    if (!slot) {
-      console.warn(`TimeSlot with ID ${timeSlotId} not found in court ${courtId}`);
-      return null;
-    }
-    
-    if (!slot.startTime) {
-      console.warn(`No startTime found for timeSlot ${timeSlotId} in court ${courtId}`);
-      return null;
-    }
-    
-    return slot.startTime;
-  };
-
   const normalizeTime = (timeStr) => {
-    if (!timeStr) {
-      console.warn("normalizeTime received null or empty timeStr");
-      return null;
-    }
+    if (!timeStr) return null;
     return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
   };
 
-  // const handleCheckboxChange = (timeSlotId, courtId) => {
-  //   console.log("Checkbox clicked:", { timeSlotId, courtId });
-
-  //   timeSlotId = Number(timeSlotId);
-  //   courtId = Number(courtId);
-
-  //   const timeSlotStartTime = getStartTimeBySlot(courtId, timeSlotId);
-  //   const normalizedCurrentStartTime = normalizeTime(timeSlotStartTime);
-
-  //   console.log("Normalized start time:", normalizedCurrentStartTime);
-
-  //   const isSelected = selectedTimeSlots.some(
-  //     (slot) =>
-  //       Number(slot.timeSlotId) === timeSlotId &&
-  //       Number(slot.courtId) === courtId
-  //   );
-
-  //   if (isSelected) {
-  //     const newSelectedTimeSlots = selectedTimeSlots.filter(
-  //       (slot) =>
-  //         !(
-  //           Number(slot.timeSlotId) === timeSlotId &&
-  //           Number(slot.courtId) === courtId
-  //         )
+  const getStartTimeBySlot = (courtId, timeSlotId) => {
+    const court = reservationData.find((c) => Number(c.id) === Number(courtId));
+    const slot = court?.timeSlots?.find(
+      (ts) => Number(ts.id) === Number(timeSlotId)
+    );
+    return slot?.startTime || null;
+  };
 
   const handleCheckboxChange = (timeSlotId, courtId) => {
     console.log("Checkbox clicked:", { timeSlotId, courtId });
@@ -350,38 +281,23 @@ export default function ReservationTable() {
     courtId = Number(courtId);
 
     const timeSlotStartTime = getStartTimeBySlot(courtId, timeSlotId);
-    
-    // ตรวจสอบว่า timeSlot มีข้อมูล startTime หรือไม่
-    if (!timeSlotStartTime) {
-      console.warn(`ไม่พบข้อมูลเวลาเริ่มต้นสำหรับ timeSlot ${timeSlotId} ในสนาม ${courtId}`);
-      Swal.fire({
-        title: "ไม่สามารถเลือกช่วงเวลานี้ได้",
-        text: "ข้อมูลช่วงเวลาไม่สมบูรณ์ กรุณาติดต่อผู้ดูแลระบบ",
-        icon: "warning",
-      });
-      return;
-    }
-    
     const normalizedCurrentStartTime = normalizeTime(timeSlotStartTime);
-    console.log("Normalized start time:", normalizedCurrentStartTime);
 
-    // ตรวจสอบอีกครั้งว่าหลังจาก normalize แล้วยังมีค่าหรือไม่
-    if (!normalizedCurrentStartTime) {
-      console.warn(`ข้อมูลเวลาเริ่มต้นไม่ถูกต้องสำหรับ timeSlot ${timeSlotId} ในสนาม ${courtId}`);
-      Swal.fire({
-        title: "ไม่สามารถเลือกช่วงเวลานี้ได้",
-        text: "รูปแบบข้อมูลเวลาไม่ถูกต้อง กรุณาติดต่อผู้ดูแลระบบ",
-        icon: "warning",
-      });
-      return;
-    }
+    console.log("Normalized start time:", normalizedCurrentStartTime);
 
     const isSelected = selectedTimeSlots.some(
       (slot) =>
         Number(slot.timeSlotId) === timeSlotId &&
         Number(slot.courtId) === courtId
+    );
 
-    // ส่วนที่เหลือของฟังก์ชันยังคงเหมือนเดิม...
+    if (isSelected) {
+      const newSelectedTimeSlots = selectedTimeSlots.filter(
+        (slot) =>
+          !(
+            Number(slot.timeSlotId) === timeSlotId &&
+            Number(slot.courtId) === courtId
+          )
       );
       console.log("After removal:", newSelectedTimeSlots);
       setSelectedTimeSlots(newSelectedTimeSlots);
