@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const SettingButton = ({ court, selectedDate }) => {
   const [courtName, setCourtName] = useState(court.name);
@@ -53,10 +53,19 @@ const SettingButton = ({ court, selectedDate }) => {
             end: format(endTime, "HH:mm"),
             statusId: slot.statusId,
             checked: slot.statusId === 4,
+            checked: slot.statusId === 4,
+            // เพิ่มข้อมูลเวลาดิบเพื่อใช้ในการเรียงลำดับ
+            rawStartTime: slot.start_time,
+            rawEndTime: slot.end_time,
           };
         });
+        // เรียงลำดับตามเวลาเริ่มต้น
+        const sortedSlots = fetchedSlots.sort((a, b) => {
+          return new Date(a.rawStartTime) - new Date(b.rawStartTime);
+        });
 
-        setTimeSlots(fetchedSlots);
+        setTimeSlots(sortedSlots);
+        // setTimeSlots(fetchedSlots);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching time slots:", error);
