@@ -61,8 +61,7 @@ export default function ReservationTable() {
       "สามารถจองได้สูงสุด 3 ช่วงเวลาต่อวัน",
       "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ที่ต่างกันได้",
       "ต้องชำระเงินทันทีหลังจากทำการจอง",
-      "หากไม่มาใช้บริการตามเวลาที่จอง จะถูกปรับ 50% ของค่าบริการ",
-      "สามารถยกเลิกการจองได้ล่วงหน้าอย่างน้อย 3 ชั่วโมง",
+      "หากไม่มาใช้บริการตามเวลาที่จอง จะถูกปรับ 100% ของค่าบริการ",
     ],
     paymentRules: [
       "ชำระผ่าน QR Code ที่แสดงในระบบ",
@@ -168,26 +167,28 @@ export default function ReservationTable() {
       ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
       formData.append("reservationDate", reservationDate);
 
-
-           // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
-           console.log("Selected time slots before mapping:", selectedTimeSlots);
-           console.log("Reservation data structure:", reservationData);
+      // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
+      console.log("Selected time slots before mapping:", selectedTimeSlots);
+      console.log("Reservation data structure:", reservationData);
       // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
       const enhancedTimeSlots = selectedTimeSlots.map((slot) => {
         console.log(`Looking for court ID: ${slot.courtId}`);
         const court = reservationData.find(
           (c) => Number(c.id) === Number(slot.courtId)
-        ); 
+        );
         console.log(`Court found:`, court);
-        console.log(`Looking for timeSlot ID: ${slot.timeSlotId} in court:`, court?.name);
+        console.log(
+          `Looking for timeSlot ID: ${slot.timeSlotId} in court:`,
+          court?.name
+        );
         const timeSlot = court?.timeSlots?.find(
           (ts) => Number(ts.id) === Number(slot.timeSlotId)
         );
         console.log(`TimeSlot found:`, timeSlot);
-           // ตรวจสอบโครงสร้างของ timeSlot
-           if (timeSlot) {
-            console.log("TimeSlot properties:", Object.keys(timeSlot));
-          }
+        // ตรวจสอบโครงสร้างของ timeSlot
+        if (timeSlot) {
+          console.log("TimeSlot properties:", Object.keys(timeSlot));
+        }
         return {
           timeSlotId: slot.timeSlotId,
           courtId: slot.courtId,
@@ -402,33 +403,36 @@ export default function ReservationTable() {
 
           //เรียงลำดับข้อมูลสนามโดยใช้ทั้งตัวเลขในชื่อและ ID
           // ดึงตัวเลขจากชื่อสนาม (เช่น "สนามแบดมินตัน 1" จะได้ 1)
-          const sortedData = await [...response.data].sort((a, b) => {
-            const getCourtNumber = (name) => {
-              const match = name.match(/\d+/);
-              return match ? parseInt(match[0]) : -1;
-            };
+          const sortedData = await [...response.data]
+            .sort((a, b) => {
+              const getCourtNumber = (name) => {
+                const match = name.match(/\d+/);
+                return match ? parseInt(match[0]) : -1;
+              };
 
-            const numA = getCourtNumber(a.name);
-            const numB = getCourtNumber(b.name);
-            console.log(numA);
-            console.log(numB);
+              const numA = getCourtNumber(a.name);
+              const numB = getCourtNumber(b.name);
+              console.log(numA);
+              console.log(numB);
 
-            // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
-            if (numA >= 0 && numB >= 0) {
-              return numA - numB;
-            }
-            // ถ้าอันใดอันหนึ่งไม่มีตัวเลข ให้เรียงตาม ID
-            else {
-              return Number(a.id) - Number(b.id);
-            }
-          }).map((court) => ({
-            ...court,
-            timeSlots: [...(court.timeSlots || [])].sort((a, b) => Number(a.id) - Number(b.id)),
-          }));
+              // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
+              if (numA >= 0 && numB >= 0) {
+                return numA - numB;
+              }
+              // ถ้าอันใดอันหนึ่งไม่มีตัวเลข ให้เรียงตาม ID
+              else {
+                return Number(a.id) - Number(b.id);
+              }
+            })
+            .map((court) => ({
+              ...court,
+              timeSlots: [...(court.timeSlots || [])].sort(
+                (a, b) => Number(a.id) - Number(b.id)
+              ),
+            }));
           console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
-         
-         setReservationData(sortedData);
 
+          setReservationData(sortedData);
         } catch (error) {
           console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
         }
@@ -666,6 +670,7 @@ export default function ReservationTable() {
   const [appliedPromotion, setAppliedPromotion] = useState(null);
 
   // ปรับฟังก์ชัน validatePromotionCode ให้ตรวจสอบข้อจำกัดการใช้งาน
+
   const validatePromotionCode = async () => {
     try {
       const response = await axios.get(
@@ -693,6 +698,16 @@ export default function ReservationTable() {
         !isNaN(Number(promotion.discount))
       ) {
         setAppliedPromotion(promotion);
+        console.log("โปรโมชั่นที่ใช้:", {
+          code: promotion.code,
+          discount: promotion.discount,
+          maxUses: promotion.maxUses,
+          usedCount: promotion.usedCount,
+          remaining:
+            promotion.maxUses > 0
+              ? promotion.maxUses - promotion.usedCount
+              : "ไม่จำกัด",
+        });
         Swal.fire({
           icon: "success",
           title: "ใช้โค้ดสำเร็จ",
