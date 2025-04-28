@@ -185,8 +185,8 @@ export default function ReservationTable() {
       });
 
       console.log("ช่วงเวลาที่เลือกพร้อมข้อมูลเวลา:", enhancedTimeSlots);
-      formData.append("selectedTimeSlots", JSON.stringify(enhancedTimeSlots));
-
+      // formData.append("selectedTimeSlots", JSON.stringify(enhancedTimeSlots));
+      formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
       // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
       formData.append("courtId", selectedTimeSlots[0].courtId);
 
@@ -276,41 +276,120 @@ export default function ReservationTable() {
     return slot?.startTime || null;
   };
 
+  // const handleCheckboxChange = (timeSlotId, courtId) => {
+  //   console.log("Checkbox clicked:", { timeSlotId, courtId });
+
+  //   timeSlotId = Number(timeSlotId);
+  //   courtId = Number(courtId);
+
+  //   // Find the court and slot objects
+  //   const court = reservationData.find((c) => Number(c.id) === courtId);
+  //   const slot = court?.timeSlots?.find((ts) => Number(ts.id) === timeSlotId);
+
+  //   // Log the slot object details
+  //   console.log("Selected slot object:", slot);
+
+  //   const timeSlotStartTime = getStartTimeBySlot(courtId, timeSlotId);
+  //   const normalizedCurrentStartTime = normalizeTime(timeSlotStartTime);
+
+  //   console.log("Normalized start time:", normalizedCurrentStartTime);
+
+  //   const isSelected = selectedTimeSlots.some(
+  //     (slot) =>
+  //       Number(slot.timeSlotId) === timeSlotId &&
+  //       Number(slot.courtId) === courtId
+  //   );
+
+  //   if (isSelected) {
+  //     const newSelectedTimeSlots = selectedTimeSlots.filter(
+  //       (slot) =>
+  //         !(
+  //           Number(slot.timeSlotId) === timeSlotId &&
+  //           Number(slot.courtId) === courtId
+  //         )
+  //     );
+  //     console.log("After removal:", newSelectedTimeSlots);
+  //     setSelectedTimeSlots(newSelectedTimeSlots);
+  //   } else {
+  //     if (selectedTimeSlots.length >= maxTimeSlots) {
+  //       Swal.fire({
+  //         title: "ไม่สามารถเลือกได้",
+  //         text: `คุณสามารถเลือกได้สูงสุด ${maxTimeSlots} ช่วงเวลาต่อวัน`,
+  //         icon: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     // ตรวจสอบว่าเลือกช่วงเวลาเดียวกันในคอร์ทอื่นหรือไม่
+  //     const hasSameTimeSlotInOtherCourt = selectedTimeSlots.some((slot) => {
+  //       const existingTime = normalizeTime(
+  //         getStartTimeBySlot(slot.courtId, slot.timeSlotId)
+  //       );
+  //       return (
+  //         existingTime === normalizedCurrentStartTime &&
+  //         Number(slot.courtId) !== courtId
+  //       );
+  //     });
+
+  //     if (hasSameTimeSlotInOtherCourt) {
+  //       Swal.fire({
+  //         title: "ไม่สามารถเลือกได้",
+  //         text: "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ทที่ต่างกันได้",
+  //         icon: "warning",
+  //       });
+  //       return;
+  //     }
+
+  //     const newSelectedTimeSlots = [
+  //       ...selectedTimeSlots,
+  //       { timeSlotId, courtId },
+  //     ];
+  //     console.log("After addition:", newSelectedTimeSlots);
+  //     setSelectedTimeSlots(newSelectedTimeSlots);
+  //   }
+  // };
+
   const handleCheckboxChange = (timeSlotId, courtId) => {
     console.log("Checkbox clicked:", { timeSlotId, courtId });
-
+  
     timeSlotId = Number(timeSlotId);
     courtId = Number(courtId);
-
-    // Find the court and slot objects
+  
+    // หาคอร์ทและช่วงเวลา
     const court = reservationData.find((c) => Number(c.id) === courtId);
     const slot = court?.timeSlots?.find((ts) => Number(ts.id) === timeSlotId);
-
-    // Log the slot object details
-    console.log("Selected slot object:", slot);
-
-    const timeSlotStartTime = getStartTimeBySlot(courtId, timeSlotId);
-    const normalizedCurrentStartTime = normalizeTime(timeSlotStartTime);
-
-    console.log("Normalized start time:", normalizedCurrentStartTime);
-
+  
+    // ถ้าไม่เจอ slot หรือ slot ไม่มีเวลา start/end
+    if (!slot || !slot.startTime || !slot.endTime) {
+      Swal.fire({
+        title: "ไม่สามารถเลือกช่วงเวลานี้ได้",
+        text: "ข้อมูลช่วงเวลาไม่สมบูรณ์ กรุณาติดต่อผู้ดูแลระบบ",
+        icon: "warning",
+      });
+      return;
+    }
+  
+    // เช็คว่ากดเลือกหรือยกเลิก
     const isSelected = selectedTimeSlots.some(
-      (slot) =>
-        Number(slot.timeSlotId) === timeSlotId &&
-        Number(slot.courtId) === courtId
+      (selected) =>
+        Number(selected.timeSlotId) === timeSlotId &&
+        Number(selected.courtId) === courtId
     );
-
+  
     if (isSelected) {
-      const newSelectedTimeSlots = selectedTimeSlots.filter(
-        (slot) =>
+      // ถ้ายกเลิกการเลือก
+      const updatedSelected = selectedTimeSlots.filter(
+        (selected) =>
           !(
-            Number(slot.timeSlotId) === timeSlotId &&
-            Number(slot.courtId) === courtId
+            Number(selected.timeSlotId) === timeSlotId &&
+            Number(selected.courtId) === courtId
           )
       );
-      console.log("After removal:", newSelectedTimeSlots);
-      setSelectedTimeSlots(newSelectedTimeSlots);
+      console.log("After removal:", updatedSelected);
+      setSelectedTimeSlots(updatedSelected);
     } else {
+      // ถ้าเลือกใหม่
+  
       if (selectedTimeSlots.length >= maxTimeSlots) {
         Swal.fire({
           title: "ไม่สามารถเลือกได้",
@@ -319,18 +398,20 @@ export default function ReservationTable() {
         });
         return;
       }
-
-      // ตรวจสอบว่าเลือกช่วงเวลาเดียวกันในคอร์ทอื่นหรือไม่
-      const hasSameTimeSlotInOtherCourt = selectedTimeSlots.some((slot) => {
-        const existingTime = normalizeTime(
-          getStartTimeBySlot(slot.courtId, slot.timeSlotId)
+  
+      // ตรวจสอบว่ามีการเลือกช่วงเวลาเดียวกันในคอร์ทอื่นไหม
+      const normalizedCurrentStartTime = normalizeTime(slot.startTime);
+  
+      const hasSameTimeSlotInOtherCourt = selectedTimeSlots.some((selected) => {
+        const existingStartTime = normalizeTime(
+          getStartTimeBySlot(selected.courtId, selected.timeSlotId)
         );
         return (
-          existingTime === normalizedCurrentStartTime &&
-          Number(slot.courtId) !== courtId
+          existingStartTime === normalizedCurrentStartTime &&
+          Number(selected.courtId) !== courtId
         );
       });
-
+  
       if (hasSameTimeSlotInOtherCourt) {
         Swal.fire({
           title: "ไม่สามารถเลือกได้",
@@ -339,15 +420,22 @@ export default function ReservationTable() {
         });
         return;
       }
-
-      const newSelectedTimeSlots = [
+  
+      // เพิ่มใหม่
+      const updatedSelected = [
         ...selectedTimeSlots,
-        { timeSlotId, courtId },
+        {
+          timeSlotId,
+          courtId,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        },
       ];
-      console.log("After addition:", newSelectedTimeSlots);
-      setSelectedTimeSlots(newSelectedTimeSlots);
+      console.log("After addition:", updatedSelected);
+      setSelectedTimeSlots(updatedSelected);
     }
   };
+  
 
   useEffect(() => {
     console.log("showDate changed:", showDate);
