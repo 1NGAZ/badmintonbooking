@@ -117,6 +117,135 @@ export default function ReservationTable() {
     });
   };
 
+  // const handleSubmitReservation = async () => {
+  //   // ตรวจสอบข้อมูลผู้ใช้
+  //   if (!userData) {
+  //     setIsModalOpen(true);
+  //     return;
+  //   }
+
+  //   // ตรวจสอบวันที่
+  //   if (!showDate || !showDate.from) {
+  //     Swal.fire({
+  //       title: "กรุณาเลือกวันที่",
+  //       icon: "warning",
+  //     });
+  //     return;
+  //   }
+
+  //   // ตรวจสอบช่วงเวลา
+  //   if (selectedTimeSlots.length === 0) {
+  //     Swal.fire({
+  //       title: "กรุณาเลือกช่วงเวลา",
+  //       text: "กรุณาเลือกช่วงเวลาที่ต้องการจองอย่างน้อย 1 ช่วงเวลา",
+  //       icon: "warning",
+  //     });
+  //     return;
+  //   }
+
+  //   // ตรวจสอบไฟล์สลิป
+  //   if (!selectedFile) {
+  //     Swal.fire({
+  //       icon: "warning",
+  //       title: "กรุณาแนบสลิปการโอนเงิน",
+  //       text: "คุณต้องแนบสลิปการโอนเงินเพื่อยืนยันการจอง",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     const formData = new FormData();
+
+  //     // แนบไฟล์
+  //     formData.append("attachment", selectedFile);
+
+  //     // แนบข้อมูลผู้ใช้
+  //     formData.append("userId", userData.id);
+
+  //     // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
+  //     const reservationDate = `${showDate.from.getFullYear()}-${String(
+  //       showDate.from.getMonth() + 1
+  //     ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
+  //     formData.append("reservationDate", reservationDate);
+
+  //     // แนบช่วงเวลาที่เลือก
+  //     formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
+
+  //     // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
+  //     formData.append("courtId", selectedTimeSlots[0].courtId);
+
+  //     // แนบสถานะ (2 = รอดำเนินการ)
+  //     formData.append("statusId", "2");
+
+  //     // แนบรหัสโปรโมชั่นถ้ามี
+  //     if (appliedPromotion?.code) {
+  //       formData.append("promotionCode", appliedPromotion.code);
+  //     }
+  //     console.log("Sending reservation data:", {
+  //       userId: userData.id,
+  //       date: reservationDate,
+  //       selectedTimeSlots: selectedTimeSlots,
+  //       courtId: selectedTimeSlots[0].courtId,
+  //       statusId: 2,
+  //     });
+
+  //     // ส่งข้อมูลไปยัง API
+  //     const response = await axios.post(
+  //       `${API_URL}/reservation/reservations`,
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //         withCredentials: true,
+  //       }
+  //     );
+
+  //     // ถ้าสำเร็จ
+  //     if (response.status >= 200 && response.status < 300) {
+  //       setOpen(false);
+  //       setSelectedTimeSlots([]);
+  //       setSelectedFile(null);
+  //       setPromotionCode("");
+  //       setAppliedPromotion(null);
+
+  //       Swal.fire({
+  //         title: "จองสนามสำเร็จ",
+  //         text: "กรุณารอการยืนยันจากแอดมิน",
+  //         icon: "success",
+  //       });
+
+  //       // โหลดข้อมูลใหม่
+  //       const adjustedDate = new Date(showDate.from);
+  //       adjustedDate.setHours(12, 0, 0, 0);
+  //       const formattedDate = `${adjustedDate.getFullYear()}-${String(
+  //         adjustedDate.getMonth() + 1
+  //       ).padStart(2, "0")}-${String(adjustedDate.getDate()).padStart(2, "0")}`;
+
+  //       const reservationResponse = await axios.get(
+  //         `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
+  //         { withCredentials: true }
+  //       );
+  //       setReservationData(reservationResponse.data);
+  //     }
+  //   } catch (error) {
+  //     let errorMessage = "ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง";
+
+  //     if (error?.response?.data) {
+  //       errorMessage =
+  //         error.response.data.message ||
+  //         error.response.data.error ||
+  //         errorMessage;
+  //     }
+
+  //     Swal.fire({
+  //       title: "เกิดข้อผิดพลาด",
+  //       text: errorMessage,
+  //       icon: "error",
+  //     });
+  //   }
+  // };
+
   const handleSubmitReservation = async () => {
     // ตรวจสอบข้อมูลผู้ใช้
     if (!userData) {
@@ -162,25 +291,34 @@ export default function ReservationTable() {
       // แนบข้อมูลผู้ใช้
       formData.append("userId", userData.id);
 
-      // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
-      const reservationDate = `${showDate.from.getFullYear()}-${String(
-        showDate.from.getMonth() + 1
-      ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
-      formData.append("reservationDate", reservationDate);
-
-      // แนบช่วงเวลาที่เลือก
+      // แนบ selectedTimeSlots แบบ array JSON
       formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
 
-      // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
+      // แนบ courtId จากช่วงเวลาแรก (บางที backend อาจใช้)
       formData.append("courtId", selectedTimeSlots[0].courtId);
 
-      // แนบสถานะ (2 = รอดำเนินการ)
+      // แนบสถานะ
       formData.append("statusId", "2");
 
       // แนบรหัสโปรโมชั่นถ้ามี
       if (appliedPromotion?.code) {
         formData.append("promotionCode", appliedPromotion.code);
       }
+
+      // แนบวันจอง (format YYYY-MM-DD)
+      const reservationDate = `${showDate.from.getFullYear()}-${String(
+        showDate.from.getMonth() + 1
+      ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
+      formData.append("reservationDate", reservationDate);
+
+      console.log("ส่งข้อมูล:", {
+        userId: userData.id,
+        reservationDate,
+        selectedTimeSlots,
+        courtId: selectedTimeSlots[0].courtId,
+        statusId: 2,
+        promotionCode: appliedPromotion?.code || null,
+      });
 
       // ส่งข้อมูลไปยัง API
       const response = await axios.post(
@@ -208,7 +346,7 @@ export default function ReservationTable() {
           icon: "success",
         });
 
-        // โหลดข้อมูลใหม่
+        // รีโหลดข้อมูลการจองใหม่
         const adjustedDate = new Date(showDate.from);
         adjustedDate.setHours(12, 0, 0, 0);
         const formattedDate = `${adjustedDate.getFullYear()}-${String(
@@ -238,7 +376,6 @@ export default function ReservationTable() {
       });
     }
   };
-
   const normalizeTime = (timeStr) => {
     if (!timeStr) return null;
     return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
@@ -352,7 +489,7 @@ export default function ReservationTable() {
             { withCredentials: true }
           );
           setReservationData(response.data);
-          
+
           //เรียงลำดับข้อมูลสนามโดยใช้ทั้งตัวเลขในชื่อและ ID
           // ดึงตัวเลขจากชื่อสนาม (เช่น "สนามแบดมินตัน 1" จะได้ 1)
           // const sortedData = [...response.data].sort((a, b) => {
@@ -360,10 +497,10 @@ export default function ReservationTable() {
           //     const match = name.match(/\d+/);
           //     return match ? parseInt(match[0]) : -1;
           //   };
-            
+
           //   const numA = getCourtNumber(a.name);
           //   const numB = getCourtNumber(b.name);
-            
+
           //   // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
           //   if (numA >= 0 && numB >= 0) {
           //     return numA - numB;
