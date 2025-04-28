@@ -243,6 +243,9 @@ export default function ReservationTable() {
           title: "จองสนามสำเร็จ",
           text: "กรุณารอการยืนยันจากแอดมิน",
           icon: "success",
+        }).then(() => {
+          // รีเฟรชหน้าเมื่อกดปุ่ม OK หรือปิด Swal
+          window.location.reload();
         });
 
         // โหลดข้อมูลใหม่
