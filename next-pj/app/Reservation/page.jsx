@@ -163,37 +163,11 @@ export default function ReservationTable() {
       formData.append("userId", userData.id);
 
       // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
-      // const reservationDate = `${showDate.from.getFullYear()}-${String(
-      //   showDate.from.getMonth() + 1
-      // ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
-      // formData.append("reservationDate", reservationDate);
-
-      // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
       const reservationDate = `${showDate.from.getFullYear()}-${String(
         showDate.from.getMonth() + 1
       ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
       formData.append("reservationDate", reservationDate);
 
-      // แนบช่วงเวลาที่เลือกพร้อมข้อมูลเวลาเริ่มต้นและสิ้นสุด
-      const enhancedTimeSlots = selectedTimeSlots.map(slot => {
-        const court = reservationData.find(c => Number(c.id) === Number(slot.courtId));
-        const timeSlot = court?.timeSlots?.find(ts => Number(ts.id) === Number(slot.timeSlotId));
-        return {
-          ...slot,
-          startTime: timeSlot?.startTime || "",
-          endTime: timeSlot?.endTime || ""
-        };
-      });
-      
-      console.log("ช่วงเวลาที่เลือกก่อนส่ง:", enhancedTimeSlots);
-      formData.append("selectedTimeSlots", JSON.stringify(enhancedTimeSlots));
-
-      // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
-      formData.append("courtId", selectedTimeSlots[0].courtId);
-
-
-
-      console.log("ช่วงเวลาที่เลือกก่อนส่ง:", enhancedTimeSlots);
       // แนบช่วงเวลาที่เลือก
       formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
 
