@@ -32,7 +32,13 @@ export default function LoginPage() {
   
     try {
       // ส่งคำขอเข้าสู่ระบบไปที่ API
-      const response = await axios.post(`${API_URL}/auth/login`, formData, { withCredentials: true });
+      const response = await axios.post(`${API_URL}/auth/login`, formData, { 
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json; charset=utf-8'
+        }
+      });
       console.log(response);
   
       if (!response) {
