@@ -35,8 +35,6 @@ export function DatePickerDemo({ className, setReservationData, setShowDate }) {
       const day = String(selectedDate.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
 
-      // ลบ console.log ที่ไม่จำเป็น
-
       const fetchData = async () => {
         try {
           const response = await axios.get(

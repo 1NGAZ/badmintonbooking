@@ -375,7 +375,7 @@ export default function ReservationTable() {
           console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
           setReservationData(sortedData);
 
-          setReservationData(response.data);
+          // setReservationData(response.data);
         } catch (error) {
           console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
         }
