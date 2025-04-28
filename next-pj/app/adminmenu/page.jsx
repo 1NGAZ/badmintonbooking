@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getUserData } from "../utils/auth"; // เพิ่มการ import getUserData
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const Page = () => {
   const [reservations, setReservations] = useState([]);
@@ -22,19 +22,16 @@ const Page = () => {
       try {
         const userData = getUserData();
         const token = sessionStorage.getItem("authToken");
-        
+
         if (!userData || !token) {
           router.push("/login");
           return;
         }
 
         // ดึงข้อมูลผู้ใช้เพื่อตรวจสอบบทบาท
-        const userResponse = await axios.get(
-          `${API_URL}/user/profile`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const userResponse = await axios.get(`${API_URL}/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
         const isAdmin = userResponse.data?.roles?.some((role) => role.id === 1);
@@ -62,19 +59,28 @@ const Page = () => {
         console.log("Reservation data:", response.data.groupedReservations);
 
         // ปรับปรุงข้อมูลราคาถ้าจำเป็น
-        const updatedReservations = response.data.groupedReservations.map(reservation => {
-          // ถ้ามีข้อมูลส่วนลดแต่ไม่มีราคาหลังส่วนลด ให้คำนวณราคาหลังส่วนลด
-          if (reservation.discountAmount > 0 && reservation.discountedPrice === undefined) {
-            reservation.discountedPrice = reservation.totalPrice - reservation.discountAmount;
+        const updatedReservations = response.data.groupedReservations.map(
+          (reservation) => {
+            // ถ้ามีข้อมูลส่วนลดแต่ไม่มีราคาหลังส่วนลด ให้คำนวณราคาหลังส่วนลด
+            if (
+              reservation.discountAmount > 0 &&
+              reservation.discountedPrice === undefined
+            ) {
+              reservation.discountedPrice =
+                reservation.totalPrice - reservation.discountAmount;
+            }
+            return reservation;
           }
-          return reservation;
-        });
+        );
 
         setReservations(updatedReservations || []);
       } catch (error) {
         console.error("Fetch data error:", error);
         // จัดการกรณี token หมดอายุหรือไม่ถูกต้อง
-        if (error?.response?.status === 401 || error?.response?.status === 403) {
+        if (
+          error?.response?.status === 401 ||
+          error?.response?.status === 403
+        ) {
           sessionStorage.removeItem("authToken");
           sessionStorage.removeItem("userData");
           router.push("/login");
@@ -104,7 +110,7 @@ const Page = () => {
       });
 
       const response = await axios.post(
-       `${API_URL}/approval/approvals/approve`,
+        `${API_URL}/approval/approvals/approve`,
         { reservationId, timeSlotIds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -569,16 +575,13 @@ const Page = () => {
                             <td className="hidden md:table-cell px-4 py-3">
                               {item.user.phone || "-"}
                             </td>
-                            <td className="px-4 py-3">
+                            {/* <td className="px-4 py-3">
                               <div className="text-gray-600">
                                 <div>
                                   {new Date(item.start_time).toLocaleString(
                                     "th-TH",
                                     {
                                       timeZone: "Asia/Bangkok",
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
                                       hour: "2-digit",
                                       minute: "2-digit",
                                     }
@@ -596,12 +599,26 @@ const Page = () => {
                                   )}
                                 </div>
                               </div>
+                            </td> */}
+                            <td className="px-4 py-3">
+                              <div className="text-gray-600">
+                                <div>
+                                  {item.start_time
+                                    .split("T")[1]
+                                    .substring(0, 5)}
+                                </div>
+                                <div className="text-gray-400 text-xs">
+                                  ถึง{" "}
+                                  {item.end_time.split("T")[1].substring(0, 5)}
+                                </div>
+                              </div>
                             </td>
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm font-medium">
                               {item.totalHours}
                             </td>
                             <td className="px-4 py-3 text-right text-xs sm:text-sm font-medium">
-                              {item.discountedPrice !== undefined && item.discountedPrice !== item.totalPrice ? (
+                              {item.discountedPrice !== undefined &&
+                              item.discountedPrice !== item.totalPrice ? (
                                 <>
                                   <div className="line-through text-gray-400">
                                     {new Intl.NumberFormat("th-TH", {
@@ -624,7 +641,8 @@ const Page = () => {
                               )}
                               {item.discountAmount > 0 && (
                                 <div className="text-green-600 text-xs">
-                                  ส่วนลด: {new Intl.NumberFormat("th-TH", {
+                                  ส่วนลด:{" "}
+                                  {new Intl.NumberFormat("th-TH", {
                                     style: "currency",
                                     currency: "THB",
                                   }).format(item.discountAmount)}
