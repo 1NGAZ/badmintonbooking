@@ -399,7 +399,7 @@ export default function ReservationTable() {
 
           //เรียงลำดับข้อมูลสนามโดยใช้ทั้งตัวเลขในชื่อและ ID
           // ดึงตัวเลขจากชื่อสนาม (เช่น "สนามแบดมินตัน 1" จะได้ 1)
-          const sortedData = [...response.data].sort((a, b) => {
+          const sortedData = await [...response.data].sort((a, b) => {
             const getCourtNumber = (name) => {
               const match = name.match(/\d+/);
               return match ? parseInt(match[0]) : -1;
@@ -423,9 +423,9 @@ export default function ReservationTable() {
             timeSlots: [...(court.timeSlots || [])].sort((a, b) => Number(a.id) - Number(b.id)),
           }));
           console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
-          setReservationData(sortedData);
+         
+         setReservationData(sortedData);
 
-          // setReservationData(response.data);
         } catch (error) {
           console.error("เกิดข้อผิดพลาดในการดึงข้อมูลการจอง:", error);
         }
