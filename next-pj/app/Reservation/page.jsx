@@ -168,14 +168,26 @@ export default function ReservationTable() {
       ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
       formData.append("reservationDate", reservationDate);
 
+
+           // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
+           console.log("Selected time slots before mapping:", selectedTimeSlots);
+           console.log("Reservation data structure:", reservationData);
       // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
       const enhancedTimeSlots = selectedTimeSlots.map((slot) => {
+        console.log(`Looking for court ID: ${slot.courtId}`);
         const court = reservationData.find(
           (c) => Number(c.id) === Number(slot.courtId)
-        );
+        ); 
+        console.log(`Court found:`, court);
+        console.log(`Looking for timeSlot ID: ${slot.timeSlotId} in court:`, court?.name);
         const timeSlot = court?.timeSlots?.find(
           (ts) => Number(ts.id) === Number(slot.timeSlotId)
         );
+        console.log(`TimeSlot found:`, timeSlot);
+           // ตรวจสอบโครงสร้างของ timeSlot
+           if (timeSlot) {
+            console.log("TimeSlot properties:", Object.keys(timeSlot));
+          }
         return {
           timeSlotId: slot.timeSlotId,
           courtId: slot.courtId,
