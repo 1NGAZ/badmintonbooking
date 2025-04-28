@@ -75,6 +75,12 @@ const Page = () => {
       const newUserData = { ...storedUserData, fname, lname };
       sessionStorage.setItem("userData", JSON.stringify(newUserData));
       
+  // หลังจากอัปเดตสำเร็จ ให้ดึงข้อมูลใหม่จาก API
+  const refreshedUserData = await getUserData(true);
+  if (refreshedUserData) {
+    setUserData(refreshedUserData);
+  }
+
       toast.success("อัพเดทชื่อสำเร็จ");
       setIsOpen(false);
     } catch (error) {
@@ -120,6 +126,12 @@ const Page = () => {
       const storedUserData = JSON.parse(sessionStorage.getItem("userData") || "{}");
       const newUserData = { ...storedUserData, phone: cleanedPhone };
       sessionStorage.setItem("userData", JSON.stringify(newUserData));
+
+       // หลังจากอัปเดตสำเร็จ ให้ดึงข้อมูลใหม่จาก API
+       const refreshedUserData = await getUserData(true);
+       if (refreshedUserData) {
+         setUserData(refreshedUserData);
+       }
       
       toast.success("อัพเดทเบอร์โทรศัพท์สำเร็จ");
       setIsOpen1(false);
@@ -131,19 +143,38 @@ const Page = () => {
     }
   };
 
+  // useEffect(() => {
+  //   // แทนที่ fetchUserData ด้วยการเรียกใช้ getUserData จาก auth.js
+  //   const userDataFromToken = getUserData();
+  //   if (userDataFromToken) {
+  //     setUserData(userDataFromToken);
+  //     // ตั้งค่าเริ่มต้นสำหรับฟอร์มแก้ไข
+  //     setName(`${userDataFromToken.fname || ""} ${userDataFromToken.lname || ""}`);
+  //     setPhone(userDataFromToken.phone || "");
+  //   } else {
+  //     // ถ้าไม่มีข้อมูลผู้ใช้ (ไม่ได้ login) ให้ redirect ไปหน้า login
+  //     window.location.href = "/login";
+  //   }
+  // }, []);
+
   useEffect(() => {
-    // แทนที่ fetchUserData ด้วยการเรียกใช้ getUserData จาก auth.js
-    const userDataFromToken = getUserData();
-    if (userDataFromToken) {
-      setUserData(userDataFromToken);
-      // ตั้งค่าเริ่มต้นสำหรับฟอร์มแก้ไข
-      setName(`${userDataFromToken.fname || ""} ${userDataFromToken.lname || ""}`);
-      setPhone(userDataFromToken.phone || "");
-    } else {
-      // ถ้าไม่มีข้อมูลผู้ใช้ (ไม่ได้ login) ให้ redirect ไปหน้า login
-      window.location.href = "/login";
-    }
+    // เรียกใช้ getUserData แบบ async และบังคับให้ดึงข้อมูลใหม่จาก API
+    const fetchUserData = async () => {
+      const userDataFromAPI = await getUserData(true); // บังคับให้ดึงข้อมูลใหม่จาก API
+      if (userDataFromAPI) {
+        setUserData(userDataFromAPI);
+        // ตั้งค่าเริ่มต้นสำหรับฟอร์มแก้ไข
+        setName(`${userDataFromAPI.fname || ""} ${userDataFromAPI.lname || ""}`);
+        setPhone(userDataFromAPI.phone || "");
+      } else {
+        // ถ้าไม่มีข้อมูลผู้ใช้ (ไม่ได้ login) ให้ redirect ไปหน้า login
+        window.location.href = "/login";
+      }
+    };
+    
+    fetchUserData();
   }, []);
+
 
   if (!userData) return <div className="text-center py-10">Loading...</div>;
 

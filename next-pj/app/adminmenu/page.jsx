@@ -597,20 +597,6 @@ const Page = () => {
                                 </div>
                               </div>
                             </td>
-
-                            {/* <td className="px-4 py-3">
-                              <div className="text-gray-600">
-                                <div>
-                                  {item.start_time
-                                    .split("T")[1]
-                                    .substring(0, 5)}
-                                </div>
-                                <div className="text-gray-400 text-xs">
-                                  ถึง{" "}
-                                  {item.end_time.split("T")[1].substring(0, 5)}
-                                </div>
-                              </div>
-                            </td> */}
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm font-medium">
                               {item.totalHours}
                             </td>
