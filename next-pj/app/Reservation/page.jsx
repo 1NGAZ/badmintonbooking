@@ -395,8 +395,8 @@ export default function ReservationTable() {
 
             const numA = getCourtNumber(a.name);
             const numB = getCourtNumber(b.name);
-console.log(numA);
-console.log(numB);
+            console.log(numA);
+            console.log(numB);
 
             // ถ้าทั้งคู่มีตัวเลขในชื่อ ให้เรียงตามตัวเลข
             if (numA >= 0 && numB >= 0) {
@@ -406,7 +406,10 @@ console.log(numB);
             else {
               return Number(a.id) - Number(b.id);
             }
-          });
+          }).map((court) => ({
+            ...court,
+            timeSlots: [...(court.timeSlots || [])].sort((a, b) => Number(a.id) - Number(b.id)),
+          }));
           console.log("ข้อมูลสนามหลังเรียงลำดับ:", sortedData);
           setReservationData(sortedData);
 
