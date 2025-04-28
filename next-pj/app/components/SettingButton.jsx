@@ -138,6 +138,9 @@ const SettingButton = ({ court, selectedDate }) => {
         pauseOnHover: true,
         draggable: true,
       });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
   };
 
