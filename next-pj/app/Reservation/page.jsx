@@ -261,17 +261,54 @@ export default function ReservationTable() {
 
 
 
-  const normalizeTime = (timeStr) => {
-    if (!timeStr) return null;
-    return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
-  };
+  // const normalizeTime = (timeStr) => {
+  //   if (!timeStr) return null;
+  //   return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
+  // };
+
+  // const getStartTimeBySlot = (courtId, timeSlotId) => {
+  //   const court = reservationData.find((c) => Number(c.id) === Number(courtId));
+  //   const slot = court?.timeSlots?.find(
+  //     (ts) => Number(ts.id) === Number(timeSlotId)
+  //   );
+  //   return slot?.startTime || null;
+  // };
 
   const getStartTimeBySlot = (courtId, timeSlotId) => {
     const court = reservationData.find((c) => Number(c.id) === Number(courtId));
-    const slot = court?.timeSlots?.find(
+    if (!court) {
+      console.warn(`Court with ID ${courtId} not found in reservationData`);
+      return null;
+    }
+    
+    if (!court.timeSlots || !Array.isArray(court.timeSlots)) {
+      console.warn(`No timeSlots array found for court ${courtId}`);
+      return null;
+    }
+    
+    const slot = court.timeSlots.find(
       (ts) => Number(ts.id) === Number(timeSlotId)
     );
-    return slot?.startTime || null;
+    
+    if (!slot) {
+      console.warn(`TimeSlot with ID ${timeSlotId} not found in court ${courtId}`);
+      return null;
+    }
+    
+    if (!slot.startTime) {
+      console.warn(`No startTime found for timeSlot ${timeSlotId} in court ${courtId}`);
+      return null;
+    }
+    
+    return slot.startTime;
+  };
+
+  const normalizeTime = (timeStr) => {
+    if (!timeStr) {
+      console.warn("normalizeTime received null or empty timeStr");
+      return null;
+    }
+    return timeStr.trim().slice(0, 5); // เหลือแค่ HH:MM
   };
 
   const handleCheckboxChange = (timeSlotId, courtId) => {
