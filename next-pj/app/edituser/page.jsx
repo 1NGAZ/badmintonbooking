@@ -71,6 +71,9 @@ const Page = () => {
       };
       setUserData(updatedUserData);
       
+      console.log(updatedUserData);
+      
+
        // อัปเดต sessionStorage ให้เหมือนกัน
     sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
       
@@ -99,6 +102,9 @@ const Page = () => {
       return;
     }
 
+    console.log(cleanedPhone);
+    
+
     const token = sessionStorage.getItem("authToken");
     if (!token) {
       toast.error("กรุณาเข้าสู่ระบบใหม่");
@@ -115,6 +121,9 @@ const Page = () => {
       const updatedUserData = { ...userData, phone: response.data.user.phone };
       setUserData(updatedUserData);
       
+      console.log(updatedUserData);
+      
+
       // อัปเดตข้อมูลใน sessionStorage
       sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
       
