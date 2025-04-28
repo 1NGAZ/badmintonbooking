@@ -216,6 +216,7 @@ export default function ReservationTable() {
         date: reservationDate,
         selectedTimeSlots: enhancedTimeSlots,
         courtId: selectedTimeSlots[0].courtId,
+        validatePromotionCode: appliedPromotion?.code || null,
         statusId: 2,
       });
 
