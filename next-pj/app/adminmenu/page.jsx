@@ -610,31 +610,20 @@ const Page = () => {
                               {item.promotionCode ? (
                                 <>
                                   <div className="line-through text-gray-400">
-                                    {new Intl.NumberFormat("th-TH", {
-                                      style: "currency",
-                                      currency: "THB",
-                                    }).format(item.totalPrice)}
+                                    ฿{item.totalPrice.toFixed(2)}
                                   </div>
                                   <div className="text-red-600 font-semibold">
-                                    {new Intl.NumberFormat("th-TH", {
-                                      style: "currency",
-                                      currency: "THB",
-                                    }).format(
-                                      item.discountedPrice || 
-                                      (item.totalPrice - (item.totalPrice * Number(item.discountPercent) / 100))
-                                    )}
+                                    ฿{(item.discountedPrice || 
+                                      (item.totalPrice - (item.totalPrice * Number(item.discountPercent) / 100))).toFixed(2)}
                                   </div>
                                   <div className="text-green-600 text-xs">
-                                    ส่วนลด: {item.discountPercent}%
+                                    ส่วนลด: ฿{((item.totalPrice * Number(item.discountPercent) / 100)).toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    โค้ด: {item.promotionCode}
                                   </div>
                                 </>
                               ) : (
-                                new Intl.NumberFormat("th-TH", {
-                                  style: "currency",
-                                  currency: "THB",
-                                }).format(item.totalPrice)
-                              )}
-                              {item.promotionCode && (
                                 <div className="text-xs text-gray-500">
                                   โค้ด: {item.promotionCode}
                                 </div>
