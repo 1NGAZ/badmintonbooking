@@ -59,16 +59,49 @@ const Page = () => {
         console.log("Reservation data:", response.data.groupedReservations);
 
         // ปรับปรุงข้อมูลราคาถ้าจำเป็น
-        // ปรับปรุงข้อมูลราคาถ้าจำเป็น
         const updatedReservations = response.data.groupedReservations.map(
           (reservation) => {
+            console.log("ข้อมูลการจองก่อนปรับปรุง:", reservation);
+            
             // แปลงราคาให้เป็นตัวเลข
             reservation.totalPrice = Number(
               reservation.totalPrice || reservation.originalPrice || 0
             );
-
+            
+            // ตรวจสอบว่ามีข้อมูลโปรโมชั่นเพิ่มเติมหรือไม่
+            // บางครั้งข้อมูลอาจอยู่ในรูปแบบอื่น เช่น finalPrice, originalPrice
+            if (reservation.finalPrice && 
+                Number(reservation.finalPrice) !== Number(reservation.totalPrice) &&
+                !reservation.promotionCode) {
+              
+              console.log("พบข้อมูลราคาที่แตกต่าง แต่ไม่มีข้อมูลโปรโมชั่น:", {
+                totalPrice: reservation.totalPrice,
+                finalPrice: reservation.finalPrice
+              });
+              
+              // คำนวณส่วนลดจากความแตกต่างของราคา
+              const finalPrice = Number(reservation.finalPrice);
+              const discountAmount = reservation.totalPrice - finalPrice;
+              
+              // ถ้ามีส่วนลดแต่ไม่มีข้อมูลโปรโมชั่น ให้เพิ่มข้อมูลโปรโมชั่นเป็น "ส่วนลดพิเศษ"
+              if (discountAmount > 0) {
+                reservation.discountAmount = discountAmount;
+                reservation.discountedPrice = finalPrice;
+                reservation.promotionCode = reservation.promotionCode || "ส่วนลดพิเศษ";
+                
+                // คำนวณเปอร์เซ็นต์ส่วนลด
+                reservation.discountPercent = ((discountAmount / reservation.totalPrice) * 100).toFixed(0);
+                
+                console.log("เพิ่มข้อมูลส่วนลด:", {
+                  discountAmount,
+                  discountPercent: reservation.discountPercent,
+                  promotionCode: reservation.promotionCode
+                });
+              }
+            }
+            
             // กรณีที่มีข้อมูลโปรโมชั่นจากหน้า Reservation
-            if (
+            else if (
               reservation.promotionCode &&
               (reservation.discountPercent || reservation.discountAmount)
             ) {
@@ -82,14 +115,14 @@ const Page = () => {
               reservation.discountedPrice =
                 reservation.totalPrice - discountAmount;
 
-              console.log("คำนวณส่วนลด:", {
+              console.log("คำนวณส่วนลดจากโปรโมชั่น:", {
                 totalPrice: reservation.totalPrice,
                 discountPercent: discountPercent,
                 discountAmount: discountAmount,
                 finalPrice: reservation.discountedPrice,
               });
             }
-
+            
             // กรณีที่มีราคาหลังหักส่วนลดแต่ไม่มีข้อมูลส่วนลด
             else if (
               reservation.finalPrice &&
@@ -107,7 +140,8 @@ const Page = () => {
                 ).toFixed(0);
               }
             }
-
+            
+            console.log("ข้อมูลการจองหลังปรับปรุง:", reservation);
             return reservation;
           }
         );
