@@ -61,8 +61,14 @@ const Page = () => {
         // ปรับปรุงข้อมูลราคาถ้าจำเป็น
         const updatedReservations = response.data.groupedReservations.map(
           (reservation) => {
+            // คำนวณราคาหลังหักส่วนลดถ้ามีการใช้โปรโมชั่น
+            if (reservation.promotionCode && reservation.discountPercent) {
+              const discountAmount = (reservation.totalPrice * Number(reservation.discountPercent)) / 100;
+              reservation.discountAmount = discountAmount;
+              reservation.discountedPrice = reservation.totalPrice - discountAmount;
+            }
             // ถ้ามีข้อมูลส่วนลดแต่ไม่มีราคาหลังส่วนลด ให้คำนวณราคาหลังส่วนลด
-            if (
+            else if (
               reservation.discountAmount > 0 &&
               reservation.discountedPrice === undefined
             ) {
@@ -243,7 +249,7 @@ const Page = () => {
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -601,8 +607,7 @@ const Page = () => {
                               {item.totalHours}
                             </td>
                             <td className="px-4 py-3 text-right text-xs sm:text-sm font-medium">
-                              {item.discountedPrice !== undefined &&
-                              item.discountedPrice !== item.totalPrice ? (
+                              {item.promotionCode ? (
                                 <>
                                   <div className="line-through text-gray-400">
                                     {new Intl.NumberFormat("th-TH", {
@@ -614,7 +619,13 @@ const Page = () => {
                                     {new Intl.NumberFormat("th-TH", {
                                       style: "currency",
                                       currency: "THB",
-                                    }).format(item.discountedPrice)}
+                                    }).format(
+                                      item.discountedPrice || 
+                                      (item.totalPrice - (item.totalPrice * Number(item.discountPercent) / 100))
+                                    )}
+                                  </div>
+                                  <div className="text-green-600 text-xs">
+                                    ส่วนลด: {item.discountPercent}%
                                   </div>
                                 </>
                               ) : (
@@ -622,15 +633,6 @@ const Page = () => {
                                   style: "currency",
                                   currency: "THB",
                                 }).format(item.totalPrice)
-                              )}
-                              {item.discountAmount > 0 && (
-                                <div className="text-green-600 text-xs">
-                                  ส่วนลด:{" "}
-                                  {new Intl.NumberFormat("th-TH", {
-                                    style: "currency",
-                                    currency: "THB",
-                                  }).format(item.discountAmount)}
-                                </div>
                               )}
                               {item.promotionCode && (
                                 <div className="text-xs text-gray-500">
