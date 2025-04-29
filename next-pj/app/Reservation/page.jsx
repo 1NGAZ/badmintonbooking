@@ -248,8 +248,8 @@ export default function ReservationTable() {
         selectedTimeSlots: enhancedTimeSlots,
         courtId: selectedTimeSlots[0].courtId,
         promotionId: appliedPromotion?.id || null,
-        promotionCode: appliedPromotion?.code || null,  // แก้ไขชื่อฟิลด์
-        discountPercent: appliedPromotion?.discount || 0,  // แก้ไขชื่อฟิลด์
+        promotionCode: appliedPromotion?.code || null,
+        discountPercent: appliedPromotion?.discount || 0,
         originalPrice: originalPrice,
         finalPrice: appliedPromotion ? calculateTotalPrice() : originalPrice,
         statusId: 2,
@@ -269,7 +269,6 @@ export default function ReservationTable() {
 
       // ถ้าสำเร็จ
       if (response.status >= 200 && response.status < 300) {
-        // ... โค้ดส่วนที่เหลือยังคงเหมือนเดิม ...
         setOpen(false);
         setSelectedTimeSlots([]);
         setSelectedFile(null);
