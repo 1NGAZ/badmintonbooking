@@ -65,7 +65,7 @@ const Page = () => {
             
             // แปลงราคาให้เป็นตัวเลข
             reservation.totalPrice = Number(
-              reservation.originalPrice || reservation.totalPrice || 0
+              reservation.totalPrice || reservation.originalPrice || 0
             );
             
             // ตรวจสอบว่ามีข้อมูลโปรโมชั่นจาก backend
@@ -75,18 +75,74 @@ const Page = () => {
                 discountPercent: reservation.discountPercent
               });
               
-              // คำนวณส่วนลดที่มีอยู่แล้วกับ
-              if (reservation.discountAmount && reservation.finalPrice) {
-                reservation.discountedPrice = Number(reservation.finalPrice);
-              }
-              // คำนวณส่วนลดใหม่ถ้าไม่มีข้อมูล
-              else if (reservation.discountPercent) {
-                const discountPercent = Number(reservation.discountPercent);
+              // คำนวณส่วนลดใหม่เพื่อความแน่ใจ
+              const discountPercent = Number(reservation.discountPercent || 0);
+              
+              // ถ้ามี discountPercent ให้คำนวณจากเปอร์เซ็นต์
+              if (discountPercent > 0) {
                 const discountAmount = (reservation.totalPrice * discountPercent) / 100;
                 reservation.discountAmount = discountAmount;
                 reservation.discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+              } 
+              // ถ้ามี discountAmount แต่ไม่มี discountPercent
+              else if (reservation.discountAmount && !reservation.discountPercent) {
+                const discountAmount = Number(reservation.discountAmount);
+                reservation.discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+                // คำนวณ discountPercent ย้อนกลับ
+                reservation.discountPercent = ((discountAmount / reservation.totalPrice) * 100).toFixed(0);
               }
+              // ถ้ามี discountedPrice แต่ไม่มี discountAmount
+              else if (reservation.discountedPrice && !reservation.discountAmount) {
+                const discountedPrice = Number(reservation.discountedPrice);
+                reservation.discountAmount = reservation.totalPrice - discountedPrice;
+                // คำนวณ discountPercent ย้อนกลับ
+                reservation.discountPercent = ((reservation.discountAmount / reservation.totalPrice) * 100).toFixed(0);
+              }
+              
+              console.log("คำนวณส่วนลดจากข้อมูล backend:", {
+                totalPrice: reservation.totalPrice,
+                discountPercent: reservation.discountPercent,
+                discountAmount: reservation.discountAmount,
+                finalPrice: reservation.discountedPrice
+              });
             }
+            // ตรวจสอบกรณีมี discountAmount หรือ discountedPrice แต่ไม่มี promotionCode
+            else if ((reservation.discountAmount > 0 || 
+                     (reservation.discountedPrice && reservation.discountedPrice < reservation.totalPrice)) && 
+                     !reservation.promotionCode) {
+              
+              // กำหนดค่า discountAmount ถ้ายังไม่มี
+              if (!reservation.discountAmount && reservation.discountedPrice) {
+                reservation.discountAmount = reservation.totalPrice - Number(reservation.discountedPrice);
+              }
+              
+              // กำหนดค่า discountedPrice ถ้ายังไม่มี
+              if (!reservation.discountedPrice && reservation.discountAmount) {
+                reservation.discountedPrice = reservation.totalPrice - Number(reservation.discountAmount);
+              }
+              
+              // คำนวณ discountPercent ถ้ายังไม่มี
+              if (!reservation.discountPercent) {
+                reservation.discountPercent = ((reservation.discountAmount / reservation.totalPrice) * 100).toFixed(0);
+              }
+              
+              // เพิ่ม promotionCode เป็น "ส่วนลดพิเศษ" ถ้าไม่มี
+              reservation.promotionCode = "ส่วนลดพิเศษ";
+              
+              console.log("เพิ่มข้อมูลส่วนลด:", {
+                discountAmount: reservation.discountAmount,
+                discountPercent: reservation.discountPercent,
+                promotionCode: reservation.promotionCode
+              });
+            }
+            
+            // ตรวจสอบความถูกต้องของข้อมูลหลังการคำนวณ
+            if (isNaN(reservation.discountAmount)) reservation.discountAmount = 0;
+            if (isNaN(reservation.discountedPrice)) reservation.discountedPrice = reservation.totalPrice;
+            if (isNaN(reservation.discountPercent)) reservation.discountPercent = 0;
+            
+            // ปรับให้ discountedPrice ไม่ต่ำกว่า 0
+            reservation.discountedPrice = Math.max(0, reservation.discountedPrice);
             
             console.log("ข้อมูลการจองหลังปรับปรุง:", reservation);
             return reservation;
