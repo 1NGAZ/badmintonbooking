@@ -8,31 +8,34 @@ import { Phone } from 'lucide-react';
  */
 export const getUserDataFromToken = () => {
   try {
-    // ตรวจสอบว่าอยู่ใน browser environment หรือไม่
     if (typeof window === 'undefined') {
       return null;
     }
 
-    // ดึง token จาก sessionStorage
     const token = window.sessionStorage.getItem("authToken");
-    
-    // ถ้าไม่มี token ให้ return null
+
     if (!token) {
       console.log("ไม่พบ token ในระบบ");
       return null;
     }
-    
-    // แกะข้อมูลจาก token
+
     const tokenParts = token.split('.');
     if (tokenParts.length !== 3) {
       console.log("รูปแบบ token ไม่ถูกต้อง");
       return null;
     }
-    
-    // แปลง base64 ส่วนที่ 2 (payload) เป็น JSON
-    const payload = JSON.parse(atob(tokenParts[1]));
-    
-    // ตรวจสอบว่า token หมดอายุหรือไม่
+
+    // ฟังก์ชัน decode base64 ให้เป็น UTF-8
+    const decodeBase64Utf8 = (base64) => {
+      return decodeURIComponent(
+        Array.prototype.map
+          .call(atob(base64), (c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+          .join('')
+      );
+    };
+
+    const payload = JSON.parse(decodeBase64Utf8(tokenParts[1]));
+
     const currentTime = Math.floor(Date.now() / 1000);
     if (payload.exp && payload.exp < currentTime) {
       console.log("Token หมดอายุแล้ว");
@@ -40,8 +43,7 @@ export const getUserDataFromToken = () => {
       window.sessionStorage.removeItem("userData");
       return null;
     }
-    
-    // สร้างข้อมูลผู้ใช้จาก payload
+
     const userData = {
       id: payload.userId,
       email: payload.email,
@@ -50,10 +52,9 @@ export const getUserDataFromToken = () => {
       phone: payload.phone || "",
       userRoles: [{ roleId: payload.roleId }]
     };
-    
-    // เก็บข้อมูลผู้ใช้ลงใน sessionStorage
+
     window.sessionStorage.setItem("userData", JSON.stringify(userData));
-    
+
     return userData;
   } catch (error) {
     console.log("Error parsing token:", error);
@@ -64,6 +65,7 @@ export const getUserDataFromToken = () => {
     return null;
   }
 };
+
 
 /**
  * ฟังก์ชันสำหรับดึงข้อมูลผู้ใช้จาก sessionStorage หรือ token
