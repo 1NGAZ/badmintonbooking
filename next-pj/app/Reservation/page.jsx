@@ -712,19 +712,19 @@ export default function ReservationTable() {
   };
  
 
-    console.log("Before discount:", totalPrice);
-    console.log("Applied promotion:", appliedPromotion);
+  //   console.log("Before discount:", totalPrice);
+  //   console.log("Applied promotion:", appliedPromotion);
 
-    if (appliedPromotion && appliedPromotion.discount != null) {
-      const discountAmount = Number(appliedPromotion.discount);
-      if (!isNaN(discountAmount)) {
-        const discount = (totalPrice * discountAmount) / 100;
-        totalPrice = Math.max(0, totalPrice - discount); // Prevent negative prices
-      }
-    }
+  //   if (appliedPromotion && appliedPromotion.discount != null) {
+  //     const discountAmount = Number(appliedPromotion.discount);
+  //     if (!isNaN(discountAmount)) {
+  //       const discount = (totalPrice * discountAmount) / 100;
+  //       totalPrice = Math.max(0, totalPrice - discount); // Prevent negative prices
+  //     }
+  //   }
 
-    return isNaN(totalPrice) ? "0" : totalPrice.toLocaleString();
-  };
+  //   return isNaN(totalPrice) ? "0" : totalPrice.toLocaleString();
+  // };
 
   const [promotionCode, setPromotionCode] = useState("");
   const [appliedPromotion, setAppliedPromotion] = useState(null);
