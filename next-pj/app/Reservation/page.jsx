@@ -75,6 +75,8 @@ export default function ReservationTable() {
     ],
   });
 
+
+
   // ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
   const saveRulesEdit = () => {
     localStorage.setItem("rulesData", JSON.stringify(rulesData));
