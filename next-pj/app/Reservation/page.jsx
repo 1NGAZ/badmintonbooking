@@ -211,36 +211,48 @@ export default function ReservationTable() {
       formData.append("originalPrice", originalPrice);
 
       // แนบรหัสโปรโมชั่นถ้ามี
-      if (appliedPromotion?.code) {
-        formData.append("promotionId", appliedPromotion.id);
+   // แนบข้อมูลโปรโมชั่น - ปรับปรุงการตรวจสอบและส่งข้อมูล
+   if (appliedPromotion) {
+    // ตรวจสอบว่า appliedPromotion.id มีค่าและเป็นตัวเลขหรือไม่
+    const promotionId = parseInt(appliedPromotion.id, 10);
+    
+    if (!isNaN(promotionId) && promotionId > 0) {
+      console.log("ส่งข้อมูล promotionId:", promotionId);
+      formData.append("promotionId", promotionId);
+      
+      // ส่งข้อมูลเพิ่มเติมเกี่ยวกับโปรโมชั่น
+      if (appliedPromotion.code) {
         formData.append("promotionCode", appliedPromotion.code);
-        formData.append("discountPercent", appliedPromotion.discount);
-
-                // คำนวณราคาหลังหักส่วนลด
-        const discountAmount = (originalPrice * Number(appliedPromotion.discount)) / 100;
-        const finalPrice = Math.max(0, originalPrice - discountAmount);
-        // formData.append("finalPrice", finalPrice);
-        formData.append("finalPrice", appliedPromotion ? calculateTotalPrice() : originalPrice);
-        
-        console.log("ข้อมูลโปรโมชั่นที่ใช้:", {
-          id: appliedPromotion.id,
-          code: appliedPromotion.code,
-          discount: appliedPromotion.discount,
-          originalPrice: originalPrice,
-          finalPrice: finalPrice
-        });
-        
-        // อัปเดตจำนวนการใช้งานโปรโมชั่น
-        try {
-          await axios.post(`${API_URL}/promotions/use/${appliedPromotion.code}`);
-          console.log("อัปเดตจำนวนการใช้งานโปรโมชั่นสำเร็จ");
-        } catch (promoError) {
-          console.error("ไม่สามารถอัปเดตจำนวนการใช้งานโปรโมชั่นได้:", promoError);
-        }
-      } else {
-        // ถ้าไม่มีโปรโมชั่น ราคาสุดท้ายคือราคาเดิม
-        formData.append("finalPrice", originalPrice);
       }
+      
+      if (appliedPromotion.discount) {
+        formData.append("discountPercent", appliedPromotion.discount);
+      }
+      
+      // คำนวณราคาหลังหักส่วนลด
+      const originalPrice = calculateTotalPrice(false); // เพิ่มพารามิเตอร์เพื่อคำนวณราคาก่อนส่วนลด
+      const discountAmount = (originalPrice * Number(appliedPromotion.discount)) / 100;
+      const finalPrice = Math.max(0, originalPrice - discountAmount);
+      
+      formData.append("originalPrice", originalPrice);
+      formData.append("finalPrice", finalPrice);
+      
+      console.log("ข้อมูลโปรโมชั่นที่ส่งไป backend:", {
+        id: promotionId,
+        code: appliedPromotion.code,
+        discount: appliedPromotion.discount,
+        originalPrice: originalPrice,
+        finalPrice: finalPrice
+      });
+    } else {
+      console.warn("ข้อมูล promotionId ไม่ถูกต้อง:", appliedPromotion.id);
+      // ไม่ส่งข้อมูลโปรโมชั่นถ้า ID ไม่ถูกต้อง
+    }
+  } else {
+    console.log("ไม่มีการใช้โปรโมชั่น");
+    formData.append("originalPrice", calculateTotalPrice(false));
+    formData.append("finalPrice", calculateTotalPrice(false));
+  }
 
       console.log("ส่งข้อมูลการจอง:", {
         userId: userData.id,
@@ -668,16 +680,14 @@ export default function ReservationTable() {
   const isAdmin = userData?.roleId === 1 && !!userData?.id;
   const isLoggedIn = !!userData?.id;
 
-  const calculateTotalPrice = () => {
+  const calculateTotalPrice = (applyDiscount = true) => {
     let totalPrice = 0;
-
+  
     selectedTimeSlots.forEach((slot) => {
       const court = reservationData.find(
         (c) => Number(c.id) === Number(slot.courtId)
       );
-      console.log("Court found:", court);
-      console.log("Court price:", court?.price);
-
+  
       // Ensure price is a valid number
       if (court?.price != null) {
         const price = Number(court.price);
@@ -685,7 +695,21 @@ export default function ReservationTable() {
           totalPrice += price;
         }
       }
-    }); 
+    });
+  
+    console.log("Before discount:", totalPrice);
+  
+    // ถ้าต้องการคำนวณราคาหลังส่วนลด และมีโปรโมชั่นที่ใช้งานได้
+    if (applyDiscount && appliedPromotion && appliedPromotion.discount != null) {
+      const discountAmount = Number(appliedPromotion.discount);
+      if (!isNaN(discountAmount)) {
+        const discount = (totalPrice * discountAmount) / 100;
+        totalPrice = Math.max(0, totalPrice - discount); // Prevent negative prices
+      }
+    }
+  
+    return isNaN(totalPrice) ? "0" : totalPrice.toLocaleString();
+  };
  
 
     console.log("Before discount:", totalPrice);
@@ -712,12 +736,17 @@ export default function ReservationTable() {
       const response = await axios.get(
         `${API_URL}/promotions/validate/${promotionCode}`
       );
-
+  
       console.log("Promotion response:", response.data);
-
+  
       // ตรวจสอบข้อมูลโปรโมชั่น
       const promotion = response.data?.promotion || response.data;
-
+  
+      // ตรวจสอบว่าโปรโมชั่นมี id และเป็นตัวเลขที่ถูกต้อง
+      if (!promotion.id || isNaN(parseInt(promotion.id, 10))) {
+        throw new Error("ข้อมูลโปรโมชั่นไม่ถูกต้อง (ID ไม่ถูกต้อง)");
+      }
+  
       // ตรวจสอบว่าโปรโมชั่นยังใช้งานได้หรือไม่ (ไม่เกินจำนวนครั้งที่กำหนด)
       if (
         promotion &&
@@ -726,21 +755,31 @@ export default function ReservationTable() {
       ) {
         throw new Error("โปรโมชั่นนี้ถูกใช้งานครบตามจำนวนที่กำหนดแล้ว");
       }
-
+  
       // ตรวจสอบว่า discount เป็นตัวเลขที่ถูกต้อง
       if (
         promotion &&
         promotion.discount != null &&
         !isNaN(Number(promotion.discount))
       ) {
-        setAppliedPromotion(promotion);
-
-      // คำนวณราคาใหม่หลังใช้โค้ดส่วนลด
-        const originalPrice = calculateTotalPrice();
+        // เก็บข้อมูลโปรโมชั่นทั้งหมดที่จำเป็น
+        setAppliedPromotion({
+          id: promotion.id,
+          code: promotion.code,
+          discount: promotion.discount,
+          maxUses: promotion.maxUses,
+          usedCount: promotion.usedCount,
+          title: promotion.title || "",
+          description: promotion.description || ""
+        });
+  
+        // คำนวณราคาใหม่หลังใช้โค้ดส่วนลด
+        const originalPrice = calculateTotalPrice(false); // ราคาก่อนส่วนลด
         const discountAmount = (originalPrice * Number(promotion.discount)) / 100;
         const finalPrice = Math.max(0, originalPrice - discountAmount);
         
         console.log("โปรโมชั่นที่ใช้:", {
+          id: promotion.id,
           code: promotion.code,
           discount: promotion.discount,
           maxUses: promotion.maxUses,
