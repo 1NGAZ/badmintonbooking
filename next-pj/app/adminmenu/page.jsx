@@ -625,26 +625,25 @@ const Page = () => {
                               {item.totalHours}
                             </td>
                             <td className="px-4 py-3 text-right text-xs sm:text-sm font-medium">
-                              {item.promotionCode || item.discountAmount > 0 ? (
+                              {item.discountAmount > 0 ? (
                                 <>
                                   <div className="line-through text-gray-400">
                                     ฿{Number(item.totalPrice).toFixed(2)}
                                   </div>
-                                  <div className="text-red-600 font-semibold">
-                                    ฿{Number(item.discountedPrice || (item.totalPrice - (item.discountAmount || 0))).toFixed(2)}
+                                  <div className="text-red-600 font-bold text-lg">
+                                    ฿{Number(item.discountedPrice).toFixed(2)}
                                   </div>
-                                  <div className="text-green-600 text-xs">
-                                    ส่วนลด: {item.discountPercent ? `${item.discountPercent}%` : ''} 
-                                    {item.discountAmount ? ` (฿${Number(item.discountAmount).toFixed(2)})` : ''}
+                                  <div className="text-green-600 text-sm font-semibold">
+                                    ส่วนลด: ฿{Number(item.discountAmount).toFixed(2)}
                                   </div>
                                   {item.promotionCode && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-700 mt-1">
                                       โค้ด: {item.promotionCode}
                                     </div>
                                   )}
                                 </>
                               ) : (
-                                <div>
+                                <div className="text-gray-800 font-semibold">
                                   ฿{Number(item.totalPrice).toFixed(2)}
                                 </div>
                               )}
