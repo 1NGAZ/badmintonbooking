@@ -75,8 +75,6 @@ export default function ReservationTable() {
     ],
   });
 
-
-
   // ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
   const saveRulesEdit = () => {
     localStorage.setItem("rulesData", JSON.stringify(rulesData));
@@ -201,24 +199,59 @@ export default function ReservationTable() {
 
       console.log("ช่วงเวลาที่เลือกพร้อมข้อมูลเวลา:", enhancedTimeSlots);
       formData.append("selectedTimeSlots", JSON.stringify(enhancedTimeSlots));
-      // console.log("ช่วงเวลาที่เลือกพร้อมข้อมูลเวลา:", selectedTimeSlots);
-      // formData.append("selectedTimeSlots", JSON.stringify(selectedTimeSlots));
+
       // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
       formData.append("courtId", selectedTimeSlots[0].courtId);
 
       // แนบสถานะ (2 = รอดำเนินการ)
       formData.append("statusId", "2");
 
+      // คำนวณราคาก่อนส่วนลด
+      const originalPrice = calculateTotalPrice();
+      formData.append("originalPrice", originalPrice);
+
       // แนบรหัสโปรโมชั่นถ้ามี
       if (appliedPromotion?.code) {
+        formData.append("promotionId", appliedPromotion.id);
         formData.append("promotionCode", appliedPromotion.code);
+        formData.append("discountPercent", appliedPromotion.discount);
+
+                // คำนวณราคาหลังหักส่วนลด
+        const discountAmount = (originalPrice * Number(appliedPromotion.discount)) / 100;
+        const finalPrice = Math.max(0, originalPrice - discountAmount);
+        // formData.append("finalPrice", finalPrice);
+        formData.append("finalPrice", appliedPromotion ? calculateTotalPrice() : originalPrice);
+        
+        console.log("ข้อมูลโปรโมชั่นที่ใช้:", {
+          id: appliedPromotion.id,
+          code: appliedPromotion.code,
+          discount: appliedPromotion.discount,
+          originalPrice: originalPrice,
+          finalPrice: finalPrice
+        });
+        
+        // อัปเดตจำนวนการใช้งานโปรโมชั่น
+        try {
+          await axios.post(`${API_URL}/promotions/use/${appliedPromotion.code}`);
+          console.log("อัปเดตจำนวนการใช้งานโปรโมชั่นสำเร็จ");
+        } catch (promoError) {
+          console.error("ไม่สามารถอัปเดตจำนวนการใช้งานโปรโมชั่นได้:", promoError);
+        }
+      } else {
+        // ถ้าไม่มีโปรโมชั่น ราคาสุดท้ายคือราคาเดิม
+        formData.append("finalPrice", originalPrice);
       }
+
       console.log("ส่งข้อมูลการจอง:", {
         userId: userData.id,
         date: reservationDate,
         selectedTimeSlots: enhancedTimeSlots,
         courtId: selectedTimeSlots[0].courtId,
-        validatePromotionCode: appliedPromotion?.code || null,
+        promotionId: appliedPromotion?.id || null,
+        promotionCode: appliedPromotion?.code || null,  // แก้ไขชื่อฟิลด์
+        discountPercent: appliedPromotion?.discount || 0,  // แก้ไขชื่อฟิลด์
+        originalPrice: originalPrice,
+        finalPrice: appliedPromotion ? calculateTotalPrice() : originalPrice,
         statusId: 2,
       });
 
@@ -653,7 +686,8 @@ export default function ReservationTable() {
           totalPrice += price;
         }
       }
-    });
+    }); 
+ 
 
     console.log("Before discount:", totalPrice);
     console.log("Applied promotion:", appliedPromotion);
@@ -701,6 +735,12 @@ export default function ReservationTable() {
         !isNaN(Number(promotion.discount))
       ) {
         setAppliedPromotion(promotion);
+
+      // คำนวณราคาใหม่หลังใช้โค้ดส่วนลด
+        const originalPrice = calculateTotalPrice();
+        const discountAmount = (originalPrice * Number(promotion.discount)) / 100;
+        const finalPrice = Math.max(0, originalPrice - discountAmount);
+        
         console.log("โปรโมชั่นที่ใช้:", {
           code: promotion.code,
           discount: promotion.discount,
@@ -710,7 +750,11 @@ export default function ReservationTable() {
             promotion.maxUses > 0
               ? promotion.maxUses - promotion.usedCount
               : "ไม่จำกัด",
+          originalPrice: originalPrice,
+          discountAmount: discountAmount,
+          finalPrice: finalPrice
         });
+        
         Swal.fire({
           icon: "success",
           title: "ใช้โค้ดสำเร็จ",
@@ -724,12 +768,12 @@ export default function ReservationTable() {
         throw new Error("ข้อมูลส่วนลดไม่ถูกต้อง");
       }
     } catch (error) {
-      // console.error("Failed to apply promotion:", error);
+      console.error("Failed to apply promotion:", error);
       setAppliedPromotion(null);
       Swal.fire({
         icon: "error",
         title: "ไม่สามารถใช้โค้ดได้",
-        text: "รหัสโปรโมชั่นไม่ถูกต้องหรือหมดอายุ",
+        text: error.response?.data?.error || error.message || "รหัสโปรโมชั่นไม่ถูกต้องหรือหมดอายุ",
       });
     }
   };
