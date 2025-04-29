@@ -59,22 +59,55 @@ const Page = () => {
         console.log("Reservation data:", response.data.groupedReservations);
 
         // ปรับปรุงข้อมูลราคาถ้าจำเป็น
+        // ปรับปรุงข้อมูลราคาถ้าจำเป็น
         const updatedReservations = response.data.groupedReservations.map(
           (reservation) => {
-            // คำนวณราคาหลังหักส่วนลดถ้ามีการใช้โปรโมชั่น
-            if (reservation.promotionCode && reservation.discountPercent) {
-              const discountAmount = (reservation.totalPrice * Number(reservation.discountPercent)) / 100;
-              reservation.discountAmount = discountAmount;
-              reservation.discountedPrice = reservation.totalPrice - discountAmount;
-            }
-            // ถ้ามีข้อมูลส่วนลดแต่ไม่มีราคาหลังส่วนลด ให้คำนวณราคาหลังส่วนลด
-            else if (
-              reservation.discountAmount > 0 &&
-              reservation.discountedPrice === undefined
+            // แปลงราคาให้เป็นตัวเลข
+            reservation.totalPrice = Number(
+              reservation.totalPrice || reservation.originalPrice || 0
+            );
+
+            // กรณีที่มีข้อมูลโปรโมชั่นจากหน้า Reservation
+            if (
+              reservation.promotionCode &&
+              (reservation.discountPercent || reservation.discountAmount)
             ) {
+              const discountPercent = Number(reservation.discountPercent || 0);
+              const discountAmount =
+                discountPercent > 0
+                  ? (reservation.totalPrice * discountPercent) / 100
+                  : Number(reservation.discountAmount || 0);
+
+              reservation.discountAmount = discountAmount;
               reservation.discountedPrice =
-                reservation.totalPrice - reservation.discountAmount;
+                reservation.totalPrice - discountAmount;
+
+              console.log("คำนวณส่วนลด:", {
+                totalPrice: reservation.totalPrice,
+                discountPercent: discountPercent,
+                discountAmount: discountAmount,
+                finalPrice: reservation.discountedPrice,
+              });
             }
+
+            // กรณีที่มีราคาหลังหักส่วนลดแต่ไม่มีข้อมูลส่วนลด
+            else if (
+              reservation.finalPrice &&
+              reservation.finalPrice !== reservation.totalPrice
+            ) {
+              reservation.discountedPrice = Number(reservation.finalPrice);
+              reservation.discountAmount =
+                reservation.totalPrice - reservation.discountedPrice;
+
+              // คำนวณเปอร์เซ็นต์ส่วนลดย้อนกลับ
+              if (!reservation.discountPercent) {
+                reservation.discountPercent = (
+                  (reservation.discountAmount / reservation.totalPrice) *
+                  100
+                ).toFixed(0);
+              }
+            }
+
             return reservation;
           }
         );
@@ -610,23 +643,32 @@ const Page = () => {
                               {item.promotionCode ? (
                                 <>
                                   <div className="line-through text-gray-400">
-                                    ฿{item.totalPrice.toFixed(2)}
+                                    ฿{Number(item.totalPrice).toFixed(2)}
                                   </div>
                                   <div className="text-red-600 font-semibold">
-                                    ฿{(item.discountedPrice || 
-                                      (item.totalPrice - (item.totalPrice * Number(item.discountPercent) / 100))).toFixed(2)}
+                                    ฿
+                                    {Number(
+                                      item.discountedPrice ||
+                                        item.totalPrice -
+                                          (item.totalPrice *
+                                            Number(item.discountPercent)) /
+                                            100
+                                    ).toFixed(2)}
                                   </div>
                                   <div className="text-green-600 text-xs">
-                                    ส่วนลด: ฿{((item.totalPrice * Number(item.discountPercent) / 100)).toFixed(2)}
+                                    ส่วนลด: ฿
+                                    {Number(
+                                      (item.totalPrice *
+                                        Number(item.discountPercent)) /
+                                        100
+                                    ).toFixed(2)}
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     โค้ด: {item.promotionCode}
                                   </div>
                                 </>
                               ) : (
-                                <div className="text-xs text-gray-500">
-                                  โค้ด: {item.promotionCode}
-                                </div>
+                                <div>฿{Number(item.totalPrice).toFixed(2)}</div>
                               )}
                             </td>
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm">
