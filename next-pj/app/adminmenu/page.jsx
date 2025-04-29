@@ -33,7 +33,7 @@ const Page = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // ตรวจสอบว่าเป็น admin (roleId === 1) หรือไม่
+        // ตรวจสอบว่าเป็น admin (roleId === 1) หรืุ่ไม่
         const isAdmin = userResponse.data?.roles?.some((role) => role.id === 1);
 
         if (!isAdmin) {
@@ -68,9 +68,30 @@ const Page = () => {
               reservation.totalPrice || reservation.originalPrice || 0
             );
             
-            // ตรวจสอบว่ามีข้อมูลโปรโมชั่นเพิ่มเติมหรือไม่
+            // ตรวจสอบว่ามีข้อมูลโปรโมชั่นจาก backend
+            if (reservation.promotionCode && reservation.discountPercent) {
+              console.log("พบข้อมูลโปรโมชั่นจาก backend:", {
+                promotionCode: reservation.promotionCode,
+                discountPercent: reservation.discountPercent
+              });
+              
+              // คำนวณส่วนลดใหม่เพื่อความแน่ใจ
+              const discountPercent = Number(reservation.discountPercent);
+              const discountAmount = (reservation.totalPrice * discountPercent) / 100;
+              
+              reservation.discountAmount = discountAmount;
+              reservation.discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+              
+              console.log("คำนวณส่วนลดจากข้อมูล backend:", {
+                totalPrice: reservation.totalPrice,
+                discountPercent: discountPercent,
+                discountAmount: discountAmount,
+                finalPrice: reservation.discountedPrice
+              });
+            }
+            // ตรวจสอบว่ามีข้อมูลโปรโมชั่นเพิ่มเติมหรืุ่ไม่
             // บางครั้งข้อมูลอาจอยู่ในรูปแบบอื่น เช่น finalPrice, originalPrice
-            if (reservation.finalPrice && 
+            else if (reservation.finalPrice && 
                 Number(reservation.finalPrice) !== Number(reservation.totalPrice) &&
                 !reservation.promotionCode) {
               
@@ -125,12 +146,12 @@ const Page = () => {
             
             // กรณีที่มีราคาหลังหักส่วนลดแต่ไม่มีข้อมูลส่วนลด
             else if (
-              reservation.finalPrice &&
-              reservation.finalPrice !== reservation.totalPrice
+              reservation.discountedPrice &&
+              reservation.discountedPrice !== reservation.totalPrice
             ) {
-              reservation.discountedPrice = Number(reservation.finalPrice);
+              // ใช้ discountedPrice ที่มีอยู่แล้ว
               reservation.discountAmount =
-                reservation.totalPrice - reservation.discountedPrice;
+                reservation.totalPrice - Number(reservation.discountedPrice);
 
               // คำนวณเปอร์เซ็นต์ส่วนลดย้อนกลับ
               if (!reservation.discountPercent) {
@@ -139,7 +160,27 @@ const Page = () => {
                   100
                 ).toFixed(0);
               }
+              
+              // ถ้าไม่มี promotionCode ให้เพิ่มเป็น "ส่วนลดพิเศษ"
+              if (!reservation.promotionCode && reservation.discountAmount > 0) {
+                reservation.promotionCode = "ส่วนลดพิเศษ";
+              }
+              
+              console.log("คำนวณส่วนลดจาก discountedPrice:", {
+                totalPrice: reservation.totalPrice,
+                discountedPrice: reservation.discountedPrice,
+                discountAmount: reservation.discountAmount,
+                discountPercent: reservation.discountPercent
+              });
             }
+            
+            // ตรวจสอบความถูกต้องของข้อมูลหลังการคำนวณ
+            if (isNaN(reservation.discountAmount)) reservation.discountAmount = 0;
+            if (isNaN(reservation.discountedPrice)) reservation.discountedPrice = reservation.totalPrice;
+            if (isNaN(reservation.discountPercent)) reservation.discountPercent = 0;
+            
+            // ปรับให้ discountedPrice ไม่ต่ำกว่า 0
+            reservation.discountedPrice = Math.max(0, reservation.discountedPrice);
             
             console.log("ข้อมูลการจองหลังปรับปรุง:", reservation);
             return reservation;
@@ -149,7 +190,7 @@ const Page = () => {
         setReservations(updatedReservations || []);
       } catch (error) {
         console.error("Fetch data error:", error);
-        // จัดการกรณี token หมดอายุหรือไม่ถูกต้อง
+        // จัดการกรณี token หมดอายุหรืุ่ไม่ถูกต้อง
         if (
           error?.response?.status === 401 ||
           error?.response?.status === 403
@@ -680,29 +721,19 @@ const Page = () => {
                                     ฿{Number(item.totalPrice).toFixed(2)}
                                   </div>
                                   <div className="text-red-600 font-semibold">
-                                    ฿
-                                    {Number(
-                                      item.discountedPrice ||
-                                        item.totalPrice -
-                                          (item.totalPrice *
-                                            Number(item.discountPercent)) /
-                                            100
-                                    ).toFixed(2)}
+                                    ฿{Number(item.discountedPrice || 0).toFixed(2)}
                                   </div>
                                   <div className="text-green-600 text-xs">
-                                    ส่วนลด: ฿
-                                    {Number(
-                                      (item.totalPrice *
-                                        Number(item.discountPercent)) /
-                                        100
-                                    ).toFixed(2)}
+                                    ส่วนลด: {item.discountPercent}% (฿{Number(item.discountAmount || 0).toFixed(2)})
                                   </div>
                                   <div className="text-xs text-gray-500">
                                     โค้ด: {item.promotionCode}
                                   </div>
                                 </>
                               ) : (
-                                <div>฿{Number(item.totalPrice).toFixed(2)}</div>
+                                <div>
+                                  ฿{Number(item.totalPrice).toFixed(2)}
+                                </div>
                               )}
                             </td>
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm">
