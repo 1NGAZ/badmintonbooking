@@ -61,50 +61,37 @@ const Page = () => {
         // ปรับปรุงข้อมูลราคาถ้าจำเป็น
         const promotions = response.data.promotions || [];
 
-        const updatedReservations = response.data.groupedReservations.map(
-          (reservation) => {
-            reservation.totalPrice = Number(reservation.totalPrice || 0);
-
-            if (reservation.promotionId) {
-              const promo = promotions.find(
-                (p) => p.id === reservation.promotionId
-              );
-              if (promo) {
-                const discountType = promo.discountType || "percentage";
-                const discountValue = parseFloat(promo.discount);
-                let discountAmount = 0;
-                let discountPercent = 0;
-                let discountedPrice = reservation.totalPrice;
-
-                if (discountType === "percentage" && !isNaN(discountValue)) {
-                  discountPercent = discountValue;
-                  discountAmount =
-                    (reservation.totalPrice * discountPercent) / 100;
-                  discountedPrice = Math.max(
-                    0,
-                    reservation.totalPrice - discountAmount
-                  );
-                } else if (discountType === "amount" && !isNaN(discountValue)) {
-                  discountAmount = discountValue;
-                  discountPercent = (
-                    (discountAmount / reservation.totalPrice) *
-                    100
-                  ).toFixed(0);
-                  discountedPrice = Math.max(
-                    0,
-                    reservation.totalPrice - discountAmount
-                  );
-                }
-
-                reservation.discountAmount = discountAmount;
-                reservation.discountPercent = discountPercent;
-                reservation.discountedPrice = discountedPrice;
+        const updatedReservations = response.data.groupedReservations.map((reservation) => {
+          reservation.totalPrice = Number(reservation.totalPrice || 0);
+        
+          if (reservation.promotionId) {
+            const promo = promotions.find(p => p.id === reservation.promotionId);
+            if (promo) {
+              const discountType = promo.discountType || 'percentage';
+              const discountValue = parseFloat(promo.discount);
+              let discountAmount = 0;
+              let discountPercent = 0;
+              let discountedPrice = reservation.totalPrice;
+        
+              if (discountType === 'percentage' && !isNaN(discountValue)) {
+                discountPercent = discountValue;
+                discountAmount = (reservation.totalPrice * discountPercent) / 100;
+                discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+              } else if (discountType === 'amount' && !isNaN(discountValue)) {
+                discountAmount = discountValue;
+                discountPercent = ((discountAmount / reservation.totalPrice) * 100).toFixed(0);
+                discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
               }
-            } else {
-              reservation.discountAmount = 0;
-              reservation.discountPercent = 0;
-              reservation.discountedPrice = reservation.totalPrice;
+        
+              reservation.discountAmount = discountAmount;
+              reservation.discountPercent = discountPercent;
+              reservation.discountedPrice = discountedPrice;
             }
+          } else {
+            reservation.discountAmount = 0;
+            reservation.discountPercent = 0;
+            reservation.discountedPrice = reservation.totalPrice;
+          }
             console.log("ข้อมูลการจองหลังปรับปรุง:", reservation);
             return reservation;
           }
@@ -637,33 +624,31 @@ const Page = () => {
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm font-medium">
                               {item.totalHours}
                             </td>
-                            // ... existing code ...
                             <td className="px-4 py-3 text-right text-xs sm:text-sm font-medium">
-                              {item.discountAmount > 0 ? (
+                              {item.promotionCode || item.discountAmount > 0 ? (
                                 <>
                                   <div className="line-through text-gray-400">
                                     ฿{Number(item.totalPrice).toFixed(2)}
                                   </div>
-                                  <div className="text-red-600 font-bold text-lg">
-                                    ฿{Number(item.discountedPrice).toFixed(2)}
+                                  <div className="text-red-600 font-semibold">
+                                    ฿{Number(item.discountedPrice || (item.totalPrice - (item.discountAmount || 0))).toFixed(2)}
                                   </div>
-                                  <div className="text-green-600 text-sm font-semibold">
-                                    ส่วนลด: ฿
-                                    {Number(item.discountAmount).toFixed(2)}
+                                  <div className="text-green-600 text-xs">
+                                    ส่วนลด: {item.discountPercent ? `${item.discountPercent}%` : ''} 
+                                    {item.discountAmount ? ` (฿${Number(item.discountAmount).toFixed(2)})` : ''}
                                   </div>
                                   {item.promotionCode && (
-                                    <div className="text-xs text-gray-700 mt-1">
+                                    <div className="text-xs text-gray-500">
                                       โค้ด: {item.promotionCode}
                                     </div>
                                   )}
                                 </>
                               ) : (
-                                <div className="text-gray-800 font-semibold">
+                                <div>
                                   ฿{Number(item.totalPrice).toFixed(2)}
                                 </div>
                               )}
                             </td>
-                            // ... existing code ...
                             <td className="hidden sm:table-cell px-4 py-3 text-center text-xs sm:text-sm">
                               <a
                                 href={`${API_URL}/uploads/${item.attachment}`}
