@@ -69,108 +69,70 @@ const Page = () => {
             );
             
             // ตรวจสอบว่ามีข้อมูลโปรโมชั่นจาก backend
-            if (reservation.promotionCode && reservation.discountPercent) {
+            if (reservation.promotionCode) {
               console.log("พบข้อมูลโปรโมชั่นจาก backend:", {
                 promotionCode: reservation.promotionCode,
                 discountPercent: reservation.discountPercent
               });
               
               // คำนวณส่วนลดใหม่เพื่อความแน่ใจ
-              const discountPercent = Number(reservation.discountPercent);
-              const discountAmount = (reservation.totalPrice * discountPercent) / 100;
+              const discountPercent = Number(reservation.discountPercent || 0);
               
-              reservation.discountAmount = discountAmount;
-              reservation.discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+              // ถ้ามี discountPercent ให้คำนวณจากเปอร์เซ็นต์
+              if (discountPercent > 0) {
+                const discountAmount = (reservation.totalPrice * discountPercent) / 100;
+                reservation.discountAmount = discountAmount;
+                reservation.discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+              } 
+              // ถ้ามี discountAmount แต่ไม่มี discountPercent
+              else if (reservation.discountAmount && !reservation.discountPercent) {
+                const discountAmount = Number(reservation.discountAmount);
+                reservation.discountedPrice = Math.max(0, reservation.totalPrice - discountAmount);
+                // คำนวณ discountPercent ย้อนกลับ
+                reservation.discountPercent = ((discountAmount / reservation.totalPrice) * 100).toFixed(0);
+              }
+              // ถ้ามี discountedPrice แต่ไม่มี discountAmount
+              else if (reservation.discountedPrice && !reservation.discountAmount) {
+                const discountedPrice = Number(reservation.discountedPrice);
+                reservation.discountAmount = reservation.totalPrice - discountedPrice;
+                // คำนวณ discountPercent ย้อนกลับ
+                reservation.discountPercent = ((reservation.discountAmount / reservation.totalPrice) * 100).toFixed(0);
+              }
               
               console.log("คำนวณส่วนลดจากข้อมูล backend:", {
                 totalPrice: reservation.totalPrice,
-                discountPercent: discountPercent,
-                discountAmount: discountAmount,
+                discountPercent: reservation.discountPercent,
+                discountAmount: reservation.discountAmount,
                 finalPrice: reservation.discountedPrice
               });
             }
-            // ตรวจสอบว่ามีข้อมูลโปรโมชั่นเพิ่มเติมหรืุ่ไม่
-            // บางครั้งข้อมูลอาจอยู่ในรูปแบบอื่น เช่น finalPrice, originalPrice
-            else if (reservation.finalPrice && 
-                Number(reservation.finalPrice) !== Number(reservation.totalPrice) &&
-                !reservation.promotionCode) {
+            // ตรวจสอบกรณีมี discountAmount หรือ discountedPrice แต่ไม่มี promotionCode
+            else if ((reservation.discountAmount > 0 || 
+                     (reservation.discountedPrice && reservation.discountedPrice < reservation.totalPrice)) && 
+                     !reservation.promotionCode) {
               
-              console.log("พบข้อมูลราคาที่แตกต่าง แต่ไม่มีข้อมูลโปรโมชั่น:", {
-                totalPrice: reservation.totalPrice,
-                finalPrice: reservation.finalPrice
-              });
-              
-              // คำนวณส่วนลดจากความแตกต่างของราคา
-              const finalPrice = Number(reservation.finalPrice);
-              const discountAmount = reservation.totalPrice - finalPrice;
-              
-              // ถ้ามีส่วนลดแต่ไม่มีข้อมูลโปรโมชั่น ให้เพิ่มข้อมูลโปรโมชั่นเป็น "ส่วนลดพิเศษ"
-              if (discountAmount > 0) {
-                reservation.discountAmount = discountAmount;
-                reservation.discountedPrice = finalPrice;
-                reservation.promotionCode = reservation.promotionCode || "ส่วนลดพิเศษ";
-                
-                // คำนวณเปอร์เซ็นต์ส่วนลด
-                reservation.discountPercent = ((discountAmount / reservation.totalPrice) * 100).toFixed(0);
-                
-                console.log("เพิ่มข้อมูลส่วนลด:", {
-                  discountAmount,
-                  discountPercent: reservation.discountPercent,
-                  promotionCode: reservation.promotionCode
-                });
+              // กำหนดค่า discountAmount ถ้ายังไม่มี
+              if (!reservation.discountAmount && reservation.discountedPrice) {
+                reservation.discountAmount = reservation.totalPrice - Number(reservation.discountedPrice);
               }
-            }
-            
-            // กรณีที่มีข้อมูลโปรโมชั่นจากหน้า Reservation
-            else if (
-              reservation.promotionCode &&
-              (reservation.discountPercent || reservation.discountAmount)
-            ) {
-              const discountPercent = Number(reservation.discountPercent || 0);
-              const discountAmount =
-                discountPercent > 0
-                  ? (reservation.totalPrice * discountPercent) / 100
-                  : Number(reservation.discountAmount || 0);
-
-              reservation.discountAmount = discountAmount;
-              reservation.discountedPrice =
-                reservation.totalPrice - discountAmount;
-
-              console.log("คำนวณส่วนลดจากโปรโมชั่น:", {
-                totalPrice: reservation.totalPrice,
-                discountPercent: discountPercent,
-                discountAmount: discountAmount,
-                finalPrice: reservation.discountedPrice,
-              });
-            }
-            
-            // กรณีที่มีราคาหลังหักส่วนลดแต่ไม่มีข้อมูลส่วนลด
-            else if (
-              reservation.discountedPrice &&
-              reservation.discountedPrice !== reservation.totalPrice
-            ) {
-              // ใช้ discountedPrice ที่มีอยู่แล้ว
-              reservation.discountAmount =
-                reservation.totalPrice - Number(reservation.discountedPrice);
-
-              // คำนวณเปอร์เซ็นต์ส่วนลดย้อนกลับ
+              
+              // กำหนดค่า discountedPrice ถ้ายังไม่มี
+              if (!reservation.discountedPrice && reservation.discountAmount) {
+                reservation.discountedPrice = reservation.totalPrice - Number(reservation.discountAmount);
+              }
+              
+              // คำนวณ discountPercent ถ้ายังไม่มี
               if (!reservation.discountPercent) {
-                reservation.discountPercent = (
-                  (reservation.discountAmount / reservation.totalPrice) *
-                  100
-                ).toFixed(0);
+                reservation.discountPercent = ((reservation.discountAmount / reservation.totalPrice) * 100).toFixed(0);
               }
               
-              // ถ้าไม่มี promotionCode ให้เพิ่มเป็น "ส่วนลดพิเศษ"
-              if (!reservation.promotionCode && reservation.discountAmount > 0) {
-                reservation.promotionCode = "ส่วนลดพิเศษ";
-              }
+              // เพิ่ม promotionCode เป็น "ส่วนลดพิเศษ" ถ้าไม่มี
+              reservation.promotionCode = "ส่วนลดพิเศษ";
               
-              console.log("คำนวณส่วนลดจาก discountedPrice:", {
-                totalPrice: reservation.totalPrice,
-                discountedPrice: reservation.discountedPrice,
+              console.log("เพิ่มข้อมูลส่วนลด:", {
                 discountAmount: reservation.discountAmount,
-                discountPercent: reservation.discountPercent
+                discountPercent: reservation.discountPercent,
+                promotionCode: reservation.promotionCode
               });
             }
             
@@ -715,20 +677,23 @@ const Page = () => {
                               {item.totalHours}
                             </td>
                             <td className="px-4 py-3 text-right text-xs sm:text-sm font-medium">
-                              {item.promotionCode ? (
+                              {item.promotionCode || item.discountAmount > 0 ? (
                                 <>
                                   <div className="line-through text-gray-400">
                                     ฿{Number(item.totalPrice).toFixed(2)}
                                   </div>
                                   <div className="text-red-600 font-semibold">
-                                    ฿{Number(item.discountedPrice || 0).toFixed(2)}
+                                    ฿{Number(item.discountedPrice || (item.totalPrice - (item.discountAmount || 0))).toFixed(2)}
                                   </div>
                                   <div className="text-green-600 text-xs">
-                                    ส่วนลด: {item.discountPercent}% (฿{Number(item.discountAmount || 0).toFixed(2)})
+                                    ส่วนลด: {item.discountPercent ? `${item.discountPercent}%` : ''} 
+                                    {item.discountAmount ? ` (฿${Number(item.discountAmount).toFixed(2)})` : ''}
                                   </div>
-                                  <div className="text-xs text-gray-500">
-                                    โค้ด: {item.promotionCode}
-                                  </div>
+                                  {item.promotionCode && (
+                                    <div className="text-xs text-gray-500">
+                                      โค้ด: {item.promotionCode}
+                                    </div>
+                                  )}
                                 </>
                               ) : (
                                 <div>
