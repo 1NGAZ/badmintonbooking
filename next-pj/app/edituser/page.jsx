@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Navbar from '../components/Navbar';
+import Navbar from "../components/Navbar";
 import { getUserData } from "../utils/auth";
 import Link from "next/link";
 import axios from "axios";
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const Page = () => {
   const [userData, setUserData] = useState({
@@ -70,13 +70,12 @@ const Page = () => {
         lname: response.data.user.lname,
       };
       setUserData(updatedUserData);
-      
-      console.log(updatedUserData);
-      
 
-       // อัปเดต sessionStorage ให้เหมือนกัน
-    sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
-      
+      console.log(updatedUserData);
+
+      // อัปเดต sessionStorage ให้เหมือนกัน
+      sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
+
       toast.success("อัพเดทชื่อสำเร็จ");
       setIsOpen(false);
     } catch (error) {
@@ -88,28 +87,28 @@ const Page = () => {
   };
 
   const handleUpdatePhone = async () => {
-    try {if (!phone.trim()) {
-      toast.error("กรุณากรอกเบอร์โทรศัพท์");
-      return;
-    }
+    try {
+      if (!phone.trim()) {
+        toast.error("กรุณากรอกเบอร์โทรศัพท์");
+        return;
+      }
 
-    // ตรวจสอบรูปแบบเบอร์โทรศัพท์
-    const cleanedPhone = phone.trim().replace(/[- .]/g, "");
-    if (!/^\d{10}$/.test(cleanedPhone)) {
-      toast.error(
-        "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์โทรศัพท์ 10 หลัก"
-      );
-      return;
-    }
+      // ตรวจสอบรูปแบบเบอร์โทรศัพท์
+      const cleanedPhone = phone.trim().replace(/[- .]/g, "");
+      if (!/^\d{10}$/.test(cleanedPhone)) {
+        toast.error(
+          "รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง กรุณากรอกเบอร์โทรศัพท์ 10 หลัก"
+        );
+        return;
+      }
 
-    console.log(cleanedPhone);
-    
+      console.log(cleanedPhone);
 
-    const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      toast.error("กรุณาเข้าสู่ระบบใหม่");
-      return;
-    }
+      const token = sessionStorage.getItem("authToken");
+      if (!token) {
+        toast.error("กรุณาเข้าสู่ระบบใหม่");
+        return;
+      }
 
       const response = await axios.patch(
         `${API_URL}/user/users/profile`,
@@ -120,19 +119,19 @@ const Page = () => {
       // อัปเดตข้อมูลใน state
       const updatedUserData = { ...userData, phone: response.data.user.phone };
       setUserData(updatedUserData);
-      
+
       console.log(updatedUserData);
-      
 
       // อัปเดตข้อมูลใน sessionStorage
       sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
-      
+
       toast.success("อัพเดทเบอร์โทรศัพท์สำเร็จ");
       setIsOpen1(false);
     } catch (error) {
       console.error("Update error:", error);
       toast.error(
-        error.response?.data?.message || "เกิดข้อผิดพลาดในการอัพเดทเบอร์โทรศัพท์"
+        error.response?.data?.message ||
+          "เกิดข้อผิดพลาดในการอัพเดทเบอร์โทรศัพท์"
       );
     }
   };
@@ -143,7 +142,9 @@ const Page = () => {
     if (userDataFromToken) {
       setUserData(userDataFromToken);
       // ตั้งค่าเริ่มต้นสำหรับฟอร์มแก้ไข
-      setName(`${userDataFromToken.fname || ""} ${userDataFromToken.lname || ""}`);
+      setName(
+        `${userDataFromToken.fname || ""} ${userDataFromToken.lname || ""}`
+      );
       setPhone(userDataFromToken.phone || "");
     } else {
       // ถ้าไม่มีข้อมูลผู้ใช้ (ไม่ได้ login) ให้ redirect ไปหน้า login
@@ -345,50 +346,6 @@ const Page = () => {
                 </div>
               </div>
 
-              {/* UID */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  UID
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    value={userData.id || ""}
-                    className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-gray-700 text-sm sm:text-base"
-                    disabled
-                  />
-                  <button className="ml-2 p-2 text-gray-600 hover:text-blue-600 transition-colors duration-200">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  อีเมล
-                </label>
-                <input
-                  type="email"
-                  value={userData.email || ""}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-gray-700 text-sm sm:text-base"
-                  disabled
-                />
-              </div>
-
               {/* Phone */}
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
@@ -462,6 +419,19 @@ const Page = () => {
                     </DialogContent>
                   </Dialog>
                 </div>
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  อีเมล
+                </label>
+                <input
+                  type="email"
+                  value={userData.email || ""}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-gray-700 text-sm sm:text-base"
+                  disabled
+                />
               </div>
             </div>
           </main>
