@@ -27,7 +27,16 @@ export function DatePickerWithRange({ className, setDateRange }) {
   });
 
   React.useEffect(() => {
-    setDateRange(date);
+    // เพิ่ม log เพื่อตรวจสอบค่าที่ส่งไป
+    console.log("DateRangePicker - ส่งค่า dateRange:", {
+      from: date.from,
+      to: date.to
+    });
+    
+    // ตรวจสอบว่า date มีค่าก่อนส่งไปยัง parent component
+    if (date && date.from && date.to) {
+      setDateRange(date);
+    }
   }, [date, setDateRange]);
 
   return (

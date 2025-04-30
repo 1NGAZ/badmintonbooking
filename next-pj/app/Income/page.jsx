@@ -119,16 +119,9 @@ const Page = () => {
 
           const response = await axios.get(`${API_URL}/reports/income`, {
             headers: headers,
-            params: {
-              startDate: dateRange.from
-                ? new Date(dateRange.from).toISOString().split("T")[0]
-                : undefined,
-              endDate: dateRange.to
-                ? new Date(dateRange.to).toISOString().split("T")[0]
-                : undefined,
-            },
+            params: params,
           });
-
+          console.log("ข้อมูลที่ได้จาก API:", response.data);
           if (response.data.error) {
             throw new Error(response.data.error);
           }
