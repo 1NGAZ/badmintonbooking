@@ -30,24 +30,25 @@ export function DatePickerWithRange({ className, setDateRange }) {
   React.useEffect(() => {
     // ส่งค่าวันที่ไปยัง parent component เมื่อ component โหลดหรือมีการเปลี่ยนแปลง
     if (date && date.from && date.to) {
-      // สร้างวันที่ใหม่โดยระบุปี เดือน วันโดยตรงเพื่อหลีกเลี่ยงปัญหา timezone
-      const fromDate = new Date(
+      // แก้ไขการสร้างวันที่เพื่อป้องกันปัญหา timezone
+      // ใช้ setUTCHours แทน setHours เพื่อให้แน่ใจว่าวันที่ไม่เปลี่ยนเมื่อแปลงเป็น ISO string
+      const fromDate = new Date(Date.UTC(
         date.from.getFullYear(),
         date.from.getMonth(),
         date.from.getDate(),
         0, 0, 0, 0
-      );
+      ));
       
-      const toDate = new Date(
+      const toDate = new Date(Date.UTC(
         date.to.getFullYear(),
         date.to.getMonth(),
         date.to.getDate(),
         23, 59, 59, 999
-      );
+      ));
       
       console.log("DateRangePicker - ส่งค่า dateRange (เวลาไทย):", {
-        from: fromDate,
-        to: toDate
+        from: fromDate.toISOString().split('T')[0],
+        to: toDate.toISOString().split('T')[0]
       });
       
       // ส่งค่าวันที่ที่ปรับแล้วไปยัง parent component
@@ -58,14 +59,9 @@ export function DatePickerWithRange({ className, setDateRange }) {
   // ฟังก์ชันสำหรับสร้างวันที่ที่ถูกต้องสำหรับการแสดงผล
   const formatDateForDisplay = (dateObj) => {
     if (!dateObj) return null;
-    // สร้างวันที่ใหม่โดยระบุปี เดือน วันโดยตรง เพื่อให้แน่ใจว่าไม่มีปัญหา timezone
-    const displayDate = new Date(
-      dateObj.getFullYear(),
-      dateObj.getMonth(),
-      dateObj.getDate(),
-      12, 0, 0
-    );
-    return format(displayDate, "dd LLL yyyy", { locale: th });
+    // ใช้ date-fns format โดยตรงกับวัตถุวันที่ที่มีอยู่
+    // date-fns จะจัดการเรื่อง timezone ให้ถูกต้อง
+    return format(dateObj, "dd LLL yyyy", { locale: th });
   };
 
   return (
