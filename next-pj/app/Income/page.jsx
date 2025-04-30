@@ -101,19 +101,35 @@ const Page = () => {
           let params = {};
 
           if (dateRange && dateRange.from) {
-            // ใช้ค่าวันที่ที่ได้จาก DateRangePicker โดยตรง
-            // แปลงเป็น ISO string และตัดเอาเฉพาะส่วนวันที่
-            params.startDate = dateRange.from.toISOString().split("T")[0];
+            // แก้ไขการแปลงวันที่เพื่อให้แน่ใจว่าวันที่เริ่มต้นถูกต้อง
+            // สร้างวันที่ใหม่โดยใช้ปี เดือน วัน จากวันที่เริ่มต้น
+            const fromYear = dateRange.from.getFullYear();
+            const fromMonth = dateRange.from.getMonth();
+            const fromDay = dateRange.from.getDate();
 
-            console.log("วันที่เริ่มต้น (ISO):", params.startDate);
+            // สร้างวันที่ในรูปแบบ YYYY-MM-DD โดยตรง เพื่อหลีกเลี่ยงปัญหา timezone
+            params.startDate = `${fromYear}-${String(fromMonth + 1).padStart(
+              2,
+              "0"
+            )}-${String(fromDay).padStart(2, "0")}`;
+
+            console.log("วันที่เริ่มต้น (แบบกำหนดเอง):", params.startDate);
           }
 
           if (dateRange && dateRange.to) {
-            // ใช้ค่าวันที่ที่ได้จาก DateRangePicker โดยตรง
-            // แปลงเป็น ISO string และตัดเอาเฉพาะส่วนวันที่
-            params.endDate = dateRange.to.toISOString().split("T")[0];
+            // แก้ไขการแปลงวันที่เพื่อให้แน่ใจว่าวันที่สิ้นสุดถูกต้อง
+            // สร้างวันที่ใหม่โดยใช้ปี เดือน วัน จากวันที่สิ้นสุด
+            const toYear = dateRange.to.getFullYear();
+            const toMonth = dateRange.to.getMonth();
+            const toDay = dateRange.to.getDate();
 
-            console.log("วันที่สิ้นสุด (ISO):", params.endDate);
+            // สร้างวันที่ในรูปแบบ YYYY-MM-DD โดยตรง เพื่อหลีกเลี่ยงปัญหา timezone
+            params.endDate = `${toYear}-${String(toMonth + 1).padStart(
+              2,
+              "0"
+            )}-${String(toDay).padStart(2, "0")}`;
+
+            console.log("วันที่สิ้นสุด (แบบกำหนดเอง):", params.endDate);
           }
 
           console.log(
@@ -122,6 +138,7 @@ const Page = () => {
             "ถึง",
             params.endDate
           );
+
           const response = await axios.get(`${API_URL}/reports/income`, {
             headers: headers,
             params: params,
