@@ -101,12 +101,18 @@ const Page = () => {
           let params = {};
 
           if (dateRange && dateRange.from) {
+            const startDate = new Date(dateRange.from);
+            // ตั้งเวลาเป็น 00:00:00
+            startDate.setHours(0, 0, 0, 0);
             params.startDate = new Date(dateRange.from)
               .toISOString()
               .split("T")[0];
           }
 
           if (dateRange && dateRange.to) {
+            const endDate = new Date(dateRange.to);
+            // ตั้งเวลาเป็น 23:59:59 เพื่อให้ครอบคลุมทั้งวัน
+            endDate.setHours(23, 59, 59, 999);
             params.endDate = new Date(dateRange.to).toISOString().split("T")[0];
           }
 

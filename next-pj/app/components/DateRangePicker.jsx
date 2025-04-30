@@ -27,15 +27,21 @@ export function DatePickerWithRange({ className, setDateRange }) {
   });
 
   React.useEffect(() => {
-    // เพิ่ม log เพื่อตรวจสอบค่าที่ส่งไป
-    console.log("DateRangePicker - ส่งค่า dateRange:", {
-      from: date.from,
-      to: date.to
-    });
-    
-    // ตรวจสอบว่า date มีค่าก่อนส่งไปยัง parent component
+    // ส่งค่าวันที่ไปยัง parent component ทันทีเมื่อ component โหลด
     if (date && date.from && date.to) {
-      setDateRange(date);
+      // แก้ไขปัญหา timezone โดยการตัดเวลาออกและใช้เฉพาะวันที่
+      const fromDate = new Date(date.from);
+      fromDate.setHours(0, 0, 0, 0);
+      
+      const toDate = new Date(date.to);
+      toDate.setHours(23, 59, 59, 999);
+      
+      console.log("DateRangePicker - ส่งค่า dateRange:", {
+        from: fromDate,
+        to: toDate
+      });
+      
+      setDateRange({ from: fromDate, to: toDate });
     }
   }, [date, setDateRange]);
 
