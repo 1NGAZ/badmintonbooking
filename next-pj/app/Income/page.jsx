@@ -26,7 +26,6 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState({ from: null, to: null });
   // เพิ่ม state สำหรับการแบ่งหน้า
   const [currentPage, setCurrentPage] = useState(1);
   const [summary, setSummary] = useState({
@@ -46,12 +45,22 @@ const Page = () => {
   // กำหนดจำนวนรายการต่อหน้า
   const itemsPerPage = 10;
 
+  // แก้ไขการตั้งค่าเริ่มต้นของ dateRange เพื่อให้แสดงข้อมูลทั้งเดือนปัจจุบัน
+  const [dateRange, setDateRange] = useState(() => {
+    // สร้างวันที่เริ่มต้นของเดือนปัจจุบัน
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    // สร้างวันที่สิ้นสุดของเดือนปัจจุบัน
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    return { from: firstDay, to: lastDay };
+  });
+
   useEffect(() => {
     const checkLoginAndFetchData = async () => {
       try {
         if (typeof window !== "undefined") {
           const token = sessionStorage.getItem("authToken");
-          // ลบ console.log ที่ไม่จำเป็น
           if (!token) {
             router.push("/login");
             return;
@@ -87,6 +96,26 @@ const Page = () => {
             "Content-Type": "application/json",
             Accept: "application/json",
           };
+
+          // ปรับปรุงการส่งพารามิเตอร์วันที่ โดยเพิ่มการตรวจสอบว่า dateRange มีค่าหรือไม่
+          let params = {};
+
+          if (dateRange && dateRange.from) {
+            params.startDate = new Date(dateRange.from)
+              .toISOString()
+              .split("T")[0];
+          }
+
+          if (dateRange && dateRange.to) {
+            params.endDate = new Date(dateRange.to).toISOString().split("T")[0];
+          }
+
+          console.log(
+            "กำลังดึงข้อมูลในช่วง:",
+            params.startDate,
+            "ถึง",
+            params.endDate
+          );
 
           const response = await axios.get(`${API_URL}/reports/income`, {
             headers: headers,
@@ -846,7 +875,7 @@ const Page = () => {
                           />
                         </svg>
                         <p className="text-gray-500 mt-4">
-                        ไม่พบรายการในช่วงเวลาที่เลือก
+                          ไม่พบรายการในช่วงเวลาที่เลือก
                         </p>
                       </div>
                     ) : filteredTransactions.length === 0 ? (
