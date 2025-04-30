@@ -46,7 +46,10 @@ export default function ReservationTable() {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [maxTimeSlots, setMaxTimeSlots] = useState(3);
-  // เพิ่มฟังก์ชัน handleFileChange ที่หายไป
+  const [courtShowcaseImage, setCourtShowcaseImage] =
+    useState("/courtdetail.png");
+  const [isChangingShowcaseImage, setIsChangingShowcaseImage] = useState(false);
+
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
@@ -210,49 +213,49 @@ export default function ReservationTable() {
       const originalPrice = calculateTotalPrice();
       formData.append("originalPrice", originalPrice);
 
-      // แนบรหัสโปรโมชั่นถ้ามี
-   // แนบข้อมูลโปรโมชั่น - ปรับปรุงการตรวจสอบและส่งข้อมูล
-   if (appliedPromotion) {
-    // ตรวจสอบว่า appliedPromotion.id มีค่าและเป็นตัวเลขหรือไม่
-    const promotionId = parseInt(appliedPromotion.id, 10);
-    
-    if (!isNaN(promotionId) && promotionId > 0) {
-      console.log("ส่งข้อมูล promotionId:", promotionId);
-      formData.append("promotionId", promotionId);
-      
-      // ส่งข้อมูลเพิ่มเติมเกี่ยวกับโปรโมชั่น
-      if (appliedPromotion.code) {
-        formData.append("promotionCode", appliedPromotion.code);
+      // แนบข้อมูลโปรโมชั่น - ปรับปรุงการตรวจสอบและส่งข้อมูล
+      if (appliedPromotion) {
+        // ตรวจสอบว่า appliedPromotion.id มีค่าและเป็นตัวเลขหรือไม่
+        const promotionId = parseInt(appliedPromotion.id, 10);
+
+        if (!isNaN(promotionId) && promotionId > 0) {
+          console.log("ส่งข้อมูล promotionId:", promotionId);
+          formData.append("promotionId", promotionId);
+
+          // ส่งข้อมูลเพิ่มเติมเกี่ยวกับโปรโมชั่น
+          if (appliedPromotion.code) {
+            formData.append("promotionCode", appliedPromotion.code);
+          }
+
+          if (appliedPromotion.discount) {
+            formData.append("discountPercent", appliedPromotion.discount);
+          }
+
+          // คำนวณราคาหลังหักส่วนลด
+          const originalPrice = calculateTotalPrice(false); // เพิ่มพารามิเตอร์เพื่อคำนวณราคาก่อนส่วนลด
+          const discountAmount =
+            (originalPrice * Number(appliedPromotion.discount)) / 100;
+          const finalPrice = Math.max(0, originalPrice - discountAmount);
+
+          formData.append("originalPrice", originalPrice);
+          formData.append("finalPrice", finalPrice);
+
+          console.log("ข้อมูลโปรโมชั่นที่ส่งไป backend:", {
+            id: promotionId,
+            code: appliedPromotion.code,
+            discount: appliedPromotion.discount,
+            originalPrice: originalPrice,
+            finalPrice: finalPrice,
+          });
+        } else {
+          console.warn("ข้อมูล promotionId ไม่ถูกต้อง:", appliedPromotion.id);
+          // ไม่ส่งข้อมูลโปรโมชั่นถ้า ID ไม่ถูกต้อง
+        }
+      } else {
+        console.log("ไม่มีการใช้โปรโมชั่น");
+        formData.append("originalPrice", calculateTotalPrice(false));
+        formData.append("finalPrice", calculateTotalPrice(false));
       }
-      
-      if (appliedPromotion.discount) {
-        formData.append("discountPercent", appliedPromotion.discount);
-      }
-      
-      // คำนวณราคาหลังหักส่วนลด
-      const originalPrice = calculateTotalPrice(false); // เพิ่มพารามิเตอร์เพื่อคำนวณราคาก่อนส่วนลด
-      const discountAmount = (originalPrice * Number(appliedPromotion.discount)) / 100;
-      const finalPrice = Math.max(0, originalPrice - discountAmount);
-      
-      formData.append("originalPrice", originalPrice);
-      formData.append("finalPrice", finalPrice);
-      
-      console.log("ข้อมูลโปรโมชั่นที่ส่งไป backend:", {
-        id: promotionId,
-        code: appliedPromotion.code,
-        discount: appliedPromotion.discount,
-        originalPrice: originalPrice,
-        finalPrice: finalPrice
-      });
-    } else {
-      console.warn("ข้อมูล promotionId ไม่ถูกต้อง:", appliedPromotion.id);
-      // ไม่ส่งข้อมูลโปรโมชั่นถ้า ID ไม่ถูกต้อง
-    }
-  } else {
-    console.log("ไม่มีการใช้โปรโมชั่น");
-    formData.append("originalPrice", calculateTotalPrice(false));
-    formData.append("finalPrice", calculateTotalPrice(false));
-  }
 
       console.log("ส่งข้อมูลการจอง:", {
         userId: userData.id,
@@ -538,6 +541,51 @@ export default function ReservationTable() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+  useEffect(() => {
+    const savedImage = localStorage.getItem("courtShowcaseImage");
+    if (savedImage) {
+      setCourtShowcaseImage(savedImage);
+    }
+  }, []);
+
+  // Add this function to handle showcase image change
+  const handleShowcaseImageChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await axios.post(`${API_URL}/upload-image`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        },
+      });
+
+      const imageUrl = URL.createObjectURL(file);
+
+      setCourtShowcaseImage(imageUrl);
+      localStorage.setItem("courtShowcaseImage", imageUrl);
+
+      Swal.fire({
+        title: "อัพเดทรูปภาพสำเร็จ",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      setIsChangingShowcaseImage(false);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถอัพโหลดรูปภาพได้",
+        icon: "error",
+      });
+    }
+  };
 
   const handleOpenDrawer = () => {
     if (!userData) {
@@ -682,12 +730,12 @@ export default function ReservationTable() {
 
   const calculateTotalPrice = (applyDiscount = true) => {
     let totalPrice = 0;
-  
+
     selectedTimeSlots.forEach((slot) => {
       const court = reservationData.find(
         (c) => Number(c.id) === Number(slot.courtId)
       );
-  
+
       // Ensure price is a valid number
       if (court?.price != null) {
         const price = Number(court.price);
@@ -696,57 +744,44 @@ export default function ReservationTable() {
         }
       }
     });
-  
+
     console.log("Before discount:", totalPrice);
-  
+
     // ถ้าต้องการคำนวณราคาหลังส่วนลด และมีโปรโมชั่นที่ใช้งานได้
-    if (applyDiscount && appliedPromotion && appliedPromotion.discount != null) {
+    if (
+      applyDiscount &&
+      appliedPromotion &&
+      appliedPromotion.discount != null
+    ) {
       const discountAmount = Number(appliedPromotion.discount);
       if (!isNaN(discountAmount)) {
         const discount = (totalPrice * discountAmount) / 100;
         totalPrice = Math.max(0, totalPrice - discount); // Prevent negative prices
       }
     }
-  
+
     return isNaN(totalPrice) ? "0" : totalPrice.toLocaleString();
   };
- 
-
-  //   console.log("Before discount:", totalPrice);
-  //   console.log("Applied promotion:", appliedPromotion);
-
-  //   if (appliedPromotion && appliedPromotion.discount != null) {
-  //     const discountAmount = Number(appliedPromotion.discount);
-  //     if (!isNaN(discountAmount)) {
-  //       const discount = (totalPrice * discountAmount) / 100;
-  //       totalPrice = Math.max(0, totalPrice - discount); // Prevent negative prices
-  //     }
-  //   }
-
-  //   return isNaN(totalPrice) ? "0" : totalPrice.toLocaleString();
-  // };
 
   const [promotionCode, setPromotionCode] = useState("");
   const [appliedPromotion, setAppliedPromotion] = useState(null);
-
-  // ปรับฟังก์ชัน validatePromotionCode ให้ตรวจสอบข้อจำกัดการใช้งาน
 
   const validatePromotionCode = async () => {
     try {
       const response = await axios.get(
         `${API_URL}/promotions/validate/${promotionCode}`
       );
-  
+
       console.log("Promotion response:", response.data);
-  
+
       // ตรวจสอบข้อมูลโปรโมชั่น
       const promotion = response.data?.promotion || response.data;
-  
+
       // ตรวจสอบว่าโปรโมชั่นมี id และเป็นตัวเลขที่ถูกต้อง
       if (!promotion.id || isNaN(parseInt(promotion.id, 10))) {
         throw new Error("ข้อมูลโปรโมชั่นไม่ถูกต้อง (ID ไม่ถูกต้อง)");
       }
-  
+
       // ตรวจสอบว่าโปรโมชั่นยังใช้งานได้หรือไม่ (ไม่เกินจำนวนครั้งที่กำหนด)
       if (
         promotion &&
@@ -755,7 +790,7 @@ export default function ReservationTable() {
       ) {
         throw new Error("โปรโมชั่นนี้ถูกใช้งานครบตามจำนวนที่กำหนดแล้ว");
       }
-  
+
       // ตรวจสอบว่า discount เป็นตัวเลขที่ถูกต้อง
       if (
         promotion &&
@@ -770,14 +805,15 @@ export default function ReservationTable() {
           maxUses: promotion.maxUses,
           usedCount: promotion.usedCount,
           title: promotion.title || "",
-          description: promotion.description || ""
+          description: promotion.description || "",
         });
-  
+
         // คำนวณราคาใหม่หลังใช้โค้ดส่วนลด
         const originalPrice = calculateTotalPrice(false); // ราคาก่อนส่วนลด
-        const discountAmount = (originalPrice * Number(promotion.discount)) / 100;
+        const discountAmount =
+          (originalPrice * Number(promotion.discount)) / 100;
         const finalPrice = Math.max(0, originalPrice - discountAmount);
-        
+
         console.log("โปรโมชั่นที่ใช้:", {
           id: promotion.id,
           code: promotion.code,
@@ -790,9 +826,9 @@ export default function ReservationTable() {
               : "ไม่จำกัด",
           originalPrice: originalPrice,
           discountAmount: discountAmount,
-          finalPrice: finalPrice
+          finalPrice: finalPrice,
         });
-        
+
         Swal.fire({
           icon: "success",
           title: "ใช้โค้ดสำเร็จ",
@@ -811,7 +847,10 @@ export default function ReservationTable() {
       Swal.fire({
         icon: "error",
         title: "ไม่สามารถใช้โค้ดได้",
-        text: error.response?.data?.error || error.message || "รหัสโปรโมชั่นไม่ถูกต้องหรือหมดอายุ",
+        text:
+          error.response?.data?.error ||
+          error.message ||
+          "รหัสโปรโมชั่นไม่ถูกต้องหรือหมดอายุ",
       });
     }
   };
@@ -1426,13 +1465,47 @@ export default function ReservationTable() {
 
       <div
         id="court-showcase"
-        className="mt-8 mb-12 flex justify-center w-full"
+        className="mt-8 mb-12 flex flex-col items-center w-full"
       >
-        <img
-          src="/courtdetail.png"
-          alt="Court Details"
-          className="rounded-lg shadow-lg max-w-[90%] md:max-w-[80%] lg:max-w-[70%] xl:max-w-[60%] hover:shadow-xl transition-shadow duration-300"
-        />
+        <div className="relative">
+          <img
+            src={courtShowcaseImage}
+            alt="Court Details"
+            className="rounded-lg shadow-lg max-w-[90%] md:max-w-[80%] lg:max-w-[70%] xl:max-w-[60%] hover:shadow-xl transition-shadow duration-300"
+          />
+
+          {isAdmin && (
+            <button
+              onClick={() =>
+                setIsChangingShowcaseImage(!isChangingShowcaseImage)
+              }
+              className="absolute top-2 right-2 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700 transition-colors"
+              title="เปลี่ยนรูปภาพ"
+            >
+              ✎
+            </button>
+          )}
+        </div>
+
+        {isAdmin && isChangingShowcaseImage && (
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%]">
+            <h3 className="text-lg font-semibold mb-2">เปลี่ยนรูปภาพสนาม</h3>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleShowcaseImageChange}
+              className="w-full mb-2"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsChangingShowcaseImage(false)}
+              >
+                ยกเลิก
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
       {/* Modal แจ้งเตือน */}
       {isModalOpen && (
