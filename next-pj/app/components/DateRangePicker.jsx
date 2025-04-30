@@ -25,33 +25,28 @@ export function DatePickerWithRange({ className, setDateRange }) {
     from: firstDayOfMonth,
     to: lastDayOfMonth,
   });
+
   React.useEffect(() => {
-    setDateRange(date);
+    // ส่งค่าวันที่ไปยัง parent component ทันทีเมื่อ component โหลด
+    if (date && date.from && date.to) {
+      // แก้ไขปัญหา timezone โดยการสร้างวันที่ใหม่และตั้งเวลาให้ตรงกับเวลาไทย
+      const fromDate = new Date(date.from);
+      // ปรับเวลาให้เป็น 00:00:00 ตามเวลาไทย
+      fromDate.setHours(0, 0, 0, 0);
+      
+      const toDate = new Date(date.to);
+      // ปรับเวลาให้เป็น 23:59:59 ตามเวลาไทย
+      toDate.setHours(23, 59, 59, 0);
+      
+      console.log("DateRangePicker - ส่งค่า dateRange (เวลาไทย):", {
+        from: fromDate,
+        to: toDate
+      });
+      
+      // ส่งค่าวันที่ที่ปรับแล้วไปยัง parent component
+      setDateRange({ from: fromDate, to: toDate });
+    }
   }, [date, setDateRange]);
-
-
-
-  // React.useEffect(() => {
-  //   // ส่งค่าวันที่ไปยัง parent component ทันทีเมื่อ component โหลด
-  //   if (date && date.from && date.to) {
-  //     // แก้ไขปัญหา timezone โดยการสร้างวันที่ใหม่และตั้งเวลาให้ตรงกับเวลาไทย
-  //     const fromDate = new Date(date.from);
-  //     // ปรับเวลาให้เป็น 00:00:00 ตามเวลาไทย
-  //     fromDate.setHours(0, 0, 0, 0);
-      
-  //     const toDate = new Date(date.to);
-  //     // ปรับเวลาให้เป็น 23:59:59 ตามเวลาไทย
-  //     toDate.setHours(23, 59, 59, 0);
-      
-  //     console.log("DateRangePicker - ส่งค่า dateRange (เวลาไทย):", {
-  //       from: fromDate,
-  //       to: toDate
-  //     });
-      
-  //     // ส่งค่าวันที่ที่ปรับแล้วไปยัง parent component
-  //     setDateRange({ from: fromDate, to: toDate });
-  //   }
-  // }, [date, setDateRange]);
 
   return (
     <div className={cn("grid gap-2", className)}>
