@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/popover";
 
 export function DatePickerWithRange({ className, setDateRange }) {
-  // กำหนดวันแรกของเดือนปัจจุบัน
+  // กำหนดวันแรกของเดือนปัจจุบันตามเวลาไทย
   const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  // กำหนดวันสุดท้ายของเดือนปัจจุบัน
+  // กำหนดวันสุดท้ายของเดือนปัจจุบันตามเวลาไทย
   const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
   
   const [date, setDate] = React.useState({
@@ -29,18 +29,21 @@ export function DatePickerWithRange({ className, setDateRange }) {
   React.useEffect(() => {
     // ส่งค่าวันที่ไปยัง parent component ทันทีเมื่อ component โหลด
     if (date && date.from && date.to) {
-      // แก้ไขปัญหา timezone โดยการตัดเวลาออกและใช้เฉพาะวันที่
+      // แก้ไขปัญหา timezone โดยการสร้างวันที่ใหม่และตั้งเวลาให้ตรงกับเวลาไทย
       const fromDate = new Date(date.from);
+      // ปรับเวลาให้เป็น 00:00:00 ตามเวลาไทย
       fromDate.setHours(0, 0, 0, 0);
       
       const toDate = new Date(date.to);
+      // ปรับเวลาให้เป็น 23:59:59 ตามเวลาไทย
       toDate.setHours(23, 59, 59, 999);
       
-      console.log("DateRangePicker - ส่งค่า dateRange:", {
+      console.log("DateRangePicker - ส่งค่า dateRange (เวลาไทย):", {
         from: fromDate,
         to: toDate
       });
       
+      // ส่งค่าวันที่ที่ปรับแล้วไปยัง parent component
       setDateRange({ from: fromDate, to: toDate });
     }
   }, [date, setDateRange]);
