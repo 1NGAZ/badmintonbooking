@@ -101,19 +101,19 @@ const Page = () => {
           let params = {};
 
           if (dateRange && dateRange.from) {
-            const startDate = new Date(dateRange.from);
-            // ตั้งเวลาเป็น 00:00:00
-            startDate.setHours(0, 0, 0, 0);
-            params.startDate = new Date(dateRange.from)
-              .toISOString()
-              .split("T")[0];
+            // ใช้ค่าวันที่ที่ได้จาก DateRangePicker โดยตรง
+            // แปลงเป็น ISO string และตัดเอาเฉพาะส่วนวันที่
+            params.startDate = dateRange.from.toISOString().split("T")[0];
+
+            console.log("วันที่เริ่มต้น (ISO):", params.startDate);
           }
 
           if (dateRange && dateRange.to) {
-            const endDate = new Date(dateRange.to);
-            // ตั้งเวลาเป็น 23:59:59 เพื่อให้ครอบคลุมทั้งวัน
-            endDate.setHours(23, 59, 59, 999);
-            params.endDate = new Date(dateRange.to).toISOString().split("T")[0];
+            // ใช้ค่าวันที่ที่ได้จาก DateRangePicker โดยตรง
+            // แปลงเป็น ISO string และตัดเอาเฉพาะส่วนวันที่
+            params.endDate = dateRange.to.toISOString().split("T")[0];
+
+            console.log("วันที่สิ้นสุด (ISO):", params.endDate);
           }
 
           console.log(
@@ -122,7 +122,6 @@ const Page = () => {
             "ถึง",
             params.endDate
           );
-
           const response = await axios.get(`${API_URL}/reports/income`, {
             headers: headers,
             params: params,
