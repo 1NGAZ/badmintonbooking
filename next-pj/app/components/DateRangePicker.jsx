@@ -32,11 +32,11 @@ export function DatePickerWithRange({ className, setDateRange }) {
       // แก้ไขปัญหา timezone โดยการสร้างวันที่ใหม่และตั้งเวลาให้ตรงกับเวลาไทย
       const fromDate = new Date(date.from);
       // ปรับเวลาให้เป็น 00:00:00 ตามเวลาไทย
-      fromDate.setHours(12, 0, 0, 0);
+      fromDate.setHours(0, 0, 0, 0);
       
       const toDate = new Date(date.to);
       // ปรับเวลาให้เป็น 23:59:59 ตามเวลาไทย
-      toDate.setHours(12, 0, 0, 0);
+      toDate.setHours(23, 59, 59, 0);
       
       console.log("DateRangePicker - ส่งค่า dateRange (เวลาไทย):", {
         from: fromDate,
