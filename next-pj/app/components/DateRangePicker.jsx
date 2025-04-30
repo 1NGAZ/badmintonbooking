@@ -63,7 +63,7 @@ export function DatePickerWithRange({ className, setDateRange }) {
       dateObj.getFullYear(),
       dateObj.getMonth(),
       dateObj.getDate(),
-      0, 0, 0
+      12, 0, 0
     );
     return format(displayDate, "dd LLL yyyy", { locale: th });
   };
