@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/popover";
 
 export function DatePickerWithRange({ className, setDateRange }) {
-  // กำหนดวันแรกของเดือนปัจจุบันตามเวลาไทย
-  const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  // กำหนดวันสุดท้ายของเดือนปัจจุบันตามเวลาไทย
-  const lastDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+  // กำหนดวันแรกของเดือนปัจจุบัน - สร้างด้วยวิธีที่ไม่มีปัญหา timezone
+  const currentDate = new Date();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  // กำหนดวันสุดท้ายของเดือนปัจจุบัน
+  const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   
   const [date, setDate] = React.useState({
     from: firstDayOfMonth,
@@ -27,16 +28,22 @@ export function DatePickerWithRange({ className, setDateRange }) {
   });
 
   React.useEffect(() => {
-    // ส่งค่าวันที่ไปยัง parent component ทันทีเมื่อ component โหลด
+    // ส่งค่าวันที่ไปยัง parent component เมื่อ component โหลดหรือมีการเปลี่ยนแปลง
     if (date && date.from && date.to) {
-      // แก้ไขปัญหา timezone โดยการสร้างวันที่ใหม่และตั้งเวลาให้ตรงกับเวลาไทย
-      const fromDate = new Date(date.from);
-      // ปรับเวลาให้เป็น 00:00:00 ตามเวลาไทย
-      fromDate.setHours(0, 0, 0, 0);
+      // สร้างวันที่ใหม่โดยระบุปี เดือน วันโดยตรงเพื่อหลีกเลี่ยงปัญหา timezone
+      const fromDate = new Date(
+        date.from.getFullYear(),
+        date.from.getMonth(),
+        date.from.getDate(),
+        0, 0, 0, 0
+      );
       
-      const toDate = new Date(date.to);
-      // ปรับเวลาให้เป็น 23:59:59 ตามเวลาไทย
-      toDate.setHours(23, 59, 59, 0);
+      const toDate = new Date(
+        date.to.getFullYear(),
+        date.to.getMonth(),
+        date.to.getDate(),
+        23, 59, 59, 999
+      );
       
       console.log("DateRangePicker - ส่งค่า dateRange (เวลาไทย):", {
         from: fromDate,
@@ -47,6 +54,19 @@ export function DatePickerWithRange({ className, setDateRange }) {
       setDateRange({ from: fromDate, to: toDate });
     }
   }, [date, setDateRange]);
+
+  // ฟังก์ชันสำหรับสร้างวันที่ที่ถูกต้องสำหรับการแสดงผล
+  const formatDateForDisplay = (dateObj) => {
+    if (!dateObj) return null;
+    // สร้างวันที่ใหม่โดยระบุปี เดือน วันโดยตรง เพื่อให้แน่ใจว่าไม่มีปัญหา timezone
+    const displayDate = new Date(
+      dateObj.getFullYear(),
+      dateObj.getMonth(),
+      dateObj.getDate(),
+      12, 0, 0
+    );
+    return format(displayDate, "dd LLL yyyy", { locale: th });
+  };
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -64,11 +84,11 @@ export function DatePickerWithRange({ className, setDateRange }) {
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "dd LLL yyyy", { locale: th })} -{" "}
-                  {format(date.to, "dd LLL yyyy", { locale: th })}
+                  {formatDateForDisplay(date.from)} -{" "}
+                  {formatDateForDisplay(date.to)}
                 </>
               ) : (
-                format(date.from, "dd LLL yyyy", { locale: th })
+                formatDateForDisplay(date.from)
               )
             ) : (
               <span>เลือกช่วงวันที่</span>
@@ -81,7 +101,12 @@ export function DatePickerWithRange({ className, setDateRange }) {
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={(newDate) => {
+              // เมื่อมีการเลือกวันที่ใหม่
+              if (newDate && newDate.from) {
+                setDate(newDate);
+              }
+            }}
             numberOfMonths={2}
             locale={th}
           />
