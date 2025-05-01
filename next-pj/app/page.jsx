@@ -14,7 +14,7 @@ export default function Page() {
   // State สำหรับควบคุมการแสดง popup แก้ไขรูปภาพ
   const [showEditPopup, setShowEditPopup] = useState(false);
   // State สำหรับเก็บ URL ของรูปภาพ
-  const [popupImage, setPopupImage] = useState("/S28270597.jpg");
+  const [popupImage, setPopupImage] = useState();
   // State สำหรับเก็บ detail (หัวข้อ+รายละเอียด)
   const [popupDetail, setPopupDetail] = useState("");
   // State สำหรับเก็บ detail ชั่วคราวระหว่างการแก้ไข
