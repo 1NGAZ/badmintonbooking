@@ -48,8 +48,7 @@ export default function ReservationTable() {
 
   const [maxTimeSlots, setMaxTimeSlots] = useState(3);
 
-  const [courtShowcaseImage, setCourtShowcaseImage] =
-    useState();
+  const [courtShowcaseImage, setCourtShowcaseImage] = useState();
   const [isChangingShowcaseImage, setIsChangingShowcaseImage] = useState(false);
 
   const handleFileChange = (event) => {
@@ -554,11 +553,7 @@ export default function ReservationTable() {
 
         const courtImage = response.data;
 
-        if (
-          courtImage &&
-          courtImage.detail === "court-showcase-image" &&
-          courtImage.image
-        ) {
+        if (courtImage && courtImage.image) {
           setCourtShowcaseImage(courtImage.image);
           localStorage.setItem("courtShowcaseImageId", courtImage.id);
         }
@@ -1573,8 +1568,7 @@ export default function ReservationTable() {
           </div>
         )}
       </div>
-      
-      
+
       {/* Modal แจ้งเตือน */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
