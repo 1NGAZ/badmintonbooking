@@ -94,7 +94,7 @@ export default function Page() {
       return;
     }
     setTempImageUrl(popupImage);
-    setTempImageFile(null); // reset file
+    setTempImageFile(null);
     setTempDetail(popupDetail);
     setShowEditPopup(true);
   };
@@ -256,14 +256,18 @@ export default function Page() {
             )}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                URL รูปภาพ
+                เลือกรูปภาพใหม่ (jpg, png)
               </label>
               <input
-                type="text"
-                value={tempImageUrl}
-                onChange={(e) => setTempImageUrl(e.target.value)}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                placeholder="ใส่ URL รูปภาพ เช่น /image.jpg หรือ https://example.com/image.jpg"
+                type="file"
+                accept="image/*"
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    setTempImageFile(e.target.files[0]);
+                    setTempImageUrl(URL.createObjectURL(e.target.files[0]));
+                  }
+                }}
+                className="block w-full text-sm text-gray-700"
               />
             </div>
             {/* textarea สำหรับแก้ไข detail */}
@@ -291,7 +295,7 @@ export default function Page() {
                     onError={() => {
                       setNotification({
                         show: true,
-                        message: "ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบ URL",
+                        message: "ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบไฟล์",
                         type: "error",
                       });
                     }}
