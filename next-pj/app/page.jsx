@@ -12,12 +12,11 @@ export default function Page() {
   // State สำหรับควบคุมการแสดง popup
   const [showPopup, setShowPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
-  const [popupImage, setPopupImage] = useState();
+  const [popupImage, setPopupImage] = useState("/S28270597.jpg");
   const [popupDetail, setPopupDetail] = useState("");
   const [tempDetail, setTempDetail] = useState("");
-  const [tempImageUrl, setTempImageUrl] = useState(""); // Add this line
-  const [tempImageFile, setTempImageFile] = useState(null); // Add this line
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [tempImageFile, setTempImageFile] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({
     show: false,
@@ -37,6 +36,7 @@ export default function Page() {
           setPopupDetail(res.data.detail || "");
         }
       } catch (err) {
+        console.error("Error fetching popup data:", err);
         setPopupImage("/S28270597.jpg");
         setPopupDetail("");
       }
@@ -54,6 +54,7 @@ export default function Page() {
         setIsAdmin(false);
       }
     } catch (error) {
+      console.error("Error checking admin status:", error);
       setIsAdmin(false);
     }
   }, []);
@@ -88,9 +89,8 @@ export default function Page() {
       }, 3000);
       return;
     }
-    setTempImageUrl(popupImage);
-    setTempImageFile(null);
     setTempDetail(popupDetail);
+    setTempImageFile(null);
     setShowEditPopup(true);
   };
 
@@ -99,8 +99,8 @@ export default function Page() {
     setShowEditPopup(false);
     setNotification({ show: false, message: "", type: "" });
   };
-  // ฟังก์ชันบันทึกการแก้ไขรูปภาพ (ตัวอย่างนี้ยังไม่เชื่อม API PUT)
-  // Update the saveImageEdit function to use FormData
+
+  // ฟังก์ชันบันทึกการแก้ไขรูปภาพ
   const saveImageEdit = async () => {
     if (!tempDetail.trim()) {
       setNotification({
@@ -141,6 +141,7 @@ export default function Page() {
         setNotification({ show: false, message: "", type: "" });
       }, 3000);
     } catch (err) {
+      console.error("Error saving data:", err);
       setNotification({
         show: true,
         message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
@@ -149,6 +150,20 @@ export default function Page() {
     }
     setIsLoading(false);
   };
+
+  // แยกข้อความ detail เป็นหัวข้อและเนื้อหา
+  const splitDetail = (detail) => {
+    if (!detail)
+      return { title: "ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน", content: "" };
+
+    const lines = detail.split("\n");
+    const title = lines[0] || "ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน";
+    const content = lines.length > 1 ? lines.slice(1).join("\n") : "";
+
+    return { title, content };
+  };
+
+  const { title, content } = splitDetail(popupDetail);
 
   return (
     <div className="bg-white flex flex-col items-center min-h-screen">
@@ -199,26 +214,16 @@ export default function Page() {
               </div>
             )}
             {/* ข้อความและปุ่ม */}
-            // Update the detail display to properly handle line breaks
             <div className="p-6 text-center">
-              {(() => {
-                const lines = popupDetail.split("\n");
-                return (
-                  <>
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                      {lines[0] || "ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน"}
-                    </h3>
-                    {lines.length > 1 && (
-                      <p
-                        className="text-gray-600 mb-4"
-                        style={{ whiteSpace: "pre-line" }}
-                      >
-                        {lines.slice(1).join("\n")}
-                      </p>
-                    )}
-                  </>
-                );
-              })()}
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">{title}</h3>
+              {content && (
+                <p
+                  className="text-gray-600 mb-4"
+                  style={{ whiteSpace: "pre-line" }}
+                >
+                  {content}
+                </p>
+              )}
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={closePopup}
