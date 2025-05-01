@@ -20,7 +20,7 @@ const Footer = () => {
           <p className="text-gray-300 mb-2">โทร: 02-123-4567</p>
           <p className="text-gray-300 mb-2">อีเมล: info@badminton.com</p>
           <p className="text-gray-300">
-            ที่อยู่: 123 ถนนกีฬา เขตบางกะปิ นครราชสีมา
+            ที่อยู่: บ้านออฟ
           </p>
         </div>
 
