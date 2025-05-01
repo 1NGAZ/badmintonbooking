@@ -295,6 +295,34 @@ export default function Page() {
                 placeholder={`ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน\nฉลองเปิดบริการ ใส่โค้ด DAY1ST รับส่วนลด 20%`}
               />
             </div>
+
+            {/* ตัวอย่างการแสดงผลข้อความ */}
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                ตัวอย่างการแสดงผลข้อความ:
+              </p>
+              <div className="border border-gray-300 rounded p-4 bg-gray-50">
+                {(() => {
+                  const { title, content } = splitDetail(tempDetail);
+                  return (
+                    <>
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">
+                        {title}
+                      </h3>
+                      {content && (
+                        <p
+                          className="text-sm text-gray-600"
+                          style={{ whiteSpace: "pre-line" }}
+                        >
+                          {content}
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={closeEditPopup}
