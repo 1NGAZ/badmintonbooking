@@ -553,10 +553,8 @@ export default function ReservationTable() {
 
         const courtImage = response.data;
 
-        if (courtImage && courtImage.image) {
           setCourtShowcaseImage(courtImage.image);
-          localStorage.setItem("courtShowcaseImageId", courtImage.id);
-        }
+
       } catch (error) {
         console.error("Error loading court image:", error);
         // ถ้าเกิดข้อผิดพลาด ใช้รูปภาพเริ่มต้น
