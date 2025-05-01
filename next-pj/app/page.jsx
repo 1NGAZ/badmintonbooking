@@ -172,7 +172,7 @@ export default function Page() {
       <div className="relative w-full h-screen bg-gradient-to-r from-red-500 to-orange-400 overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="/courtdetail.png"
+            src="/badmintonbg.jpg"
             alt="Badminton Court"
             layout="fill"
             objectFit="cover"
@@ -200,6 +200,95 @@ export default function Page() {
                 ดูรายละเอียดสนาม
               </button>
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* บริการของเรา */}
+      <div className="py-16 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            บริการของเรา
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* บริการที่ 1 */}
+            <div className="flex flex-col items-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-center mb-2">
+                จองง่าย สะดวก
+              </h3>
+              <p className="text-gray-600 text-center">
+                จองสนามออนไลน์ได้ตลอด 24 ชั่วโมง ไม่ต้องโทรจอง
+              </p>
+            </div>
+
+            {/* บริการที่ 2 */}
+            <div className="flex flex-col items-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-center mb-2">
+                สนามคุณภาพ
+              </h3>
+              <p className="text-gray-600 text-center">
+                สนามได้มาตรฐาน พื้นกันลื่น แสงสว่างเพียงพอ
+              </p>
+            </div>
+
+            {/* บริการที่ 3 */}
+            <div className="flex flex-col items-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-center mb-2">
+                ราคาเป็นมิตร
+              </h3>
+              <p className="text-gray-600 text-center">
+                อัตราค่าบริการที่คุ้มค่า มีโปรโมชั่นพิเศษสำหรับสมาชิก
+              </p>
+            </div>
           </div>
         </div>
       </div>
