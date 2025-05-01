@@ -12,7 +12,7 @@ export default function Page() {
   // State สำหรับควบคุมการแสดง popup
   const [showPopup, setShowPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
-  const [popupImage, setPopupImage] = useState("/S28270597.jpg");
+  const [popupImage, setPopupImage] = useState();
   const [popupDetail, setPopupDetail] = useState("");
   const [tempDetail, setTempDetail] = useState("");
   const [tempImageFile, setTempImageFile] = useState(null);
