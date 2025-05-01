@@ -32,12 +32,12 @@ export default function Page() {
       try {
         const res = await axios.get(`${API_URL}/news/1`);
         if (res.data) {
-          setPopupImage(res.data.image || "/S28270597.jpg");
+          setPopupImage(res.data.image || "");
           setPopupDetail(res.data.detail || "");
         }
       } catch (err) {
         console.error("Error fetching popup data:", err);
-        setPopupImage("/S28270597.jpg");
+        setPopupImage("");
         setPopupDetail("");
       }
     };
