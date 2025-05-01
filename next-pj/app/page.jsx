@@ -242,6 +242,7 @@ export default function Page() {
         </div>
       )}
 
+      {/* Popup แก้ไขรูปภาพ */}
       {showEditPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
           <div className="bg-white rounded-xl overflow-hidden max-w-lg w-full p-6">
