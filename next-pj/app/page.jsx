@@ -94,7 +94,8 @@ export default function Page() {
       return;
     }
     setTempImageUrl(popupImage);
-    setTempDetail(popupDetail); // <<== เพิ่มบรรทัดนี้
+    setTempImageFile(null); // reset file
+    setTempDetail(popupDetail);
     setShowEditPopup(true);
   };
 
@@ -265,7 +266,7 @@ export default function Page() {
                 placeholder="ใส่ URL รูปภาพ เช่น /image.jpg หรือ https://example.com/image.jpg"
               />
             </div>
-            {/* เพิ่ม textarea สำหรับแก้ไข detail */}
+            {/* textarea สำหรับแก้ไข detail */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 ข้อความโปรโมชัน (ขึ้นบรรทัดใหม่ด้วย Enter)
