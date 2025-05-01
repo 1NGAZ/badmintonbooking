@@ -168,6 +168,41 @@ export default function Page() {
   return (
     <div className="bg-white flex flex-col items-center min-h-screen">
       <Navbar />
+      {/* Hero Section */}
+      <div className="relative w-full h-screen bg-gradient-to-r from-red-500 to-orange-400 overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="/courtdetail.png"
+            alt="Badminton Court"
+            layout="fill"
+            objectFit="cover"
+            className="opacity-50"
+            priority
+          />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+            เว็บแอพพลิเคชั่นจองสนามแบดมินตัน
+          </h1>
+          <h2 className="text-2xl md:text-3xl text-white mb-8 drop-shadow-md">
+            THE BADMINTON COURT RESERVATION WEB APPLICATION
+          </h2>
+
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
+            <Link href="/Reservation">
+              <button className="px-8 py-3 bg-red-600 text-white text-lg font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-lg">
+                จองสนามเลย
+              </button>
+            </Link>
+            <Link href="/CourtInfo">
+              <button className="px-8 py-3 bg-white text-gray-800 text-lg font-semibold rounded-lg hover:bg-gray-100 transition-colors shadow-lg">
+                ดูรายละเอียดสนาม
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* Welcome Popup */}
       {showPopup && (
@@ -241,7 +276,6 @@ export default function Page() {
           </div>
         </div>
       )}
-
       {/* Popup แก้ไขรูปภาพ */}
       {showEditPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
@@ -370,6 +404,7 @@ export default function Page() {
           </div>
         </div>
       )}
+
       <Footer />
     </div>
   );
