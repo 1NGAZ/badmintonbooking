@@ -6,6 +6,8 @@ import Link from "next/link";
 import Footer from "./components/footer";
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function Page() {
   // State สำหรับควบคุมการแสดง popup
   const [showPopup, setShowPopup] = useState(false);
@@ -34,9 +36,7 @@ export default function Page() {
 
     const fetchPopupData = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/news/1`
-        );
+        const res = await axios.get(`${API_URL}/news/1`);
         if (res.data) {
           setPopupImage(res.data.image || "/S28270597.jpg");
           setPopupDetail(res.data.detail || "");
@@ -94,6 +94,7 @@ export default function Page() {
       return;
     }
     setTempImageUrl(popupImage);
+    setTempDetail(popupDetail); // เพิ่มบรรทัดนี้
     setShowEditPopup(true);
   };
 
@@ -109,7 +110,7 @@ export default function Page() {
   };
 
   // ฟังก์ชันบันทึกการแก้ไขรูปภาพ (ตัวอย่างนี้ยังไม่เชื่อม API PUT)
-  const saveImageEdit = () => {
+  const saveImageEdit = async () => {
     if (!isValidImageUrl(tempImageUrl)) {
       setNotification({
         show: true,
@@ -118,20 +119,42 @@ export default function Page() {
       });
       return;
     }
+    if (!tempDetail.trim()) {
+      setNotification({
+        show: true,
+        message: "กรุณากรอกข้อความโปรโมชัน",
+        type: "error",
+      });
+      return;
+    }
     setIsLoading(true);
-    setTimeout(() => {
-      setPopupImage(tempImageUrl);
-      setIsLoading(false);
+    try {
+      // เรียก PUT API news/1 (หรือ id ที่ต้องการ)
+      await axios.put(`${API_URL}/news/1`, {
+        detail: tempDetail,
+        image: tempImageUrl, // ถ้า API รองรับ base64 หรือ url
+      });
+      // รีเฟรชข้อมูล popup
+      const res = await axios.get(`${API_URL}/news/1`);
+      setPopupImage(res.data.image || "/S28270597.jpg");
+      setPopupDetail(res.data.detail || "");
       setShowEditPopup(false);
       setNotification({
         show: true,
-        message: "บันทึกรูปภาพเรียบร้อยแล้ว",
+        message: "บันทึกข้อมูลเรียบร้อยแล้ว",
         type: "success",
       });
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 3000);
-    }, 1000);
+    } catch (err) {
+      setNotification({
+        show: true,
+        message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+        type: "error",
+      });
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -240,6 +263,19 @@ export default function Page() {
                 onChange={(e) => setTempImageUrl(e.target.value)}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 placeholder="ใส่ URL รูปภาพ เช่น /image.jpg หรือ https://example.com/image.jpg"
+              />
+            </div>
+            {/* เพิ่ม textarea สำหรับแก้ไข detail */}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                ข้อความโปรโมชัน (ขึ้นบรรทัดใหม่ด้วย Enter)
+              </label>
+              <textarea
+                value={tempDetail}
+                onChange={(e) => setTempDetail(e.target.value)}
+                rows={4}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder="บรรทัดแรก = หัวข้อ, บรรทัดถัดไป = รายละเอียด"
               />
             </div>
             <div className="mb-4">
