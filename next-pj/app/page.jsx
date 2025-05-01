@@ -99,12 +99,6 @@ export default function Page() {
     setShowEditPopup(false);
     setNotification({ show: false, message: "", type: "" });
   };
-
-  // ฟังก์ชันตรวจสอบว่า URL เป็นรูปภาพที่ถูกต้องหรือไม่
-  const isValidImageUrl = (url) => {
-    return url && (url.startsWith("/") || url.startsWith("http"));
-  };
-
   // ฟังก์ชันบันทึกการแก้ไขรูปภาพ (ตัวอย่างนี้ยังไม่เชื่อม API PUT)
   // Update the saveImageEdit function to use FormData
   const saveImageEdit = async () => {
@@ -120,19 +114,19 @@ export default function Page() {
     try {
       const formData = new FormData();
       formData.append("detail", tempDetail);
-      
+
       // If we have a new file, append it to FormData
       if (tempImageFile) {
         formData.append("image", tempImageFile);
       }
-      
+
       // Send the FormData to the API
       await axios.put(`${API_URL}/news/1`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-      
+
       // Refresh popup data
       const res = await axios.get(`${API_URL}/news/1`);
       setPopupImage(res.data.image || "/S28270597.jpg");
@@ -181,7 +175,6 @@ export default function Page() {
                 ✎
               </button>
             )}
-
             {/* รูปภาพประชาสัมพันธ์ */}
             <div className="relative w-full h-96 md:h-[30rem]">
               <Image
@@ -193,7 +186,6 @@ export default function Page() {
                 key={popupImage}
               />
             </div>
-
             {/* การแจ้งเตือน */}
             {notification.show && (
               <div
@@ -206,8 +198,8 @@ export default function Page() {
                 {notification.message}
               </div>
             )}
-
             {/* ข้อความและปุ่ม */}
+            // Update the detail display to properly handle line breaks
             <div className="p-6 text-center">
               {(() => {
                 const lines = popupDetail.split("\n");
@@ -216,8 +208,11 @@ export default function Page() {
                     <h3 className="text-2xl font-bold text-gray-800 mb-2">
                       {lines[0] || "ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน"}
                     </h3>
-                    {lines[1] && (
-                      <p className="text-gray-600 mb-4">
+                    {lines.length > 1 && (
+                      <p
+                        className="text-gray-600 mb-4"
+                        style={{ whiteSpace: "pre-line" }}
+                      >
                         {lines.slice(1).join("\n")}
                       </p>
                     )}
@@ -259,10 +254,23 @@ export default function Page() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={e => {
+                onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
-                    setTempImageFile(e.target.files[0]);
-                    setTempImageUrl(URL.createObjectURL(e.target.files[0]));
+                    const file = e.target.files[0];
+                    // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                      setNotification({
+                        show: true,
+                        message:
+                          "ไฟล์มีขนาดใหญ่เกินไป กรุณาอัพโหลดไฟล์ขนาดไม่เกิน 2MB",
+                        type: "error",
+                      });
+                      setTimeout(() => {
+                        setNotification({ show: false, message: "", type: "" });
+                      }, 3000);
+                      return;
+                    }
+                    setTempImageFile(file);
                   }
                 }}
                 className="block w-full text-sm text-gray-700"
@@ -271,7 +279,8 @@ export default function Page() {
             {/* textarea สำหรับแก้ไข detail */}
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                ข้อความโปรโมชัน (ขึ้นบรรทัดใหม่ด้วย Enter)
+                ข้อความโปรโมชัน (บรรทัดแรกจะเป็นหัวข้อ
+                บรรทัดถัดไปจะเป็นรายละเอียด)
               </label>
               <textarea
                 value={tempDetail}
@@ -280,30 +289,6 @@ export default function Page() {
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 placeholder={`ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน\nฉลองเปิดบริการ ใส่โค้ด DAY1ST รับส่วนลด 20%`}
               />
-            </div>
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">ตัวอย่างรูปภาพ:</p>
-              <div className="relative w-full h-48 border border-gray-300 rounded">
-                {tempImageUrl && isValidImageUrl(tempImageUrl) ? (
-                  <Image
-                    src={tempImageUrl}
-                    alt="Preview"
-                    layout="fill"
-                    objectFit="contain"
-                    onError={() => {
-                      setNotification({
-                        show: true,
-                        message: "ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบไฟล์",
-                        type: "error",
-                      });
-                    }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    ไม่มีตัวอย่างรูปภาพ
-                  </div>
-                )}
-              </div>
             </div>
             <div className="flex justify-end gap-3">
               <button
@@ -352,42 +337,7 @@ export default function Page() {
           </div>
         </div>
       )}
-
-      {/* Hero Section with Overlay */}
-      {/* ... ส่วนอื่นๆ ของไฟล์ ... */}
       <Footer />
     </div>
   );
 }
-
-// Update the detail display to properly handle line breaks
-<div className="p-6 text-center">
-  {(() => {
-    const lines = popupDetail.split("\n");
-    return (
-      <>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">
-          {lines[0] || "ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน"}
-        </h3>
-        {lines.length > 1 && (
-          <p className="text-gray-600 mb-4" style={{ whiteSpace: "pre-line" }}>
-            {lines.slice(1).join("\n")}
-          </p>
-        )}
-      </>
-    );
-  })()}
-  <div className="flex gap-3 justify-center">
-    <button
-      onClick={closePopup}
-      className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-    >
-      ปิด
-    </button>
-    <Link href="/Reservation">
-      <button className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-        จองเลย
-      </button>
-    </Link>
-  </div>
-</div>
