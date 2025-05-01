@@ -144,7 +144,7 @@ const Footer = () => {
       {isAdmin && !isEditing && (
         <button
           onClick={handleEditClick}
-          className="absolute top-4 right-4 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700 transition-colors"
+          className="absolute top-4 left-4 bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700 transition-colors"
           title="แก้ไขข้อมูล"
         >
           ✎
