@@ -17,8 +17,8 @@ export default function Page() {
   const [popupImage, setPopupImage] = useState("/S28270597.jpg");
   // State สำหรับเก็บ detail (หัวข้อ+รายละเอียด)
   const [popupDetail, setPopupDetail] = useState("");
-  // State สำหรับเก็บ URL ชั่วคราวระหว่างการแก้ไข
-  const [tempImageUrl, setTempImageUrl] = useState("");
+  // State สำหรับเก็บ detail ชั่วคราวระหว่างการแก้ไข
+  const [tempDetail, setTempDetail] = useState(""); // <<== เพิ่มบรรทัดนี้
   // State สำหรับตรวจสอบว่าเป็น admin หรือไม่
   const [isAdmin, setIsAdmin] = useState(true);
   // State สำหรับแสดงสถานะการโหลด
@@ -94,7 +94,7 @@ export default function Page() {
       return;
     }
     setTempImageUrl(popupImage);
-    setTempDetail(popupDetail); // เพิ่มบรรทัดนี้
+    setTempDetail(popupDetail); // <<== เพิ่มบรรทัดนี้
     setShowEditPopup(true);
   };
 
@@ -132,7 +132,7 @@ export default function Page() {
       // เรียก PUT API news/1 (หรือ id ที่ต้องการ)
       await axios.put(`${API_URL}/news/1`, {
         detail: tempDetail,
-        image: tempImageUrl, // ถ้า API รองรับ base64 หรือ url
+        image: tempImageUrl,
       });
       // รีเฟรชข้อมูล popup
       const res = await axios.get(`${API_URL}/news/1`);
@@ -275,7 +275,7 @@ export default function Page() {
                 onChange={(e) => setTempDetail(e.target.value)}
                 rows={4}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                placeholder="บรรทัดแรก = หัวข้อ, บรรทัดถัดไป = รายละเอียด"
+                placeholder={`ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน\nฉลองเปิดบริการ ใส่โค้ด DAY1ST รับส่วนลด 20%`}
               />
             </div>
             <div className="mb-4">
