@@ -110,24 +110,33 @@ export default function Page() {
       });
       return;
     }
+    
+    // ตรวจสอบว่ามีการเลือกไฟล์ใหม่หรือไม่
+    if (!tempImageFile) {
+      setNotification({
+        show: true,
+        message: "กรุณาเลือกรูปภาพ",
+        type: "error",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const formData = new FormData();
       formData.append("detail", tempDetail);
-
-      // If we have a new file, append it to FormData
-      if (tempImageFile) {
-        formData.append("image", tempImageFile);
-      }
-
-      // Send the FormData to the API
+  
+      // เพิ่มไฟล์รูปภาพลงใน FormData
+      formData.append("image", tempImageFile);
+  
+      // ส่งข้อมูลไปยัง API
       await axios.put(`${API_URL}/news/1`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      // Refresh popup data
+  
+      // ดึงข้อมูลใหม่หลังจากบันทึก
       const res = await axios.get(`${API_URL}/news/1`);
       setPopupImage(res.data.image || "/S28270597.jpg");
       setPopupDetail(res.data.detail || "");
@@ -285,7 +294,7 @@ export default function Page() {
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
                 ข้อความโปรโมชัน (บรรทัดแรกจะเป็นหัวข้อ
-                บรรทัดถัดไปจะเป็นรายละเอียด)
+                บรรทัดถัดไปจะเป็นรายละเอียด) <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={tempDetail}
@@ -293,6 +302,7 @@ export default function Page() {
                 rows={4}
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 placeholder={`ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน\nฉลองเปิดบริการ ใส่โค้ด DAY1ST รับส่วนลด 20%`}
+                required
               />
             </div>
 
