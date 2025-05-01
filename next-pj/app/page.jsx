@@ -191,7 +191,7 @@ export default function Page() {
 
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <Link href="/Reservation">
-              <button className="px-8 py-3 bg-red-600 text-white text-lg font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-lg">
+              <button className="px-8 py-3 bg-red-600 text-white text-lg font-semibold rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg">
                 จองสนามเลย
               </button>
             </Link>
