@@ -195,8 +195,8 @@ export default function Page() {
                 จองสนามเลย
               </button>
             </Link>
-            <Link href="/CourtInfo">
-              <button className="px-8 py-3 bg-white text-gray-800 text-lg font-semibold rounded-lg hover:bg-gray-100 transition-colors shadow-lg">
+            <Link href="/Reservation#court-showcase">
+              <button className="px-8 py-3 bg-white text-gray-800 text-lg font-semibold rounded-lg hover:bg-gray-100 hover:scale-105 hover:shadow-xl transition-all duration-300 shadow-lg">
                 ดูรายละเอียดสนาม
               </button>
             </Link>
