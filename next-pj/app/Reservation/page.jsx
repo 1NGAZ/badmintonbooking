@@ -553,8 +553,7 @@ export default function ReservationTable() {
 
         const courtImage = response.data;
 
-          setCourtShowcaseImage(courtImage.image);
-
+        setCourtShowcaseImage(courtImage.image);
       } catch (error) {
         console.error("Error loading court image:", error);
         // ถ้าเกิดข้อผิดพลาด ใช้รูปภาพเริ่มต้น
@@ -1504,13 +1503,12 @@ export default function ReservationTable() {
         id="court-showcase"
         className="mt-8 mb-12 flex flex-col items-center w-full"
       >
-        <div className="relative w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%]">
+        <div className="relative w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] aspect-[1366/768]">
           <img
             src={courtShowcaseImage}
             alt="Court Details"
-            className="rounded-lg shadow-lg w-full hover:shadow-xl transition-shadow duration-300"
+            className="rounded-lg shadow-lg w-full h-full object-cover hover:shadow-xl transition-shadow duration-300"
           />
-
           {isAdmin && (
             <button
               onClick={() =>
