@@ -242,7 +242,133 @@ export default function Page() {
         </div>
       )}
 
-      
+      {showEditPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl overflow-hidden max-w-lg w-full p-6">
+            <h3 className="text-xl font-bold mb-4">แก้ไขรูปภาพประชาสัมพันธ์</h3>
+            {notification.show && notification.type === "error" && (
+              <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {notification.message}
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                เลือกรูปภาพใหม่ (jpg, png)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                      setNotification({
+                        show: true,
+                        message:
+                          "ไฟล์มีขนาดใหญ่เกินไป กรุณาอัพโหลดไฟล์ขนาดไม่เกิน 2MB",
+                        type: "error",
+                      });
+                      setTimeout(() => {
+                        setNotification({ show: false, message: "", type: "" });
+                      }, 3000);
+                      return;
+                    }
+                    setTempImageFile(file);
+                  }
+                }}
+                className="block w-full text-sm text-gray-700"
+              />
+            </div>
+            {/* textarea สำหรับแก้ไข detail */}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                ข้อความโปรโมชัน (บรรทัดแรกจะเป็นหัวข้อ
+                บรรทัดถัดไปจะเป็นรายละเอียด)
+              </label>
+              <textarea
+                value={tempDetail}
+                onChange={(e) => setTempDetail(e.target.value)}
+                rows={4}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder={`ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน\nฉลองเปิดบริการ ใส่โค้ด DAY1ST รับส่วนลด 20%`}
+              />
+            </div>
+
+            {/* ตัวอย่างการแสดงผลข้อความ */}
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                ตัวอย่างการแสดงผลข้อความ:
+              </p>
+              <div className="border border-gray-300 rounded p-4 bg-gray-50">
+                {(() => {
+                  const { title, content } = splitDetail(tempDetail);
+                  return (
+                    <>
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">
+                        {title}
+                      </h3>
+                      {content && (
+                        <p
+                          className="text-sm text-gray-600"
+                          style={{ whiteSpace: "pre-line" }}
+                        >
+                          {content}
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeEditPopup}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isLoading}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={saveImageEdit}
+                className={`px-4 py-2 ${
+                  isLoading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+                } text-white rounded-lg transition-colors flex items-center`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  "บันทึก"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   );
