@@ -11,19 +11,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function Page() {
   // State สำหรับควบคุมการแสดง popup
   const [showPopup, setShowPopup] = useState(false);
-  // State สำหรับควบคุมการแสดง popup แก้ไขรูปภาพ
   const [showEditPopup, setShowEditPopup] = useState(false);
-  // State สำหรับเก็บ URL ของรูปภาพ
   const [popupImage, setPopupImage] = useState();
-  // State สำหรับเก็บ detail (หัวข้อ+รายละเอียด)
   const [popupDetail, setPopupDetail] = useState("");
-  // State สำหรับเก็บ detail ชั่วคราวระหว่างการแก้ไข
-  const [tempDetail, setTempDetail] = useState(""); // <<== เพิ่มบรรทัดนี้
-  // State สำหรับตรวจสอบว่าเป็น admin หรือไม่
+  const [tempDetail, setTempDetail] = useState("");
+  const [tempImageUrl, setTempImageUrl] = useState(""); // Add this line
+  const [tempImageFile, setTempImageFile] = useState(null); // Add this line
   const [isAdmin, setIsAdmin] = useState(true);
-  // State สำหรับแสดงสถานะการโหลด
   const [isLoading, setIsLoading] = useState(false);
-  // State สำหรับแสดงข้อความแจ้งเตือน
   const [notification, setNotification] = useState({
     show: false,
     message: "",
@@ -111,15 +106,8 @@ export default function Page() {
   };
 
   // ฟังก์ชันบันทึกการแก้ไขรูปภาพ (ตัวอย่างนี้ยังไม่เชื่อม API PUT)
+  // Update the saveImageEdit function to use FormData
   const saveImageEdit = async () => {
-    if (!isValidImageUrl(tempImageUrl)) {
-      setNotification({
-        show: true,
-        message: "กรุณาใส่ URL รูปภาพที่ถูกต้อง",
-        type: "error",
-      });
-      return;
-    }
     if (!tempDetail.trim()) {
       setNotification({
         show: true,
@@ -130,12 +118,22 @@ export default function Page() {
     }
     setIsLoading(true);
     try {
-      // เรียก PUT API news/1 (หรือ id ที่ต้องการ)
-      await axios.put(`${API_URL}/news/1`, {
-        detail: tempDetail,
-        image: tempImageUrl,
+      const formData = new FormData();
+      formData.append("detail", tempDetail);
+      
+      // If we have a new file, append it to FormData
+      if (tempImageFile) {
+        formData.append("image", tempImageFile);
+      }
+      
+      // Send the FormData to the API
+      await axios.put(`${API_URL}/news/1`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      // รีเฟรชข้อมูล popup
+      
+      // Refresh popup data
       const res = await axios.get(`${API_URL}/news/1`);
       setPopupImage(res.data.image || "/S28270597.jpg");
       setPopupDetail(res.data.detail || "");
@@ -361,3 +359,35 @@ export default function Page() {
     </div>
   );
 }
+
+// Update the detail display to properly handle line breaks
+<div className="p-6 text-center">
+  {(() => {
+    const lines = popupDetail.split("\n");
+    return (
+      <>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">
+          {lines[0] || "ยินดีต้อนรับสู่เว็บไซต์จองสนามแบดมินตัน"}
+        </h3>
+        {lines.length > 1 && (
+          <p className="text-gray-600 mb-4" style={{ whiteSpace: "pre-line" }}>
+            {lines.slice(1).join("\n")}
+          </p>
+        )}
+      </>
+    );
+  })()}
+  <div className="flex gap-3 justify-center">
+    <button
+      onClick={closePopup}
+      className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+    >
+      ปิด
+    </button>
+    <Link href="/Reservation">
+      <button className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+        จองเลย
+      </button>
+    </Link>
+  </div>
+</div>
