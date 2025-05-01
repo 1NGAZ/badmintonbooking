@@ -154,13 +154,13 @@ exports.getPendingReservations = async (req, res) => {
 
     const result = Object.values(groupedReservations).map(item => {
       // ตรวจสอบและแก้ไขค่า null หรือ NaN
-      if (item.discountAmount === null || isNaN(item.discountAmount)) {
-        item.discountAmount = 0;
-      }
+      // if (item.discountAmount === null || isNaN(item.discountAmount)) {
+      //   item.discountAmount = 0;
+      // }
       
-      if (item.discountedPrice === null || isNaN(item.discountedPrice)) {
-        item.discountedPrice = item.totalPrice;
-      }
+      // if (item.discountedPrice === null || isNaN(item.discountedPrice)) {
+      //   item.discountedPrice = item.totalPrice;
+      // }
       
       return item;
     });
@@ -168,7 +168,7 @@ exports.getPendingReservations = async (req, res) => {
     // แสดงข้อมูลที่จะส่งกลับไปยัง frontend เพื่อตรวจสอบ
     console.log("Sending to frontend:", JSON.stringify(result, null, 2));
     
-    res.status(200).json({ groupedReservations: result });
+    res.status(200).json({ groupedReservations: result,promotions: allPromotions  });
   } catch (error) {
     console.error(error);
     res
@@ -176,6 +176,7 @@ exports.getPendingReservations = async (req, res) => {
       .json({ error: "ไม่สามารถดึงข้อมูลการจองที่รอดำเนินการได้" });
   }
 };
+
 
 // ฟังก์ชันอนุมัติการจอง
 exports.approveReservation = async (req, res) => {

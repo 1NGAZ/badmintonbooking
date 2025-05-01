@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken");
 
@@ -51,34 +51,40 @@ const login = async (req, res) => {
       return res.status(401).json({ error: "ไม่พบ roleId ในข้อมูลผู้ใช้" });
     }
 
-
-    console.log('Role ID:', roleId);
+    console.log("Role ID:", roleId);
     // สร้าง JWT token
     const token = jwt.sign(
-      { userId: user.id, email: user.email, roleId: roleId },
+      {
+        userId: user.id,
+        email: user.email,
+        fname: user.fname,
+        lname: user.lname,
+        phone: user.phone,
+        roleId: roleId,
+      },
       SECRET_KEY,
       { expiresIn: "1h" }
     );
 
-    // ส่ง token ใน cookie
-    res.cookie("token", token, {
-      maxAge: 60 * 60 * 1000,  // 10 นาที
-      secure: true, // ใช้ false สำหรับการทดสอบใน localhost (ไม่ใช้ HTTPS)
-      httpOnly: true,
-      sameSite: "None",
-    });
-
-    // ส่งผลลัพธ์กลับ
+    // ส่งผลลัพธ์กลับพร้อมกำหนด Content-Type เป็น UTF-8
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     return res.json({
       message: "เข้าสู่ระบบสำเร็จ",
       token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        fname: user.fname,
+        lname: user.lname,
+        phone: user.phone,
+        roleId: roleId,
+      },
     });
   } catch (error) {
     console.error("Error during login:", error);
     return res.status(500).json({ error: "เซิร์ฟเวอร์เกิดข้อผิดพลาด" });
   }
 };
-
 
 // ฟังก์ชันสำหรับสมัครสมาชิก
 const register = async (req, res) => {
@@ -168,14 +174,6 @@ const register = async (req, res) => {
 // ฟังก์ชันสำหรับออกระบบ
 const logout = async (req, res) => {
   try {
-    // ลบคุกกี้ที่เก็บ Token
-    res.clearCookie("token", {
-      httpOnly: true, // ป้องกันการเข้าถึงจาก JavaScript
-      secure: false, // ใช้ false ใน localhost (ถ้าใช้ HTTPS ให้ใช้ true)
-      sameSite: "Strict", // กำหนด sameSite สำหรับคุกกี้
-      path: "/", // ลบใน path นี้ทั้งหมด
-    });
-
     return res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("Error during logout:", error);

@@ -5,6 +5,7 @@ const SECRET_KEY = process.env.JWT_SECRET_KEY;
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+
 const selectUserId = async (req, res) => {
   try {
     // ดึง token จาก cookies

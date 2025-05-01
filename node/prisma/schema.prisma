@@ -4,9 +4,8 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -15,98 +14,119 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  fname        String?
-  lname        String?
-  phone        String?
-  password     String?
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  fname    String?
+  lname    String?
+  phone    String?
+  password String?
 
-  userRoles    UserRoles[]   
-  reservations Reservation[] 
+  userRoles    UserRoles[]
+  reservations Reservation[]
 }
 
 model Role {
-  id       Int           @id @default(autoincrement())
-  name     String        @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
-  userRoles UserRoles[] 
+  userRoles UserRoles[]
 }
 
 model UserRoles {
   userId Int
   roleId Int
 
-  user   User @relation(fields: [userId], references: [id]) 
-  role   Role @relation(fields: [roleId], references: [id]) 
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
 
-  @@id([userId, roleId]) 
+  @@id([userId, roleId])
 }
 
 model Court {
-  id           Int       @id @default(autoincrement())
-  name         String   
-  price        Decimal   
-  detail       String    
-  status       String    
-  
-  timeSlots    TimeSlot[] 
-  reservations Reservation[] 
+  id     Int     @id @default(autoincrement())
+  name   String
+  price  Decimal
+  detail String
+  status String
+
+  timeSlots    TimeSlot[]
+  reservations Reservation[]
 }
 
 model TimeSlot {
-  id           Int                @id @default(autoincrement())
-  start_time   DateTime 
-  end_time     DateTime 
-  courtId      Int                
-  court        Court              @relation(fields: [courtId], references: [id])
+  id         Int      @id @default(autoincrement())
+  start_time DateTime
+  end_time   DateTime
+  courtId    Int
+  court      Court    @relation(fields: [courtId], references: [id])
 
-  statusId     Int               
-  status       Reservation_status @relation(fields: [statusId], references: [id])
+  statusId Int
+  status   Reservation_status @relation(fields: [statusId], references: [id])
 
-  reservations Reservation[] 
+  reservations Reservation[]
 }
 
 model Reservation {
-  id           Int                 @id @default(autoincrement())
-  userId       Int                
-  courtId      Int                 
-  timeSlotId   Int                
-  statusId     Int                 
-  promotionId  Int?
+  id          Int  @id @default(autoincrement())
+  userId      Int
+  courtId     Int
+  timeSlotId  Int
+  statusId    Int
+  promotionId Int?
 
-  attachment  String
-  user         User                @relation(fields: [userId], references: [id]) 
-  court        Court               @relation(fields: [courtId], references: [id])   
-  status       Reservation_status  @relation(fields: [statusId], references: [id])  
-  timeSlot     TimeSlot            @relation(fields: [timeSlotId], references: [id]) 
-  promotion    Promotion?          @relation(fields: [promotionId], references: [id])  // ความสัมพันธ์กับโปรโมชั่น
+  attachment String
+  user       User               @relation(fields: [userId], references: [id])
+  court      Court              @relation(fields: [courtId], references: [id])
+  status     Reservation_status @relation(fields: [statusId], references: [id])
+  timeSlot   TimeSlot           @relation(fields: [timeSlotId], references: [id])
+  promotion  Promotion?         @relation(fields: [promotionId], references: [id]) // ความสัมพันธ์กับโปรโมชั่น
 }
 
 model Reservation_status {
-  id           Int        @id @default(autoincrement())
-  name         String      
+  id   Int    @id @default(autoincrement())
+  name String
 
-  reservations Reservation[] 
+  reservations Reservation[]
 
   TimeSlot TimeSlot[]
 }
 
 model Promotion {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   description String?
   discount    Decimal
-  code        String    @unique
+  code        String   @unique
   startDate   DateTime
   endDate     DateTime
-  status      String    // 'active' หรือ 'inactive'
-  maxUses     Int       @default(0) // จำนวนครั้งสูงสุดที่สามารถใช้คูปองได้ (0 = ไม่จำกัด)
-  usedCount   Int       @default(0) // จำนวนครั้งที่คูปองถูกใช้ไปแล้ว
+  status      String // 'active' หรือ 'inactive'
+  maxUses     Int      @default(0) // จำนวนครั้งสูงสุดที่สามารถใช้คูปองได้ (0 = ไม่จำกัด)
+  usedCount   Int      @default(0) // จำนวนครั้งที่คูปองถูกใช้ไปแล้ว
 
   // ความสัมพันธ์กับการจอง
   reservations Reservation[]
 }
 
+model Rule {
+  id           Int    @id @default(autoincrement())
+  maxtimeslots Int
+  courtrule    String
+  paymentrule  String
+}
+
+model News {
+  id     Int    @id @default(autoincrement())
+  image  String
+  detail String
+}
+
+model Aboutme {
+  id        Int    @id @default(autoincrement())
+  about     String
+  phone     String
+  email     String
+  location  String
+  normalday String
+  weekend   String
+}

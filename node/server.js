@@ -6,7 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require("bcryptjs");
 const path = require('path');
-const multer = require('multer'); // << ขาด import multer ในโค้ดคุณด้วยนะ
+const multer = require('multer');
 const cron = require('node-cron');
 
 // import routes
@@ -21,8 +21,10 @@ const courteditname = require("./routes/courteditname");
 const roleRoutes = require('./routes/roleRoutes');
 const reportsRouter = require('./routes/reports');
 const promotionRoutes = require('./routes/promotion');
-
 const { createTimeSlotsForDateController } = require('./controllers/timeSlotController');
+const ruleRoutes = require('./routes/rule');
+const aboutmeRoutes = require("./routes/aboutme");
+const newsRoutes = require('./routes/news');
 
 const app = express();
 
@@ -36,6 +38,12 @@ app.use(cors({
   origin: "https://fix-old-version.dugk5u7droojn.amplifyapp.com",
   credentials: true,
 }));
+
+// ตั้งค่า charset เป็น UTF-8
+app.use((req, res, next) => {
+  res.charset = 'utf-8';
+  next();
+});
 
 // routes
 app.get('/', (req, res) => {
@@ -53,7 +61,9 @@ app.use("/courteditname", courteditname);
 app.use('/roles', roleRoutes);
 app.use('/reports', reportsRouter);
 app.use('/promotions', promotionRoutes);
-
+app.use('/rule', ruleRoutes);
+app.use('/aboutme', aboutmeRoutes);
+app.use('/news', newsRoutes);
 // static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

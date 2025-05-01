@@ -45,9 +45,11 @@ export default function ReservationTable() {
   const [showDate, setShowDate] = useState();
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+
   const [maxTimeSlots, setMaxTimeSlots] = useState(3);
+
   const [courtShowcaseImage, setCourtShowcaseImage] =
-    useState("/courtdetail.png");
+    useState();
   const [isChangingShowcaseImage, setIsChangingShowcaseImage] = useState(false);
 
   const handleFileChange = (event) => {
@@ -541,47 +543,89 @@ export default function ReservationTable() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  // เพิ่ม useEffect สำหรับโหลดรูปภาพสนาม (ควรเพิ่มหลังจาก useEffect อื่นๆ)
   useEffect(() => {
-    const savedImage = localStorage.getItem("courtShowcaseImage");
-    if (savedImage) {
-      setCourtShowcaseImage(savedImage);
-    }
+    // โหลดรูปภาพสนามจาก API
+    const loadCourtImage = async () => {
+      try {
+        // ดึงข่าวที่มี ID = 2
+        const response = await axios.get(`${API_URL}/news/2`);
+
+        const courtImage = response.data;
+
+        if (
+          courtImage &&
+          courtImage.detail === "court-showcase-image" &&
+          courtImage.image
+        ) {
+          setCourtShowcaseImage(courtImage.image);
+          localStorage.setItem("courtShowcaseImageId", courtImage.id);
+        }
+      } catch (error) {
+        console.error("Error loading court image:", error);
+        // ถ้าเกิดข้อผิดพลาด ใช้รูปภาพเริ่มต้น
+        setCourtShowcaseImage("/courtdetail.png");
+      }
+    };
+
+    loadCourtImage();
   }, []);
 
-  // Add this function to handle showcase image change
+  // เพิ่มฟังก์ชัน handleShowcaseImageChange (ควรเพิ่มใกล้กับฟังก์ชัน handleFileChange)
   const handleShowcaseImageChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({
+        title: "ไฟล์มีขนาดใหญ่เกินไป",
+        text: "กรุณาอัพโหลดไฟล์ขนาดไม่เกิน 2MB",
+        icon: "error",
+      });
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("image", file);
+      formData.append("detail", "");
 
-      const response = await axios.post(`${API_URL}/upload-image`, formData, {
+      // ใช้ ID คงที่ = 2
+      const imageId = 2;
+
+      const response = await axios.put(`${API_URL}/news/${imageId}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
         },
+        withCredentials: true,
       });
 
-      const imageUrl = URL.createObjectURL(file);
+      // อัพเดทรูปภาพในหน้าเว็บ
+      if (response.data && response.data.image) {
+        setCourtShowcaseImage(response.data.image);
+        localStorage.setItem("courtShowcaseImageId", imageId); // เก็บไว้ถ้าจำเป็น
 
-      setCourtShowcaseImage(imageUrl);
-      localStorage.setItem("courtShowcaseImage", imageUrl);
+        Swal.fire({
+          title: "อัพเดทรูปภาพสำเร็จ",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
 
-      Swal.fire({
-        title: "อัพเดทรูปภาพสำเร็จ",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      });
-
-      setIsChangingShowcaseImage(false);
+        setIsChangingShowcaseImage(false);
+      } else {
+        throw new Error("ไม่ได้รับข้อมูลรูปภาพจาก API");
+      }
     } catch (error) {
       console.error("Error uploading image:", error);
+
       Swal.fire({
         title: "เกิดข้อผิดพลาด",
-        text: "ไม่สามารถอัพโหลดรูปภาพได้",
+        text: `ไม่สามารถอัพโหลดรูปภาพได้: ${
+          error.response?.data?.error || error.message
+        }`,
         icon: "error",
       });
     }
@@ -1515,7 +1559,7 @@ export default function ReservationTable() {
                 />
               </label>
               <p className="text-sm text-gray-500 text-center">
-                รองรับไฟล์ .jpg, .jpeg, .png ขนาดไม่เกิน 5MB
+                รองรับไฟล์ .jpg, .jpeg, .png ขนาดไม่เกิน 2MB
               </p>
             </div>
             <div className="flex justify-end gap-2 mt-4">
@@ -1529,7 +1573,8 @@ export default function ReservationTable() {
           </div>
         )}
       </div>
-
+      
+      
       {/* Modal แจ้งเตือน */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

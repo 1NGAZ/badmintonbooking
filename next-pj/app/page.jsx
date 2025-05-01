@@ -123,7 +123,6 @@ export default function Page() {
 
     setIsLoading(true);
 
-    // จำลองการส่งข้อมูลไปยัง API (ในสถานการณ์จริงควรใช้ fetch หรือ axios)
     setTimeout(() => {
       setPopupImage(tempImageUrl);
       

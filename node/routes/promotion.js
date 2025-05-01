@@ -197,7 +197,7 @@ router.post('/use/:code', async (req, res) => {
         now < new Date(promotion.startDate) || 
         now > new Date(promotion.endDate) ||
         (promotion.maxUses > 0 && promotion.usedCount >= promotion.maxUses)) {
-      return res.status(400).json({ error: 'Promotion cannot be used' });
+      return res.status(400).json({ error: 'โปรโมชั่นนี้ถูกใช้งานครบตามจำนวนที่กำหนดแล้ว' });
     }
     
     // เพิ่มจำนวนการใช้งาน
