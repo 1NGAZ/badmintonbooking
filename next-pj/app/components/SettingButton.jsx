@@ -185,7 +185,7 @@ const SettingButton = ({ court, selectedDate }) => {
                   >
                     <Label className="text-left w-16 flex flex-col items-center">
                       {slot.start}
-                      <br />-<br />
+                      <span className="text-center">-</span>
                       {slot.end}
                     </Label>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
