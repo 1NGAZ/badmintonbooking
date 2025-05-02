@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { utcToZonedTime, format } from "date-fns-tz";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const SettingButton = ({ court, selectedDate }) => {
@@ -43,33 +42,16 @@ const SettingButton = ({ court, selectedDate }) => {
         );
 
         // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
-        // const fetchedSlots = response.data.map((slot) => {
-        //   const startTime = new Date(slot.start_time);
-        //   const endTime = new Date(slot.end_time);
-          
-        //   return {
-        //     id: slot.id,
-        //     start: format(startTime, "HH:mm"),
-        //     end: format(endTime, "HH:mm"),
-        //     statusId: slot.statusId,
-        //     checked: slot.statusId === 4,
-        //     checked: slot.statusId === 4,
-        //     rawStartTime: slot.start_time,
-        //     rawEndTime: slot.end_time,
-        //   };
-        // });
-
-        const timeZone = "Asia/Bangkok"; // หรือ timezone ที่คุณต้องการ
-
         const fetchedSlots = response.data.map((slot) => {
-          const startTime = utcToZonedTime(slot.start_time, timeZone);
-          const endTime = utcToZonedTime(slot.end_time, timeZone);
-        
+          const startTime = new Date(slot.start_time);
+          const endTime = new Date(slot.end_time);
+
           return {
             id: slot.id,
-            start: format(startTime, "HH:mm", { timeZone }),
-            end: format(endTime, "HH:mm", { timeZone }),
+            start: format(startTime, "HH:mm"),
+            end: format(endTime, "HH:mm"),
             statusId: slot.statusId,
+            checked: slot.statusId === 4,
             checked: slot.statusId === 4,
             rawStartTime: slot.start_time,
             rawEndTime: slot.end_time,
@@ -189,8 +171,6 @@ const SettingButton = ({ court, selectedDate }) => {
                 className="col-span-3"
               />
             </div>
-
-
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
