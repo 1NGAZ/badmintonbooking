@@ -37,7 +37,6 @@ import { jwtDecode } from "jwt-decode";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function ReservationTable() {
-  // เพิ่มหลังจาก state declarations
   const [open, setOpen] = useState(false);
   const [userData, setUserData] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,290 +45,160 @@ export default function ReservationTable() {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const [maxTimeSlots, setMaxTimeSlots] = useState(3);
 
   const [courtShowcaseImage, setCourtShowcaseImage] = useState();
   const [isChangingShowcaseImage, setIsChangingShowcaseImage] = useState(false);
 
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
-  };
+  const [maxTimeSlots, setMaxTimeSlots] = useState(3);
 
+  const [ruleId, setRuleId] = useState(1);
   // เพิ่ม state สำหรับ popup กฎการใช้งาน
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   // เพิ่ม state สำหรับโหมดแก้ไขกฎ
   const [isEditingRules, setIsEditingRules] = useState(false);
-  // เพิ่ม state สำหรับเก็บข้อมูลกฎต่างๆ
   const [rulesData, setRulesData] = useState({
-    bookingRules: [
-      "สามารถจองได้สูงสุด 3 ช่วงเวลาต่อวัน",
-      "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ที่ต่างกันได้",
-      "ต้องชำระเงินทันทีหลังจากทำการจอง",
-      "หากไม่มาใช้บริการตามเวลาที่จอง จะถูกปรับ 100% ของค่าบริการ",
-    ],
-    paymentRules: [
-      "ชำระผ่าน QR Code ที่แสดงในระบบ",
-      "แนบสลิปการโอนเงินเพื่อยืนยันการจอง",
-      "การจองจะสมบูรณ์เมื่อแอดมินตรวจสอบและยืนยันการชำระเงิน",
-    ],
+    bookingRules: [],
+    paymentRules: [],
     statusRules: [
       "สีเหลือง - รอการยืนยัน",
       "สีแดง - จองแล้ว",
       "สีเทา - ปิดให้บริการ",
     ],
   });
+  // เพิ่ม state สำหรับเก็บข้อมูลกฎต่างๆ
+  // const [rulesData, setRulesData] = useState({
+  //   bookingRules: [
+  //     "สามารถจองได้สูงสุด 3 ช่วงเวลาต่อวัน",
+  //     "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ที่ต่างกันได้",
+  //     "ต้องชำระเงินทันทีหลังจากทำการจอง",
+  //     "หากไม่มาใช้บริการตามเวลาที่จอง จะถูกปรับ 100% ของค่าบริการ",
+  //   ],
+  //   paymentRules: [
+  //     "ชำระผ่าน QR Code ที่แสดงในระบบ",
+  //     "แนบสลิปการโอนเงินเพื่อยืนยันการจอง",
+  //     "การจองจะสมบูรณ์เมื่อแอดมินตรวจสอบและยืนยันการชำระเงิน",
+  //   ],
+  //   statusRules: [
+  //     "สีเหลือง - รอการยืนยัน",
+  //     "สีแดง - จองแล้ว",
+  //     "สีเทา - ปิดให้บริการ",
+  //   ],
+  // });
+    // ฟังก์ชันสำหรับแก้ไขกฎในหมวดหมูต่างๆ
+    // const handleRuleChange = (category, index, value) => {
+    //   setRulesData((prev) => {
+    //     const newData = { ...prev };
+    //     newData[category][index] = value;
+    //     return newData;
+    //   });
+    // };
+  
 
-  // ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
-  const saveRulesEdit = () => {
-    localStorage.setItem("rulesData", JSON.stringify(rulesData));
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+ // ฟังก์ชันสำหรับอัพเดทเฉพาะ maxTimeSlots
+ const updateMaxTimeSlots = async (newMaxTimeSlots) => {
+  try {
+    // Get current rule values
+    const courtrule = rulesData.bookingRules.join('|');
+    const paymentrule = rulesData.paymentRules.join('|');
+    
+    const response = await axios.put(`${API_URL}/rule/${ruleId}`, {
+      maxtimeslots: newMaxTimeSlots,
+      courtrule: courtrule,
+      paymentrule: paymentrule
+    });
+    
+    // Update state after successful save
+    setMaxTimeSlots(newMaxTimeSlots);
+    
+    // Show success message
+    Swal.fire({
+      title: "อัพเดทจำนวนช่วงเวลาสูงสุดเรียบร้อย",
+      icon: "success"
+    });
+  } catch (error) {
+    console.error("Error updating max time slots:", error);
+    Swal.fire({
+      title: "เกิดข้อผิดพลาด",
+      text: "ไม่สามารถอัพเดทจำนวนช่วงเวลาสูงสุดได้",
+      icon: "error"
+    });
+  }
+};
+
+// ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
+const saveRulesEdit = async () => {
+  try {
+    // แปลง array เป็น string ด้วย | คั่น
+    const courtrule = rulesData.bookingRules.join('|');
+    const paymentrule = rulesData.paymentRules.join('|');
+    
+    const response = await axios.put(`${API_URL}/rule/${ruleId}`, {
+      maxtimeslots: maxTimeSlots,
+      courtrule,
+      paymentrule
+    });
+    
     setIsEditingRules(false);
-    localStorage.setItem("maxTimeSlots", maxTimeSlots.toString());
-    setIsEditingRules(false);
+    
     Swal.fire({
       title: "บันทึกกฎการใช้งานเรียบร้อย",
       icon: "success",
       timer: 2000,
       showConfirmButton: false,
     });
-  };
-
-  // ฟังก์ชันสำหรับแก้ไขกฎในหมวดหมูต่างๆ
-  const handleRuleChange = (category, index, value) => {
-    setRulesData((prev) => {
-      const newData = { ...prev };
-      newData[category][index] = value;
-      return newData;
+    
+    // โหลดข้อมูลใหม่
+    fetchRules();
+  } catch (error) {
+    console.error("Error saving rules:", error);
+    Swal.fire({
+      title: "เกิดข้อผิดพลาด",
+      text: error.response?.data?.error || "ไม่สามารถบันทึกกฎการใช้งานได้",
+      icon: "error",
     });
-  };
+  }
+};
 
-  // ฟังก์ชันสำหรับเพิ่มกฎใหม่
-  const addNewRule = (category) => {
-    setRulesData((prev) => {
-      const newData = { ...prev };
-      newData[category].push("");
-      return newData;
-    });
-  };
+// ฟังก์ชันสำหรับเพิ่มกฎใหม่
+const addNewRule = (ruleType) => {
+  setRulesData(prev => {
+    const newRules = {...prev};
+    newRules[ruleType] = [...newRules[ruleType], ""];
+    return newRules;
+  });
+};
 
-  // ฟังก์ชันสำหรับลบกฎ
-  const removeRule = (category, index) => {
-    setRulesData((prev) => {
-      const newData = { ...prev };
-      newData[category].splice(index, 1);
-      return newData;
-    });
-  };
+// ฟังก์ชันสำหรับลบกฎ
+const removeRule = (ruleType, index) => {
+  setRulesData(prev => {
+    const newRules = {...prev};
+    newRules[ruleType] = newRules[ruleType].filter((_, i) => i !== index);
+    return newRules;
+  });
+};
+// ฟังก์ชัน handleRuleChange ที่มีอยู่แล้วทำงานได้ถูกต้อง
+const handleRuleChange = (ruleType, index, value) => {
+  setRulesData(prev => {
+    const newRules = {...prev};
+    newRules[ruleType][index] = value;
+    return newRules;
+  });
+};
+// ฟังก์ชันสำหรับอัพเดทกฎ
+const updateRule = (ruleType, index, value) => {
+  setRulesData(prev => {
+    const newRules = {...prev};
+    newRules[ruleType][index] = value;
+    return newRules;
+  });
+};
 
-  // const handleSubmitReservation = async () => {
-  //   // ตรวจสอบข้อมูลผู้ใช้
-  //   if (!userData) {
-  //     setIsModalOpen(true);
-  //     return;
-  //   }
 
-  //   // ตรวจสอบวันที่
-  //   if (!showDate || !showDate.from) {
-  //     Swal.fire({
-  //       title: "กรุณาเลือกวันที่",
-  //       icon: "warning",
-  //     });
-  //     return;
-  //   }
 
-  //   // ตรวจสอบช่วงเวลา
-  //   if (selectedTimeSlots.length === 0) {
-  //     Swal.fire({
-  //       title: "กรุณาเลือกช่วงเวลา",
-  //       text: "กรุณาเลือกช่วงเวลาที่ต้องการจองอย่างน้อย 1 ช่วงเวลา",
-  //       icon: "warning",
-  //     });
-  //     return;
-  //   }
-
-  //   // ตรวจสอบไฟล์สลิป
-  //   if (!selectedFile) {
-  //     Swal.fire({
-  //       icon: "warning",
-  //       title: "กรุณาแนบสลิปการโอนเงิน",
-  //       text: "คุณต้องแนบสลิปการโอนเงินเพื่อยืนยันการจอง",
-  //     });
-  //     return;
-  //   }
-
-  //   try {
-  //     const formData = new FormData();
-
-  //     // แนบไฟล์
-  //     formData.append("attachment", selectedFile);
-
-  //     // แนบข้อมูลผู้ใช้
-  //     formData.append("userId", userData.id);
-
-  //     // แปลงวันที่ให้อยู่ในรูปแบบ YYYY-MM-DD
-  //     const reservationDate = `${showDate.from.getFullYear()}-${String(
-  //       showDate.from.getMonth() + 1
-  //     ).padStart(2, "0")}-${String(showDate.from.getDate()).padStart(2, "0")}`;
-  //     formData.append("reservationDate", reservationDate);
-
-  //     // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
-  //     console.log("Selected time slots before mapping:", selectedTimeSlots);
-  //     console.log("Reservation data structure:", reservationData);
-  //     // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
-  //     const enhancedTimeSlots = selectedTimeSlots.map((slot) => {
-  //       console.log(`Looking for court ID: ${slot.courtId}`);
-  //       const court = reservationData.find(
-  //         (c) => Number(c.id) === Number(slot.courtId)
-  //       );
-  //       console.log(`Court found:`, court);
-  //       console.log(
-  //         `Looking for timeSlot ID: ${slot.timeSlotId} in court:`,
-  //         court?.name
-  //       );
-  //       const timeSlot = court?.timeSlots?.find(
-  //         (ts) => Number(ts.id) === Number(slot.timeSlotId)
-  //       );
-  //       console.log(`TimeSlot found:`, timeSlot);
-  //       // ตรวจสอบโครงสร้างของ timeSlot
-  //       if (timeSlot) {
-  //         console.log("TimeSlot properties:", Object.keys(timeSlot));
-  //       }
-  //       return {
-  //         timeSlotId: slot.timeSlotId,
-  //         courtId: slot.courtId,
-  //         startTime: timeSlot?.start_time || null,
-  //         endTime: timeSlot?.end_time || null,
-  //       };
-  //     });
-
-  //     console.log("ช่วงเวลาที่เลือกพร้อมข้อมูลเวลา:", enhancedTimeSlots);
-  //     formData.append("selectedTimeSlots", JSON.stringify(enhancedTimeSlots));
-
-  //     // แนบ courtId (ใช้จากช่วงเวลาที่เลือก)
-  //     formData.append("courtId", selectedTimeSlots[0].courtId);
-
-  //     // แนบสถานะ (2 = รอดำเนินการ)
-  //     formData.append("statusId", "2");
-
-  //     // คำนวณราคาก่อนส่วนลด
-  //     const originalPrice = calculateTotalPrice();
-  //     formData.append("originalPrice", originalPrice);
-
-  //     // แนบข้อมูลโปรโมชั่น - ปรับปรุงการตรวจสอบและส่งข้อมูล
-  //     if (appliedPromotion) {
-  //       // ตรวจสอบว่า appliedPromotion.id มีค่าและเป็นตัวเลขหรือไม่
-  //       const promotionId = parseInt(appliedPromotion.id, 10);
-
-  //       if (!isNaN(promotionId) && promotionId > 0) {
-  //         console.log("ส่งข้อมูล promotionId:", promotionId);
-  //         formData.append("promotionId", promotionId);
-
-  //         // ส่งข้อมูลเพิ่มเติมเกี่ยวกับโปรโมชั่น
-  //         if (appliedPromotion.code) {
-  //           formData.append("promotionCode", appliedPromotion.code);
-  //         }
-
-  //         if (appliedPromotion.discount) {
-  //           formData.append("discountPercent", appliedPromotion.discount);
-  //         }
-
-  //         // คำนวณราคาหลังหักส่วนลด
-  //         const originalPrice = calculateTotalPrice(false); // เพิ่มพารามิเตอร์เพื่อคำนวณราคาก่อนส่วนลด
-  //         const discountAmount =
-  //           (originalPrice * Number(appliedPromotion.discount)) / 100;
-  //         const finalPrice = Math.max(0, originalPrice - discountAmount);
-
-  //         formData.append("originalPrice", originalPrice);
-  //         formData.append("finalPrice", finalPrice);
-
-  //         console.log("ข้อมูลโปรโมชั่นที่ส่งไป backend:", {
-  //           id: promotionId,
-  //           code: appliedPromotion.code,
-  //           discount: appliedPromotion.discount,
-  //           originalPrice: originalPrice,
-  //           finalPrice: finalPrice,
-  //         });
-  //       } else {
-  //         console.warn("ข้อมูล promotionId ไม่ถูกต้อง:", appliedPromotion.id);
-  //         // ไม่ส่งข้อมูลโปรโมชั่นถ้า ID ไม่ถูกต้อง
-  //       }
-  //     } else {
-  //       console.log("ไม่มีการใช้โปรโมชั่น");
-  //       formData.append("originalPrice", calculateTotalPrice(false));
-  //       formData.append("finalPrice", calculateTotalPrice(false));
-  //     }
-
-  //     console.log("ส่งข้อมูลการจอง:", {
-  //       userId: userData.id,
-  //       date: reservationDate,
-  //       selectedTimeSlots: enhancedTimeSlots,
-  //       courtId: selectedTimeSlots[0].courtId,
-  //       promotionId: appliedPromotion?.id || null,
-  //       promotionCode: appliedPromotion?.code || null,
-  //       discountPercent: appliedPromotion?.discount || 0,
-  //       originalPrice: originalPrice,
-  //       finalPrice: appliedPromotion ? calculateTotalPrice() : originalPrice,
-  //       statusId: 2,
-  //     });
-
-  //     // ส่งข้อมูลไปยัง API
-  //     const response = await axios.post(
-  //       `${API_URL}/reservation/reservations`,
-  //       formData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //         withCredentials: true,
-  //       }
-  //     );
-
-  //     // ถ้าสำเร็จ
-  //     if (response.status >= 200 && response.status < 300) {
-  //       setOpen(false);
-  //       setSelectedTimeSlots([]);
-  //       setSelectedFile(null);
-  //       setPromotionCode("");
-  //       setAppliedPromotion(null);
-
-  //       Swal.fire({
-  //         title: "จองสนามสำเร็จ",
-  //         text: "กรุณารอการยืนยันจากแอดมิน",
-  //         icon: "success",
-  //       }).then(() => {
-  //         // รีเฟรชหน้าเมื่อกดปุ่ม OK หรือปิด Swal
-  //         window.location.reload();
-  //       });
-
-  //       // โหลดข้อมูลใหม่
-  //       const adjustedDate = new Date(showDate.from);
-  //       adjustedDate.setHours(12, 0, 0, 0);
-  //       const formattedDate = `${adjustedDate.getFullYear()}-${String(
-  //         adjustedDate.getMonth() + 1
-  //       ).padStart(2, "0")}-${String(adjustedDate.getDate()).padStart(2, "0")}`;
-
-  //       const reservationResponse = await axios.get(
-  //         `${API_URL}/timeslot/gettimeslots?date=${formattedDate}`,
-  //         { withCredentials: true }
-  //       );
-  //       setReservationData(reservationResponse.data);
-  //     }
-  //   } catch (error) {
-  //     let errorMessage = "ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง";
-
-  //     if (error?.response?.data) {
-  //       errorMessage =
-  //         error.response.data.message ||
-  //         error.response.data.error ||
-  //         errorMessage;
-  //     }
-
-  //     Swal.fire({
-  //       title: "เกิดข้อผิดพลาด",
-  //       text: errorMessage,
-  //       icon: "error",
-  //     });
-  //   }
-  // };
 
   const handleSubmitReservation = async () => {
     // ตรวจสอบข้อมูลผู้ใช้
@@ -743,7 +612,37 @@ export default function ReservationTable() {
     };
   }, []);
 
-  // เพิ่ม useEffect สำหรับโหลดรูปภาพสนาม (ควรเพิ่มหลังจาก useEffect อื่นๆ)
+// เพิ่มฟังก์ชันสำหรับดึงข้อมูลกฎจาก API
+const fetchRules = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/rule`);
+    if (response.data && response.data.length > 0) {
+      const rule = response.data[0]; // ใช้กฎล่าสุด
+      setRuleId(rule.id);
+      setMaxTimeSlots(rule.maxtimeslots);
+      
+      // แปลงข้อมูลจาก string เป็น array
+      const bookingRules = rule.courtrule ? rule.courtrule.split('|').filter(r => r.trim()) : [];
+      const paymentRules = rule.paymentrule ? rule.paymentrule.split('|').filter(r => r.trim()) : [];
+      
+      setRulesData({
+        ...rulesData,
+        bookingRules,
+        paymentRules,
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching rules:", error);
+  }
+};
+
+useEffect(() => {
+  fetchRules();
+}, []);
+
+
+
+  // เพิ่ม useEffect สำหรับโหลดรูปภาพสนาม 
   useEffect(() => {
     // โหลดรูปภาพสนามจาก API
     const loadCourtImage = async () => {
