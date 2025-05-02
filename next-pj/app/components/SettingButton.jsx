@@ -43,9 +43,10 @@ const SettingButton = ({ court, selectedDate }) => {
 
         // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
         const fetchedSlots = response.data.map((slot) => {
-          const startTime = new Date(slot.start_time);
-          const endTime = new Date(slot.end_time);
-
+          // const startTime = new Date(slot.start_time);
+          // const endTime = new Date(slot.end_time);
+          const startTime = new Date(new Date(slot.start_time).getTime() + 7 * 60 * 60 * 1000);
+          const endTime = new Date(new Date(slot.end_time).getTime() + 7 * 60 * 60 * 1000);
           return {
             id: slot.id,
             start: format(startTime, "HH:mm"),
