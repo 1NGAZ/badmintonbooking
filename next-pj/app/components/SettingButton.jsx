@@ -43,23 +43,41 @@ const SettingButton = ({ court, selectedDate }) => {
         );
 
         // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
+        // const fetchedSlots = response.data.map((slot) => {
+        //   const startTime = new Date(slot.start_time);
+        //   const endTime = new Date(slot.end_time);
+
+        //   return {
+        //     id: slot.id,
+        //     start: format(startTime, "HH:mm"),
+        //     end: format(endTime, "HH:mm"),
+        //     statusId: slot.statusId,
+        //     checked: slot.statusId === 4,
+        //     checked: slot.statusId === 4,
+        //     // เพิ่มข้อมูลเวลาดิบเพื่อใช้ในการเรียงลำดับ
+        //     rawStartTime: slot.start_time,
+        //     rawEndTime: slot.end_time,
+        //   };
+        // });
+        // เรียงลำดับตามเวลาเริ่มต้น
+
+        const timeZone = "Asia/Bangkok"; // หรือเวลา local ของคุณ
+
         const fetchedSlots = response.data.map((slot) => {
-          const startTime = new Date(slot.start_time);
-          const endTime = new Date(slot.end_time);
+          const startTime = utcToZonedTime(slot.start_time, timeZone);
+          const endTime = utcToZonedTime(slot.end_time, timeZone);
 
           return {
             id: slot.id,
-            start: format(startTime, "HH:mm"),
-            end: format(endTime, "HH:mm"),
+            start: format(startTime, "HH:mm", { timeZone }),
+            end: format(endTime, "HH:mm", { timeZone }),
             statusId: slot.statusId,
             checked: slot.statusId === 4,
-            checked: slot.statusId === 4,
-            // เพิ่มข้อมูลเวลาดิบเพื่อใช้ในการเรียงลำดับ
             rawStartTime: slot.start_time,
             rawEndTime: slot.end_time,
           };
         });
-        // เรียงลำดับตามเวลาเริ่มต้น
+
         const sortedSlots = fetchedSlots.sort((a, b) => {
           return new Date(a.rawStartTime) - new Date(b.rawStartTime);
         });
@@ -174,8 +192,6 @@ const SettingButton = ({ court, selectedDate }) => {
               />
             </div>
 
-
-
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 {leftColumn.map((slot, index) => (
@@ -211,7 +227,7 @@ const SettingButton = ({ court, selectedDate }) => {
                   >
                     <Label className="text-left w-16 flex flex-col items-center">
                       {slot.start}
-                      <br />-<br />
+                      <br /> - <br />
                       {slot.end}
                     </Label>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
