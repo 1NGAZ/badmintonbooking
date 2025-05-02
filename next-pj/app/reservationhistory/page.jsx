@@ -449,6 +449,7 @@ const Page = () => {
                                     day: "numeric",
                                     month: "short",
                                     hour12: false,
+                                    year: "numeric",
                                     timeZone: "UTC",
                                   })
                                   .replace(/\d{4}/, (year) =>

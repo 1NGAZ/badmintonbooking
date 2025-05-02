@@ -32,7 +32,7 @@ const Linechat = () => {
           aria-label="Line Chat"
         >
           <Image
-            src="/line-icon.png"
+            src="/line-icon.jpg"
             alt="Line"
             width={30}
             height={30}
