@@ -28,7 +28,7 @@ const Linechat = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className="fixed bottom-6 right-6 rounded-full bg-green-500 hover:bg-green-600 shadow-lg z-50 w-14 h-14 flex items-center justify-center"
+          className="fixed bottom-26 right-3 rounded-full bg-green-500 hover:bg-green-600 shadow-lg z-50 w-14 h-14 flex items-center justify-center"
           aria-label="Line Chat"
         >
           <Image
