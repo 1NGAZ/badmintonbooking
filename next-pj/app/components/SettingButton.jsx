@@ -425,11 +425,11 @@ const SettingButton = ({ court, selectedDate }) => {
                     key={slot.id}
                     className="flex items-center justify-between gap-4"
                   >
-                    <Label className="text-left w-16 flex flex-col items-center">
-                      {slot.start}
-                      <br />-<br />
-                      {slot.end}
-                    </Label>
+                    <div className="text-left w-16 flex flex-col items-center">
+                      <span>{slot.start}</span>
+                      <span>-</span>
+                      <span>{slot.end}</span>
+                    </div>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
                       <input
                         type="checkbox"
@@ -451,11 +451,11 @@ const SettingButton = ({ court, selectedDate }) => {
                     key={slot.id}
                     className="flex items-center justify-between gap-4"
                   >
-                    <Label className="text-left w-16 flex flex-col items-center">
-                      {slot.start}
-                      <br /> - <br />
-                      {slot.end}
-                    </Label>
+                    <div className="text-left w-16 flex flex-col items-center">
+                      <span>{slot.start}</span>
+                      <span>-</span>
+                      <span>{slot.end}</span>
+                    </div>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
                       <input
                         type="checkbox"
