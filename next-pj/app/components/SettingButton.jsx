@@ -43,8 +43,6 @@ const SettingButton = ({ court, selectedDate }) => {
 
         // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
         const fetchedSlots = response.data.map((slot) => {
-          // const startTime = new Date(slot.start_time);
-          // const endTime = new Date(slot.end_time);
           const startTime = new Date(
             new Date(slot.start_time).getTime() - 7 * 60 * 60 * 1000
           );
@@ -59,6 +57,7 @@ const SettingButton = ({ court, selectedDate }) => {
             checked: slot.statusId === 4,
             rawStartTime: slot.start_time,
             rawEndTime: slot.end_time,
+            isBooked: slot.statusId === 2 || slot.statusId === 3, // เพิ่มการตรวจสอบว่าสถานะเป็นการจองหรือไม่
           };
         });
         // เรียงลำดับตามเวลาเริ่มต้น
@@ -78,8 +77,17 @@ const SettingButton = ({ court, selectedDate }) => {
   }, [court.id, selectedDate]);
   const handleToggleChange = (index) => {
     const updatedSlots = [...timeSlots];
-    updatedSlots[index].checked = !updatedSlots[index].checked;
-    setTimeSlots(updatedSlots);
+    // ตรวจสอบว่าช่วงเวลานี้ถูกจองไปแล้วหรือไม่
+    if (!updatedSlots[index].isBooked) {
+      updatedSlots[index].checked = !updatedSlots[index].checked;
+      setTimeSlots(updatedSlots);
+    } else {
+      // แจ้งเตือนว่าไม่สามารถเปลี่ยนสถานะช่วงเวลาที่ถูกจองแล้วได้
+      toast.warning("ไม่สามารถเปลี่ยนสถานะช่วงเวลาที่ถูกจองแล้วได้", {
+        position: "bottom-right",
+        autoClose: 3000,
+      });
+    }
   };
 
   const handleSave = async () => {
