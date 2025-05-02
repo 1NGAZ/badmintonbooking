@@ -162,8 +162,6 @@ const Page = () => {
     setShowModal(true);
   };
 
-  // เปิดโหมดแก้ไข
-  // เปิดโหมดแก้ไข
   const handleEdit = async (id) => {
     try {
       if (typeof window !== "undefined") {
