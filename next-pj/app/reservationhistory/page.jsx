@@ -128,7 +128,7 @@ const Page = () => {
         day: "numeric",
         month: "short",
         year: "numeric",
-        timeZone: "Asia/Bangkok",
+        timeZone: "UTC",
       })
       .toLowerCase();
     const dateMatch = dateString.includes(searchLower);
@@ -449,7 +449,7 @@ const Page = () => {
                                     day: "numeric",
                                     month: "short",
                                     hour12: false,
-                                    timeZone: "Asia/Bangkok",
+                                    timeZone: "UTC",
                                   })
                                   .replace(/\d{4}/, (year) =>
                                     (parseInt(year) - 543).toString()
@@ -462,7 +462,7 @@ const Page = () => {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                   hour12: false,
-                                  timeZone: "Asia/Bangkok",
+                                  timeZone: "UTC",
                                 })}
                               </td>
                               <td className="hidden sm:table-cell px-4 py-3 text-xs sm:text-sm">
@@ -472,7 +472,7 @@ const Page = () => {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                   hour12: false,
-                                  timeZone: "Asia/Bangkok",
+                                  timeZone: "UTC",
                                 })}
                               </td>
                               <td className="px-4 py-3 text-xs sm:text-sm font-medium">
