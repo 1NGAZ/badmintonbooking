@@ -82,7 +82,6 @@ const SettingButton = ({ court, selectedDate }) => {
 
   const handleSave = async () => {
     try {
-      // บันทึกการเปลี่ยนแปลงสถานะ timeSlots ก่อน
       const updatedTimeSlots = timeSlots.map((slot) => ({
         id: slot.id,
         statusId: slot.checked ? 4 : 1,
@@ -94,7 +93,6 @@ const SettingButton = ({ court, selectedDate }) => {
       );
       console.log("บันทึกสถานะสำเร็จ:", response.data);
 
-      // เปิดใช้งานการอัปเดตชื่อสนาม
       if (courtName !== court.name) {
         await axios.put(`${API_URL}/courteditname/${court.id}`, {
           name: courtName,
@@ -102,7 +100,6 @@ const SettingButton = ({ court, selectedDate }) => {
         console.log("บันทึกชื่อสนามสำเร็จ");
       }
 
-      // แสดงการแจ้งเตือนเมื่อบันทึกสำเร็จด้วย Toastify
       toast.success("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว", {
         position: "bottom-right",
         autoClose: 3000,

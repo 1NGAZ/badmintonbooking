@@ -491,42 +491,9 @@ export default function ReservationTable() {
         setPromotionCode("");
         setAppliedPromotion(null);
 
-        // คำนวณข้อมูลราคาสำหรับแสดงในข้อความสำเร็จ
-        const originalPriceFormatted =
-          Number(originalPrice).toLocaleString() + " บาท";
-        let discountMessage = "";
-        let finalPriceFormatted = originalPriceFormatted;
-
-        if (appliedPromotion) {
-          const discountAmount =
-            (Number(originalPrice) * Number(appliedPromotion.discount)) / 100;
-          const finalPrice = Math.max(
-            0,
-            Number(originalPrice) - discountAmount
-          );
-
-          discountMessage = `\nส่วนลด ${
-            appliedPromotion.discount
-          }% (${discountAmount.toLocaleString()} บาท)`;
-          finalPriceFormatted = `${finalPrice.toLocaleString()} บาท`;
-        }
-
         Swal.fire({
           title: "จองสนามสำเร็จ",
-          html: `กรุณารอการยืนยันจากแอดมิน<br><br>
-                <div class="text-left">
-                  <b>ราคาเดิม:</b> ${originalPriceFormatted}
-                  ${
-                    appliedPromotion
-                      ? `<br><b>ส่วนลด:</b> ${appliedPromotion.discount}% (${(
-                          (Number(originalPrice) *
-                            Number(appliedPromotion.discount)) /
-                          100
-                        ).toLocaleString()} บาท)`
-                      : ""
-                  }
-                  <br><b>ราคาสุทธิ:</b> ${finalPriceFormatted}
-                </div>`,
+          text: "กรุณารอการยืนยันจากแอดมิน",
           icon: "success",
         }).then(() => {
           // รีเฟรชหน้าเมื่อกดปุ่ม OK หรือปิด Swal
@@ -1101,11 +1068,21 @@ export default function ReservationTable() {
         Swal.fire({
           icon: "success",
           title: "ใช้โค้ดสำเร็จ",
-          text: `ส่วนลด ${promotion.discount}% (เหลือ ${
+          html: `
+            <div class="text-left">
+              <p>ส่วนลด ${promotion.discount}% (เหลือ ${
             promotion.maxUses > 0
               ? promotion.maxUses - promotion.usedCount
               : "ไม่จำกัด"
-          } ครั้ง)`,
+          } ครั้ง)</p>
+              <hr class="my-2">
+              <p><b>ราคาเดิม:</b> ${Number(
+                originalPrice
+              ).toLocaleString()} บาท</p>
+              <p><b>ส่วนลด:</b> ${discountAmount.toLocaleString()} บาท</p>
+              <p><b>ราคาสุทธิ:</b> ${finalPrice.toLocaleString()} บาท</p>
+            </div>
+          `,
         });
       } else {
         throw new Error("ข้อมูลส่วนลดไม่ถูกต้อง");
