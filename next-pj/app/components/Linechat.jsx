@@ -9,23 +9,37 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getUserData } from "../utils/auth"; // Import the auth utility
 
 const Linechat = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // ตรวจสอบสถานะการล็อกอินจาก localStorage
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
+    // Use the same authentication check as the rest of your app
+    const checkLoginStatus = async () => {
+      const userData = await getUserData();
+      setIsLoggedIn(!!userData?.id); // Check if user ID exists
+    };
+    
+    checkLoginStatus();
   }, []);
 
+  // Force re-check login status when dialog opens
+  const handleOpenChange = (newOpen) => {
+    if (newOpen) {
+      // Re-check login status when opening the dialog
+      const checkLoginStatus = async () => {
+        const userData = await getUserData();
+        setIsLoggedIn(!!userData?.id);
+      };
+      checkLoginStatus();
+    }
+    setOpen(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           className="fixed bottom-8 right-3 rounded-full bg-green-500 hover:bg-green-600 shadow-lg z-50 w-14 h-14 flex items-center justify-center"
