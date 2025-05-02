@@ -92,10 +92,13 @@ const SettingButton = ({ court, selectedDate }) => {
 
   const handleSave = async () => {
     try {
-      const updatedTimeSlots = timeSlots.map((slot) => ({
-        id: slot.id,
-        statusId: slot.checked ? 4 : 1,
-      }));
+      // เฉพาะช่วงเวลาที่ไม่ได้ถูกจองเท่านั้นที่สามารถเปลี่ยนสถานะได้
+      const updatedTimeSlots = timeSlots
+        .filter(slot => !slot.isBooked)
+        .map((slot) => ({
+          id: slot.id,
+          statusId: slot.checked ? 4 : 1,
+        }));
 
       const response = await axios.put(
         `${API_URL}/courts/${court.id}/timeslots`,
