@@ -65,34 +65,6 @@ export default function ReservationTable() {
       "สีเทา - ปิดให้บริการ",
     ],
   });
-  // เพิ่ม state สำหรับเก็บข้อมูลกฎต่างๆ
-  // const [rulesData, setRulesData] = useState({
-  //   bookingRules: [
-  //     "สามารถจองได้สูงสุด 3 ช่วงเวลาต่อวัน",
-  //     "ไม่สามารถจองช่วงเวลาเดียวกันในคอร์ที่ต่างกันได้",
-  //     "ต้องชำระเงินทันทีหลังจากทำการจอง",
-  //     "หากไม่มาใช้บริการตามเวลาที่จอง จะถูกปรับ 100% ของค่าบริการ",
-  //   ],
-  //   paymentRules: [
-  //     "ชำระผ่าน QR Code ที่แสดงในระบบ",
-  //     "แนบสลิปการโอนเงินเพื่อยืนยันการจอง",
-  //     "การจองจะสมบูรณ์เมื่อแอดมินตรวจสอบและยืนยันการชำระเงิน",
-  //   ],
-  //   statusRules: [
-  //     "สีเหลือง - รอการยืนยัน",
-  //     "สีแดง - จองแล้ว",
-  //     "สีเทา - ปิดให้บริการ",
-  //   ],
-  // });
-    // ฟังก์ชันสำหรับแก้ไขกฎในหมวดหมูต่างๆ
-    // const handleRuleChange = (category, index, value) => {
-    //   setRulesData((prev) => {
-    //     const newData = { ...prev };
-    //     newData[category][index] = value;
-    //     return newData;
-    //   });
-    // };
-  
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
