@@ -128,7 +128,7 @@ const Page = () => {
         day: "numeric",
         month: "short",
         year: "numeric",
-        timeZone: "UTC",
+        timeZone: "Asia/Bangkok",
       })
       .toLowerCase();
     const dateMatch = dateString.includes(searchLower);
