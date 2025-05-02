@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Link from "next/link";
 import axios from "axios";
-import { getUserData } from "../utils/auth"; // เพิ่มการ import getUserData
+import { getUserData } from "../utils/auth"; 
 
 const Page = () => {
   const [reservations, setReservations] = useState([]);
@@ -13,7 +13,7 @@ const Page = () => {
   const [notification, setNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 10;
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"; 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   // แทนที่การดึง token โดยตรงด้วยการใช้ getUserData
   const userData = typeof window !== "undefined" ? getUserData() : null;
@@ -37,16 +37,13 @@ const Page = () => {
           return;
         }
 
-        const response = await axios.get(
-          `${API_URL}/history/history`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            timeout: 10000,
-          }
-        );
+        const response = await axios.get(`${API_URL}/history/history`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        });
 
         if (!response?.data) {
           throw new Error("ไม่พบข้อมูลการจอง");
@@ -57,7 +54,7 @@ const Page = () => {
           .map((res) => {
             // สร้าง Date object จากข้อมูลเวลาเริ่มต้น
             const startTime = new Date(res.timeSlot.start_time);
-            
+
             return {
               ...res,
               timeSlot: {
@@ -73,7 +70,7 @@ const Page = () => {
               },
               status: res.status || { id: 0, name: "ไม่ระบุ" },
               // เพิ่ม sortDate เพื่อใช้ในการเรียงลำดับ
-              sortDate: startTime.getTime()
+              sortDate: startTime.getTime(),
             };
           })
           .sort((a, b) => {
@@ -81,12 +78,15 @@ const Page = () => {
             return b.sortDate - a.sortDate;
           });
 
-        console.log("Sorted reservations:", sortedReservations.slice(0, 3).map(r => ({
-          id: r.id,
-          date: new Date(r.timeSlot.start_time).toLocaleDateString(),
-          time: new Date(r.timeSlot.start_time).toLocaleTimeString(),
-          sortDate: r.sortDate
-        })));
+        console.log(
+          "Sorted reservations:",
+          sortedReservations.slice(0, 3).map((r) => ({
+            id: r.id,
+            date: new Date(r.timeSlot.start_time).toLocaleDateString(),
+            time: new Date(r.timeSlot.start_time).toLocaleTimeString(),
+            sortDate: r.sortDate,
+          }))
+        );
 
         setReservations(sortedReservations);
       } catch (err) {
@@ -448,7 +448,7 @@ const Page = () => {
                                   .toLocaleDateString("th-TH", {
                                     day: "numeric",
                                     month: "short",
-                                    year: "numeric",
+                                    hour12: false,
                                     timeZone: "Asia/Bangkok",
                                   })
                                   .replace(/\d{4}/, (year) =>
@@ -476,27 +476,30 @@ const Page = () => {
                                 })}
                               </td>
                               <td className="px-4 py-3 text-xs sm:text-sm font-medium">
-  {reservation.discountAmount > 0 ? (
-    <div>
-      <span className="line-through text-gray-400 mr-1">
-        {reservation.totalPrice.toFixed(0)} บาท
-      </span>
-      <span className="text-red-600">
-        {reservation.discountedPrice.toFixed(0)} บาท
-      </span>
-      {reservation.promotionCode && (
-        <div className="text-xs text-green-600 mt-1">
-          โค้ด: {reservation.promotionCode}
-        </div>
-      )}
-    </div>
-  ) : (
-    <span>{reservation.totalPrice.toFixed(0)} บาท</span>
-  )}
-</td>
+                                {reservation.discountAmount > 0 ? (
+                                  <div>
+                                    <span className="line-through text-gray-400 mr-1">
+                                      {reservation.totalPrice.toFixed(0)} บาท
+                                    </span>
+                                    <span className="text-red-600">
+                                      {reservation.discountedPrice.toFixed(0)}{" "}
+                                      บาท
+                                    </span>
+                                    {reservation.promotionCode && (
+                                      <div className="text-xs text-green-600 mt-1">
+                                        โค้ด: {reservation.promotionCode}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span>
+                                    {reservation.totalPrice.toFixed(0)} บาท
+                                  </span>
+                                )}
+                              </td>
                               <td className="px-4 py-3">
                                 <span
-                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                                     reservation.status.id === 3
                                       ? "bg-green-100 text-green-800"
                                       : reservation.status.id === 1
