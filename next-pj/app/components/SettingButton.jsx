@@ -45,8 +45,12 @@ const SettingButton = ({ court, selectedDate }) => {
         const fetchedSlots = response.data.map((slot) => {
           // const startTime = new Date(slot.start_time);
           // const endTime = new Date(slot.end_time);
-          const startTime = new Date(new Date(slot.start_time).getTime() + 7 * 60 * 60 * 1000);
-          const endTime = new Date(new Date(slot.end_time).getTime() + 7 * 60 * 60 * 1000);
+          const startTime = new Date(
+            new Date(slot.start_time).getTime() - 7 * 60 * 60 * 1000
+          );
+          const endTime = new Date(
+            new Date(slot.end_time).getTime() - 7 * 60 * 60 * 1000
+          );
           return {
             id: slot.id,
             start: format(startTime, "HH:mm"),
@@ -207,7 +211,7 @@ const SettingButton = ({ court, selectedDate }) => {
                   >
                     <Label className="text-left w-16 flex flex-col items-center">
                       {slot.start}
-                      <br /> - <br />
+                      <span className="text-center">-</span>
                       {slot.end}
                     </Label>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
