@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-
+import { utcToZonedTime, format } from "date-fns-tz";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const SettingButton = ({ court, selectedDate }) => {
@@ -46,7 +46,7 @@ const SettingButton = ({ court, selectedDate }) => {
         // const fetchedSlots = response.data.map((slot) => {
         //   const startTime = new Date(slot.start_time);
         //   const endTime = new Date(slot.end_time);
-
+          
         //   return {
         //     id: slot.id,
         //     start: format(startTime, "HH:mm"),
@@ -54,19 +54,17 @@ const SettingButton = ({ court, selectedDate }) => {
         //     statusId: slot.statusId,
         //     checked: slot.statusId === 4,
         //     checked: slot.statusId === 4,
-        //     // เพิ่มข้อมูลเวลาดิบเพื่อใช้ในการเรียงลำดับ
         //     rawStartTime: slot.start_time,
         //     rawEndTime: slot.end_time,
         //   };
         // });
-        // เรียงลำดับตามเวลาเริ่มต้น
 
-        const timeZone = "Asia/Bangkok"; // หรือเวลา local ของคุณ
+        const timeZone = "Asia/Bangkok"; // หรือ timezone ที่คุณต้องการ
 
         const fetchedSlots = response.data.map((slot) => {
           const startTime = utcToZonedTime(slot.start_time, timeZone);
           const endTime = utcToZonedTime(slot.end_time, timeZone);
-
+        
           return {
             id: slot.id,
             start: format(startTime, "HH:mm", { timeZone }),
@@ -77,7 +75,7 @@ const SettingButton = ({ court, selectedDate }) => {
             rawEndTime: slot.end_time,
           };
         });
-
+        // เรียงลำดับตามเวลาเริ่มต้น
         const sortedSlots = fetchedSlots.sort((a, b) => {
           return new Date(a.rawStartTime) - new Date(b.rawStartTime);
         });
@@ -191,6 +189,8 @@ const SettingButton = ({ court, selectedDate }) => {
                 className="col-span-3"
               />
             </div>
+
+
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
