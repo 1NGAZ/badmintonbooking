@@ -500,7 +500,7 @@ const Page = () => {
                               </td>
                               <td className="px-4 py-3">
                                 <span
-                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xl font-medium ${
+                                  className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-medium ${
                                     reservation.status.id === 3
                                       ? "bg-green-100 text-green-800"
                                       : reservation.status.id === 1
