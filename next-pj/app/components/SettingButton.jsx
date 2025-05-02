@@ -262,6 +262,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { format, parseISO } from "date-fns";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const SettingButton = ({ court, selectedDate }) => {
@@ -273,7 +274,6 @@ const SettingButton = ({ court, selectedDate }) => {
   useEffect(() => {
     const fetchTimeSlots = async () => {
       try {
-        // ปรับปรุงการจัดการวันที่ให้เรียบง่ายขึ้น
         const formattedDate = selectedDate?.from
           ? format(new Date(selectedDate.from), "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd");
@@ -282,22 +282,28 @@ const SettingButton = ({ court, selectedDate }) => {
           `${API_URL}/courts/${court.id}/timeslots?date=${formattedDate}`
         );
 
-        // แปลงเวลาให้อยู่ในรูปแบบที่ถูกต้อง
-        const fetchedSlots = response.data.map((slot) => {
-          // ใช้ parseISO เพื่อแปลง string เป็น Date object อย่างถูกต้อง
-          const startTime = parseISO(slot.start_time);
-          const endTime = parseISO(slot.end_time);
+        // แปลงและกรอง time slots ให้อยู่ในช่วง 15:00-23:00
+        const fetchedSlots = response.data
+          .map((slot) => {
+            const startTime = parseISO(slot.start_time);
+            const endTime = parseISO(slot.end_time);
+            const startHour = startTime.getHours();
 
-          return {
-            id: slot.id,
-            start: format(startTime, "HH:mm"),
-            end: format(endTime, "HH:mm"),
-            statusId: slot.statusId,
-            checked: slot.statusId === 4,
-            rawStartTime: slot.start_time,
-            rawEndTime: slot.end_time,
-          };
-        });
+            // กรองเฉพาะ time slots ที่เริ่มตั้งแต่ 15:00 ถึง 22:00
+            if (startHour >= 15 && startHour < 23) {
+              return {
+                id: slot.id,
+                start: format(startTime, "HH:mm"),
+                end: format(endTime, "HH:mm"),
+                statusId: slot.statusId,
+                checked: slot.statusId === 4,
+                rawStartTime: slot.start_time,
+                rawEndTime: slot.end_time,
+              };
+            }
+            return null;
+          })
+          .filter((slot) => slot !== null); // ลบ slot ที่ไม่ตรงเงื่อนไข
 
         // เรียงลำดับตามเวลาเริ่มต้น
         const sortedSlots = fetchedSlots.sort((a, b) => {
@@ -309,12 +315,16 @@ const SettingButton = ({ court, selectedDate }) => {
       } catch (error) {
         console.error("Error fetching time slots:", error);
         setLoading(false);
+        toast.error("ไม่สามารถดึงข้อมูล time slots ได้", {
+          position: "bottom-right",
+          autoClose: 5000,
+        });
       }
     };
     fetchTimeSlots();
   }, [court.id, selectedDate]);
 
-  // แบ่ง timeslots เป็น 2 คอลัมน์หลังจากที่ข้อมูลถูกเรียงลำดับแล้ว
+  // แบ่ง timeslots เป็น 2 คอลัมน์
   const leftColumn = timeSlots.slice(0, Math.ceil(timeSlots.length / 2));
   const rightColumn = timeSlots.slice(Math.ceil(timeSlots.length / 2));
 
@@ -347,40 +357,27 @@ const SettingButton = ({ court, selectedDate }) => {
       toast.success("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว", {
         position: "bottom-right",
         autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
       });
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการบันทึก:", error);
-
       let errorMessage = "เกิดข้อผิดพลาดในการบันทึก: ";
       if (error.response) {
-        console.error("Response status:", error.response.status);
-        console.error("Response data:", error.response.data);
         errorMessage +=
           error.response.data?.message ||
           error.response.statusText ||
           error.message;
       } else if (error.request) {
-        console.error("No response received:", error.request);
         errorMessage += "ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์";
       } else {
         errorMessage += error.message;
       }
 
-      // แสดงข้อความแจ้งเตือนเมื่อเกิดข้อผิดพลาดด้วย Toastify
       toast.error(errorMessage, {
         position: "bottom-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
       });
     }
   };
@@ -425,11 +422,11 @@ const SettingButton = ({ court, selectedDate }) => {
                     key={slot.id}
                     className="flex items-center justify-between gap-4"
                   >
-                    <div className="text-left w-16 flex flex-col items-center">
-                      <span>{slot.start}</span>
-                      <span>-</span>
-                      <span>{slot.end}</span>
-                    </div>
+                    <Label className="text-left w-16 flex flex-col items-center">
+                      {slot.start}
+                      <br />-<br />
+                      {slot.end}
+                    </Label>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
                       <input
                         type="checkbox"
@@ -437,9 +434,7 @@ const SettingButton = ({ court, selectedDate }) => {
                         onChange={() => handleToggleChange(index)}
                         className="sr-only peer"
                       />
-                      <div className="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['OFF'] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:content-['ON'] peer-checked:after:translate-x-12 peer-hover:after:scale-95">
-                        {/* SVG icons */}
-                      </div>
+                      <div className="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['OFF'] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:content-['ON'] peer-checked:after:translate-x-12 peer-hover:after:scale-95"></div>
                     </label>
                   </div>
                 ))}
@@ -451,24 +446,21 @@ const SettingButton = ({ court, selectedDate }) => {
                     key={slot.id}
                     className="flex items-center justify-between gap-4"
                   >
-                    <div className="text-left w-16 flex flex-col items-center">
-                      <span>{slot.start}</span>
-                      <span>-</span>
-                      <span>{slot.end}</span>
-                    </div>
+                    <Label className="text-left w-16 flex flex-col items-center">
+                      {slot.start}
+                      <br />-<br />
+                      {slot.end}
+                    </Label>
                     <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
                       <input
                         type="checkbox"
                         checked={slot.checked}
                         onChange={() =>
-                          // แก้ไขการคำนวณ index ให้ถูกต้อง
                           handleToggleChange(index + leftColumn.length)
                         }
                         className="sr-only peer"
                       />
-                      <div className="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['OFF'] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:content-['ON'] peer-checked:after:translate-x-12 peer-hover:after:scale-95">
-                        {/* SVG icons */}
-                      </div>
+                      <div className="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['OFF'] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:content-['ON'] after:checked:after:translate-x-12 peer-hover:after:scale-95"></div>
                     </label>
                   </div>
                 ))}
