@@ -331,7 +331,6 @@ export default function ReservationTable() {
   //   }
   // };
 
-
   const handleSubmitReservation = async () => {
     // ตรวจสอบข้อมูลผู้ใช้
     if (!userData) {
@@ -386,7 +385,7 @@ export default function ReservationTable() {
       // เพิ่มข้อมูลเวลาเริ่มต้นและสิ้นสุดในแต่ละช่วงเวลาที่เลือก
       console.log("Selected time slots before mapping:", selectedTimeSlots);
       console.log("Reservation data structure:", reservationData);
-      
+
       const enhancedTimeSlots = selectedTimeSlots.map((slot) => {
         console.log(`Looking for court ID: ${slot.courtId}`);
         const court = reservationData.find(
@@ -401,7 +400,7 @@ export default function ReservationTable() {
           (ts) => Number(ts.id) === Number(slot.timeSlotId)
         );
         console.log(`TimeSlot found:`, timeSlot);
-        
+
         return {
           timeSlotId: slot.timeSlotId,
           courtId: slot.courtId,
@@ -434,7 +433,8 @@ export default function ReservationTable() {
           formData.append("discountPercent", appliedPromotion.discount || 0);
 
           // คำนวณราคาหลังหักส่วนลด
-          const discountAmount = (originalPrice * Number(appliedPromotion.discount)) / 100;
+          const discountAmount =
+            (originalPrice * Number(appliedPromotion.discount)) / 100;
           const finalPrice = Math.max(0, originalPrice - discountAmount);
           formData.append("finalPrice", finalPrice);
         } else {
@@ -476,7 +476,10 @@ export default function ReservationTable() {
           await axios.put(`${API_URL}/promotions/use/${appliedPromotion.id}`);
           console.log("อัปเดตจำนวนการใช้โค้ดโปรโมชั่นเรียบร้อยแล้ว");
         } catch (promotionError) {
-          console.error("ไม่สามารถอัปเดตจำนวนการใช้โค้ดโปรโมชั่นได้:", promotionError);
+          console.error(
+            "ไม่สามารถอัปเดตจำนวนการใช้โค้ดโปรโมชั่นได้:",
+            promotionError
+          );
         }
       }
 
@@ -488,16 +491,49 @@ export default function ReservationTable() {
         setPromotionCode("");
         setAppliedPromotion(null);
 
+        // คำนวณข้อมูลราคาสำหรับแสดงในข้อความสำเร็จ
+        const originalPriceFormatted =
+          Number(originalPrice).toLocaleString() + " บาท";
+        let discountMessage = "";
+        let finalPriceFormatted = originalPriceFormatted;
+
+        if (appliedPromotion) {
+          const discountAmount =
+            (Number(originalPrice) * Number(appliedPromotion.discount)) / 100;
+          const finalPrice = Math.max(
+            0,
+            Number(originalPrice) - discountAmount
+          );
+
+          discountMessage = `\nส่วนลด ${
+            appliedPromotion.discount
+          }% (${discountAmount.toLocaleString()} บาท)`;
+          finalPriceFormatted = `${finalPrice.toLocaleString()} บาท`;
+        }
+
         Swal.fire({
           title: "จองสนามสำเร็จ",
-          text: "กรุณารอการยืนยันจากแอดมิน",
+          html: `กรุณารอการยืนยันจากแอดมิน<br><br>
+                <div class="text-left">
+                  <b>ราคาเดิม:</b> ${originalPriceFormatted}
+                  ${
+                    appliedPromotion
+                      ? `<br><b>ส่วนลด:</b> ${appliedPromotion.discount}% (${(
+                          (Number(originalPrice) *
+                            Number(appliedPromotion.discount)) /
+                          100
+                        ).toLocaleString()} บาท)`
+                      : ""
+                  }
+                  <br><b>ราคาสุทธิ:</b> ${finalPriceFormatted}
+                </div>`,
           icon: "success",
         }).then(() => {
           // รีเฟรชหน้าเมื่อกดปุ่ม OK หรือปิด Swal
           window.location.reload();
         });
 
-          // โหลดข้อมูลใหม่
+        // โหลดข้อมูลใหม่
         const adjustedDate = new Date(showDate.from);
         adjustedDate.setHours(12, 0, 0, 0);
         const formattedDate = `${adjustedDate.getFullYear()}-${String(
@@ -527,7 +563,6 @@ export default function ReservationTable() {
       });
     }
   };
-      
 
   const normalizeTime = (timeStr) => {
     if (!timeStr) return null;
