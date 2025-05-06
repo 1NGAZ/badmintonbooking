@@ -29,54 +29,6 @@ const SettingButton = ({ court, selectedDate }) => {
   const rightColumn = timeSlots.slice(timeSlots.length / 2);
 
   // ดึง timeSlots ตาม courtId และวันที่
-  // useEffect(() => {
-  //   const fetchTimeSlots = async () => {
-  //     try {
-  //       // ปรับปรุงการจัดการวันที่ให้เรียบง่ายขึ้น
-  //       const formattedDate = selectedDate?.from
-  //         ? format(new Date(selectedDate.from), "yyyy-MM-dd")
-  //         : format(new Date(), "yyyy-MM-dd");
-
-  //       const response = await axios.get(
-  //         `${API_URL}/courts/${court.id}/timeslots?date=${formattedDate}`
-  //       );
-
-  //       // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
-  //       const fetchedSlots = response.data.map((slot) => {
-  //         const startTime = new Date(
-  //           new Date(slot.start_time).getTime() - 7 * 60 * 60 * 1000
-  //         );
-  //         const endTime = new Date(
-  //           new Date(slot.end_time).getTime() - 7 * 60 * 60 * 1000
-  //         );
-  //         return {
-  //           id: slot.id,
-  //           start: format(startTime, "HH:mm"),
-  //           end: format(endTime, "HH:mm"),
-  //           statusId: slot.statusId,
-  //           checked: slot.statusId === 4,
-  //           rawStartTime: slot.start_time,
-  //           rawEndTime: slot.end_time,
-  //           isBooked: slot.statusId === 2 || slot.statusId === 3, // เพิ่มการตรวจสอบว่าสถานะเป็นการจองหรือไม่
-  //         };
-  //       });
-  //       // เรียงลำดับตามเวลาเริ่มต้น
-  //       const sortedSlots = fetchedSlots.sort((a, b) => {
-  //         return new Date(a.rawStartTime) - new Date(b.rawStartTime);
-  //       });
-
-  //       setTimeSlots(sortedSlots);
-  //       // setTimeSlots(fetchedSlots);
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Error fetching time slots:", error);
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchTimeSlots();
-  // }, [court.id, selectedDate]);
-
-  // ดึง timeSlots ตาม courtId และวันที่
   useEffect(() => {
     const fetchTimeSlots = async () => {
       try {
@@ -276,11 +228,11 @@ const SettingButton = ({ court, selectedDate }) => {
                           slot.isBooked ? 'after:translate-x-12' : 'peer-checked:after:translate-x-12'
                         } peer-hover:after:scale-95`}>
                         {slot.isBooked ? (
-                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
                             จองแล้ว
                           </span>
                         ) : (
-                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
                             {slot.checked ? 'เปิด' : 'ปิด'}
                           </span>
                         )}
@@ -318,11 +270,11 @@ const SettingButton = ({ court, selectedDate }) => {
                           slot.isBooked ? 'after:translate-x-12' : 'peer-checked:after:translate-x-12'
                         } peer-hover:after:scale-95`}>
                         {slot.isBooked ? (
-                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
                             จองแล้ว
                           </span>
                         ) : (
-                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
                             {slot.checked ? 'เปิด' : 'ปิด'}
                           </span>
                         )}
