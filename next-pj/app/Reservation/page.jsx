@@ -45,7 +45,6 @@ export default function ReservationTable() {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
 
-
   const [courtShowcaseImage, setCourtShowcaseImage] = useState();
   const [isChangingShowcaseImage, setIsChangingShowcaseImage] = useState(false);
 
@@ -70,107 +69,104 @@ export default function ReservationTable() {
     setSelectedFile(event.target.files[0]);
   };
 
- // ฟังก์ชันสำหรับอัพเดทเฉพาะ maxTimeSlots
- const updateMaxTimeSlots = async (newMaxTimeSlots) => {
-  try {
-    // Get current rule values
-    const courtrule = rulesData.bookingRules.join('|');
-    const paymentrule = rulesData.paymentRules.join('|');
-    
-    const response = await axios.put(`${API_URL}/rule/${ruleId}`, {
-      maxtimeslots: newMaxTimeSlots,
-      courtrule: courtrule,
-      paymentrule: paymentrule
-    });
-    
-    // Update state after successful save
-    setMaxTimeSlots(newMaxTimeSlots);
-    
-    // Show success message
-    Swal.fire({
-      title: "อัพเดทจำนวนช่วงเวลาสูงสุดเรียบร้อย",
-      icon: "success"
-    });
-  } catch (error) {
-    console.error("Error updating max time slots:", error);
-    Swal.fire({
-      title: "เกิดข้อผิดพลาด",
-      text: "ไม่สามารถอัพเดทจำนวนช่วงเวลาสูงสุดได้",
-      icon: "error"
-    });
-  }
-};
+  // ฟังก์ชันสำหรับอัพเดทเฉพาะ maxTimeSlots
+  const updateMaxTimeSlots = async (newMaxTimeSlots) => {
+    try {
+      // Get current rule values
+      const courtrule = rulesData.bookingRules.join("|");
+      const paymentrule = rulesData.paymentRules.join("|");
 
-// ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
-const saveRulesEdit = async () => {
-  try {
-    // แปลง array เป็น string ด้วย | คั่น
-    const courtrule = rulesData.bookingRules.join('|');
-    const paymentrule = rulesData.paymentRules.join('|');
-    
-    const response = await axios.put(`${API_URL}/rule/${ruleId}`, {
-      maxtimeslots: maxTimeSlots,
-      courtrule,
-      paymentrule
+      const response = await axios.put(`${API_URL}/rule/${ruleId}`, {
+        maxtimeslots: newMaxTimeSlots,
+        courtrule: courtrule,
+        paymentrule: paymentrule,
+      });
+
+      // Update state after successful save
+      setMaxTimeSlots(newMaxTimeSlots);
+
+      // Show success message
+      Swal.fire({
+        title: "อัพเดทจำนวนช่วงเวลาสูงสุดเรียบร้อย",
+        icon: "success",
+      });
+    } catch (error) {
+      console.error("Error updating max time slots:", error);
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถอัพเดทจำนวนช่วงเวลาสูงสุดได้",
+        icon: "error",
+      });
+    }
+  };
+
+  // ฟังก์ชันสำหรับบันทึกการแก้ไขกฎ
+  const saveRulesEdit = async () => {
+    try {
+      // แปลง array เป็น string ด้วย | คั่น
+      const courtrule = rulesData.bookingRules.join("|");
+      const paymentrule = rulesData.paymentRules.join("|");
+
+      const response = await axios.put(`${API_URL}/rule/${ruleId}`, {
+        maxtimeslots: maxTimeSlots,
+        courtrule,
+        paymentrule,
+      });
+
+      setIsEditingRules(false);
+
+      Swal.fire({
+        title: "บันทึกกฎการใช้งานเรียบร้อย",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      // โหลดข้อมูลใหม่
+      fetchRules();
+    } catch (error) {
+      console.error("Error saving rules:", error);
+      Swal.fire({
+        title: "เกิดข้อผิดพลาด",
+        text: error.response?.data?.error || "ไม่สามารถบันทึกกฎการใช้งานได้",
+        icon: "error",
+      });
+    }
+  };
+
+  // ฟังก์ชันสำหรับเพิ่มกฎใหม่
+  const addNewRule = (ruleType) => {
+    setRulesData((prev) => {
+      const newRules = { ...prev };
+      newRules[ruleType] = [...newRules[ruleType], ""];
+      return newRules;
     });
-    
-    setIsEditingRules(false);
-    
-    Swal.fire({
-      title: "บันทึกกฎการใช้งานเรียบร้อย",
-      icon: "success",
-      timer: 2000,
-      showConfirmButton: false,
+  };
+
+  // ฟังก์ชันสำหรับลบกฎ
+  const removeRule = (ruleType, index) => {
+    setRulesData((prev) => {
+      const newRules = { ...prev };
+      newRules[ruleType] = newRules[ruleType].filter((_, i) => i !== index);
+      return newRules;
     });
-    
-    // โหลดข้อมูลใหม่
-    fetchRules();
-  } catch (error) {
-    console.error("Error saving rules:", error);
-    Swal.fire({
-      title: "เกิดข้อผิดพลาด",
-      text: error.response?.data?.error || "ไม่สามารถบันทึกกฎการใช้งานได้",
-      icon: "error",
+  };
+  // ฟังก์ชัน handleRuleChange ที่มีอยู่แล้วทำงานได้ถูกต้อง
+  const handleRuleChange = (ruleType, index, value) => {
+    setRulesData((prev) => {
+      const newRules = { ...prev };
+      newRules[ruleType][index] = value;
+      return newRules;
     });
-  }
-};
-
-// ฟังก์ชันสำหรับเพิ่มกฎใหม่
-const addNewRule = (ruleType) => {
-  setRulesData(prev => {
-    const newRules = {...prev};
-    newRules[ruleType] = [...newRules[ruleType], ""];
-    return newRules;
-  });
-};
-
-// ฟังก์ชันสำหรับลบกฎ
-const removeRule = (ruleType, index) => {
-  setRulesData(prev => {
-    const newRules = {...prev};
-    newRules[ruleType] = newRules[ruleType].filter((_, i) => i !== index);
-    return newRules;
-  });
-};
-// ฟังก์ชัน handleRuleChange ที่มีอยู่แล้วทำงานได้ถูกต้อง
-const handleRuleChange = (ruleType, index, value) => {
-  setRulesData(prev => {
-    const newRules = {...prev};
-    newRules[ruleType][index] = value;
-    return newRules;
-  });
-};
-// ฟังก์ชันสำหรับอัพเดทกฎ
-const updateRule = (ruleType, index, value) => {
-  setRulesData(prev => {
-    const newRules = {...prev};
-    newRules[ruleType][index] = value;
-    return newRules;
-  });
-};
-
-
-
+  };
+  // ฟังก์ชันสำหรับอัพเดทกฎ
+  const updateRule = (ruleType, index, value) => {
+    setRulesData((prev) => {
+      const newRules = { ...prev };
+      newRules[ruleType][index] = value;
+      return newRules;
+    });
+  };
 
   const handleSubmitReservation = async () => {
     // ตรวจสอบข้อมูลผู้ใช้
@@ -584,37 +580,39 @@ const updateRule = (ruleType, index, value) => {
     };
   }, []);
 
-// เพิ่มฟังก์ชันสำหรับดึงข้อมูลกฎจาก API
-const fetchRules = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/rule`);
-    if (response.data && response.data.length > 0) {
-      const rule = response.data[0]; // ใช้กฎล่าสุด
-      setRuleId(rule.id);
-      setMaxTimeSlots(rule.maxtimeslots);
-      
-      // แปลงข้อมูลจาก string เป็น array
-      const bookingRules = rule.courtrule ? rule.courtrule.split('|').filter(r => r.trim()) : [];
-      const paymentRules = rule.paymentrule ? rule.paymentrule.split('|').filter(r => r.trim()) : [];
-      
-      setRulesData({
-        ...rulesData,
-        bookingRules,
-        paymentRules,
-      });
+  // เพิ่มฟังก์ชันสำหรับดึงข้อมูลกฎจาก API
+  const fetchRules = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/rule`);
+      if (response.data && response.data.length > 0) {
+        const rule = response.data[0]; // ใช้กฎล่าสุด
+        setRuleId(rule.id);
+        setMaxTimeSlots(rule.maxtimeslots);
+
+        // แปลงข้อมูลจาก string เป็น array
+        const bookingRules = rule.courtrule
+          ? rule.courtrule.split("|").filter((r) => r.trim())
+          : [];
+        const paymentRules = rule.paymentrule
+          ? rule.paymentrule.split("|").filter((r) => r.trim())
+          : [];
+
+        setRulesData({
+          ...rulesData,
+          bookingRules,
+          paymentRules,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching rules:", error);
     }
-  } catch (error) {
-    console.error("Error fetching rules:", error);
-  }
-};
+  };
 
-useEffect(() => {
-  fetchRules();
-}, []);
+  useEffect(() => {
+    fetchRules();
+  }, []);
 
-
-
-  // เพิ่ม useEffect สำหรับโหลดรูปภาพสนาม 
+  // เพิ่ม useEffect สำหรับโหลดรูปภาพสนาม
   useEffect(() => {
     // โหลดรูปภาพสนามจาก API
     const loadCourtImage = async () => {
@@ -1648,24 +1646,24 @@ useEffect(() => {
 
       {/* Modal แจ้งเตือน */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-1/3">
-            <h2 className="text-lg font-bold text-red-600 text-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-sm md:max-w-md lg:w-1/3">
+            <h2 className="text-base sm:text-lg font-bold text-red-600 text-center">
               กรุณาเข้าสู่ระบบ
             </h2>
-            <p className="text-center mt-4">
+            <p className="text-center mt-3 sm:mt-4 text-sm sm:text-base">
               คุณต้องเข้าสู่ระบบก่อนทำการจองสนาม
             </p>
-            <div className="flex justify-center mt-6 space-x-4">
+            <div className="flex flex-col sm:flex-row justify-center mt-4 sm:mt-6 space-y-2 sm:space-y-0 sm:space-x-4">
               <button
                 onClick={redirectToLogin}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm sm:text-base w-full sm:w-auto"
               >
                 ไปยังหน้าล็อกอิน
               </button>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm sm:text-base w-full sm:w-auto"
               >
                 ปิด
               </button>
