@@ -29,6 +29,54 @@ const SettingButton = ({ court, selectedDate }) => {
   const rightColumn = timeSlots.slice(timeSlots.length / 2);
 
   // ดึง timeSlots ตาม courtId และวันที่
+  // useEffect(() => {
+  //   const fetchTimeSlots = async () => {
+  //     try {
+  //       // ปรับปรุงการจัดการวันที่ให้เรียบง่ายขึ้น
+  //       const formattedDate = selectedDate?.from
+  //         ? format(new Date(selectedDate.from), "yyyy-MM-dd")
+  //         : format(new Date(), "yyyy-MM-dd");
+
+  //       const response = await axios.get(
+  //         `${API_URL}/courts/${court.id}/timeslots?date=${formattedDate}`
+  //       );
+
+  //       // แปลงเวลาให้อยู่ในรูปแบบที่ต้องการ
+  //       const fetchedSlots = response.data.map((slot) => {
+  //         const startTime = new Date(
+  //           new Date(slot.start_time).getTime() - 7 * 60 * 60 * 1000
+  //         );
+  //         const endTime = new Date(
+  //           new Date(slot.end_time).getTime() - 7 * 60 * 60 * 1000
+  //         );
+  //         return {
+  //           id: slot.id,
+  //           start: format(startTime, "HH:mm"),
+  //           end: format(endTime, "HH:mm"),
+  //           statusId: slot.statusId,
+  //           checked: slot.statusId === 4,
+  //           rawStartTime: slot.start_time,
+  //           rawEndTime: slot.end_time,
+  //           isBooked: slot.statusId === 2 || slot.statusId === 3, // เพิ่มการตรวจสอบว่าสถานะเป็นการจองหรือไม่
+  //         };
+  //       });
+  //       // เรียงลำดับตามเวลาเริ่มต้น
+  //       const sortedSlots = fetchedSlots.sort((a, b) => {
+  //         return new Date(a.rawStartTime) - new Date(b.rawStartTime);
+  //       });
+
+  //       setTimeSlots(sortedSlots);
+  //       // setTimeSlots(fetchedSlots);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Error fetching time slots:", error);
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchTimeSlots();
+  // }, [court.id, selectedDate]);
+
+  // ดึง timeSlots ตาม courtId และวันที่
   useEffect(() => {
     const fetchTimeSlots = async () => {
       try {
@@ -49,15 +97,17 @@ const SettingButton = ({ court, selectedDate }) => {
           const endTime = new Date(
             new Date(slot.end_time).getTime() - 7 * 60 * 60 * 1000
           );
+          const isBooked = slot.statusId === 2 || slot.statusId === 3;
           return {
             id: slot.id,
             start: format(startTime, "HH:mm"),
             end: format(endTime, "HH:mm"),
             statusId: slot.statusId,
-            checked: slot.statusId === 4,
+            // ถ้าถูกจองแล้ว ให้แสดงเป็น checked เสมอ
+            checked: slot.statusId === 4 || isBooked,
             rawStartTime: slot.start_time,
             rawEndTime: slot.end_time,
-            isBooked: slot.statusId === 2 || slot.statusId === 3, // เพิ่มการตรวจสอบว่าสถานะเป็นการจองหรือไม่
+            isBooked: isBooked,
           };
         });
         // เรียงลำดับตามเวลาเริ่มต้น
@@ -66,7 +116,6 @@ const SettingButton = ({ court, selectedDate }) => {
         });
 
         setTimeSlots(sortedSlots);
-        // setTimeSlots(fetchedSlots);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching time slots:", error);
@@ -75,6 +124,7 @@ const SettingButton = ({ court, selectedDate }) => {
     };
     fetchTimeSlots();
   }, [court.id, selectedDate]);
+
   const handleToggleChange = (index) => {
     const updatedSlots = [...timeSlots];
     // ตรวจสอบว่าช่วงเวลานี้ถูกจองไปแล้วหรือไม่
@@ -92,13 +142,23 @@ const SettingButton = ({ court, selectedDate }) => {
 
   const handleSave = async () => {
     try {
-      // เฉพาะช่วงเวลาที่ไม่ได้ถูกจองเท่านั้นที่สามารถเปลี่ยนสถานะได้
-      const updatedTimeSlots = timeSlots
-        .filter(slot => !slot.isBooked)
-        .map((slot) => ({
-          id: slot.id,
-          statusId: slot.checked ? 4 : 1,
-        }));
+       // แยกช่วงเวลาที่ถูกจองและไม่ถูกจอง
+       const bookedTimeSlots = timeSlots.filter(slot => slot.isBooked);
+       const nonBookedTimeSlots = timeSlots.filter(slot => !slot.isBooked);
+       
+       // เตรียมข้อมูลสำหรับอัปเดต
+       const updatedTimeSlots = [
+         // ช่วงเวลาที่ไม่ได้ถูกจอง - อัปเดตตามการเปลี่ยนแปลง
+         ...nonBookedTimeSlots.map(slot => ({
+           id: slot.id,
+           statusId: slot.checked ? 4 : 1,
+         })),
+         // ช่วงเวลาที่ถูกจอง - คงสถานะเดิมไว้
+         ...bookedTimeSlots.map(slot => ({
+           id: slot.id,
+           statusId: slot.statusId, // คงสถานะเดิมไว้ (2 หรือ 3)
+         }))
+       ];
 
       const response = await axios.put(
         `${API_URL}/courts/${court.id}/timeslots`,
@@ -188,7 +248,8 @@ const SettingButton = ({ court, selectedDate }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+              
+            <div className="grid gap-2">
                 {leftColumn.map((slot, index) => (
                   <div
                     key={slot.id}
@@ -199,21 +260,35 @@ const SettingButton = ({ court, selectedDate }) => {
                       <span className="text-center">-</span>
                       {slot.end}
                     </Label>
-                    <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
+                    <label className={`relative inline-flex items-center justify-center flex-grow ${slot.isBooked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
                         checked={slot.checked}
                         onChange={() => handleToggleChange(index)}
                         className="sr-only peer"
+                        disabled={slot.isBooked}
                       />
-                      <div className="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['OFF'] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:content-['ON'] peer-checked:after:translate-x-12 peer-hover:after:scale-95">
-                        {/* SVG icons */}
+                      <div className={`group peer ring-0 ${
+                        slot.isBooked 
+                          ? 'bg-blue-400' 
+                          : (slot.checked ? 'bg-emerald-500' : 'bg-rose-400')
+                        } rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-focus:outline-none after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center ${
+                          slot.isBooked ? 'after:translate-x-12' : 'peer-checked:after:translate-x-12'
+                        } peer-hover:after:scale-95`}>
+                        {slot.isBooked ? (
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                            จองแล้ว
+                          </span>
+                        ) : (
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                            {slot.checked ? 'เปิด' : 'ปิด'}
+                          </span>
+                        )}
                       </div>
                     </label>
                   </div>
                 ))}
               </div>
-
               <div className="grid gap-2">
                 {rightColumn.map((slot, index) => (
                   <div
@@ -225,7 +300,7 @@ const SettingButton = ({ court, selectedDate }) => {
                       <span className="text-center">-</span>
                       {slot.end}
                     </Label>
-                    <label className="relative inline-flex items-center justify-center flex-grow cursor-pointer">
+                    <label className={`relative inline-flex items-center justify-center flex-grow ${slot.isBooked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
                         checked={slot.checked}
@@ -233,14 +308,31 @@ const SettingButton = ({ court, selectedDate }) => {
                           handleToggleChange(index + leftColumn.length)
                         }
                         className="sr-only peer"
+                        disabled={slot.isBooked}
                       />
-                      <div className="group peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['OFF'] after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-checked:after:content-['ON'] peer-checked:after:translate-x-12 peer-hover:after:scale-95">
-                        {/* SVG icons */}
+                      <div className={`group peer ring-0 ${
+                        slot.isBooked 
+                          ? 'bg-blue-400' 
+                          : (slot.checked ? 'bg-emerald-500' : 'bg-rose-400')
+                        } rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-focus:outline-none after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center ${
+                          slot.isBooked ? 'after:translate-x-12' : 'peer-checked:after:translate-x-12'
+                        } peer-hover:after:scale-95`}>
+                        {slot.isBooked ? (
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                            จองแล้ว
+                          </span>
+                        ) : (
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-medium">
+                            {slot.checked ? 'เปิด' : 'ปิด'}
+                          </span>
+                        )}
                       </div>
                     </label>
                   </div>
                 ))}
               </div>
+
+
             </div>
           </div>
           <SheetFooter>
