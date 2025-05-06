@@ -97,7 +97,7 @@ const SettingButton = ({ court, selectedDate }) => {
           const endTime = new Date(
             new Date(slot.end_time).getTime() - 7 * 60 * 60 * 1000
           );
-          const isBooked = slot.statusId === 2 || slot.statusId === 3;
+          const isBooked = slot.statusId === 2 || slot.statusId === 5;
           return {
             id: slot.id,
             start: format(startTime, "HH:mm"),
