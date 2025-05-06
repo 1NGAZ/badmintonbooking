@@ -94,23 +94,23 @@ const SettingButton = ({ court, selectedDate }) => {
 
   const handleSave = async () => {
     try {
-       // แยกช่วงเวลาที่ถูกจองและไม่ถูกจอง
-       const bookedTimeSlots = timeSlots.filter(slot => slot.isBooked);
-       const nonBookedTimeSlots = timeSlots.filter(slot => !slot.isBooked);
-       
-       // เตรียมข้อมูลสำหรับอัปเดต
-       const updatedTimeSlots = [
-         // ช่วงเวลาที่ไม่ได้ถูกจอง - อัปเดตตามการเปลี่ยนแปลง
-         ...nonBookedTimeSlots.map(slot => ({
-           id: slot.id,
-           statusId: slot.checked ? 4 : 1,
-         })),
-         // ช่วงเวลาที่ถูกจอง - คงสถานะเดิมไว้
-         ...bookedTimeSlots.map(slot => ({
-           id: slot.id,
-           statusId: slot.statusId, // คงสถานะเดิมไว้ (2 หรือ 3)
-         }))
-       ];
+      // แยกช่วงเวลาที่ถูกจองและไม่ถูกจอง
+      const bookedTimeSlots = timeSlots.filter((slot) => slot.isBooked);
+      const nonBookedTimeSlots = timeSlots.filter((slot) => !slot.isBooked);
+
+      // เตรียมข้อมูลสำหรับอัปเดต
+      const updatedTimeSlots = [
+        // ช่วงเวลาที่ไม่ได้ถูกจอง - อัปเดตตามการเปลี่ยนแปลง
+        ...nonBookedTimeSlots.map((slot) => ({
+          id: slot.id,
+          statusId: slot.checked ? 4 : 1,
+        })),
+        // ช่วงเวลาที่ถูกจอง - คงสถานะเดิมไว้
+        ...bookedTimeSlots.map((slot) => ({
+          id: slot.id,
+          statusId: slot.statusId, // คงสถานะเดิมไว้ (2 หรือ 3)
+        })),
+      ];
 
       const response = await axios.put(
         `${API_URL}/courts/${court.id}/timeslots`,
@@ -200,8 +200,7 @@ const SettingButton = ({ court, selectedDate }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              
-            <div className="grid gap-2">
+              <div className="grid gap-2">
                 {leftColumn.map((slot, index) => (
                   <div
                     key={slot.id}
@@ -212,7 +211,11 @@ const SettingButton = ({ court, selectedDate }) => {
                       <span className="text-center">-</span>
                       {slot.end}
                     </Label>
-                    <label className={`relative inline-flex items-center justify-center flex-grow ${slot.isBooked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <label
+                      className={`relative inline-flex items-center justify-center flex-grow ${
+                        slot.isBooked ? "cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={slot.checked}
@@ -220,22 +223,26 @@ const SettingButton = ({ court, selectedDate }) => {
                         className="sr-only peer"
                         disabled={slot.isBooked}
                       />
-                      <div className={`group peer ring-0 ${
-                        slot.isBooked 
-                          ? 'bg-blue-400' 
-                          : (slot.checked ? 'bg-emerald-500' : 'bg-rose-400')
+                      <div
+                        className={`group peer ring-0 ${
+                          slot.isBooked
+                            ? "bg-blue-400"
+                            : slot.checked
+                            ? "bg-emerald-500"
+                            : "bg-rose-400"
                         } rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-focus:outline-none after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center ${
-                          slot.isBooked ? 'after:translate-x-12' : 'peer-checked:after:translate-x-12'
-                        } peer-hover:after:scale-95`}>
-                        {slot.isBooked ? (
-                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
-                            จองแล้ว
-                          </span>
-                        ) : (
-                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
-                            {slot.checked ? 'เปิด' : 'ปิด'}
-                          </span>
-                        )}
+                          slot.isBooked
+                            ? "after:translate-x-12"
+                            : "peer-checked:after:translate-x-12"
+                        } peer-hover:after:scale-95`}
+                      >
+                        <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold z-10">
+                          {slot.isBooked
+                            ? "จองแล้ว"
+                            : slot.checked
+                            ? "เปิด"
+                            : "ปิด"}
+                        </span>
                       </div>
                     </label>
                   </div>
@@ -252,7 +259,11 @@ const SettingButton = ({ court, selectedDate }) => {
                       <span className="text-center">-</span>
                       {slot.end}
                     </Label>
-                    <label className={`relative inline-flex items-center justify-center flex-grow ${slot.isBooked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <label
+                      className={`relative inline-flex items-center justify-center flex-grow ${
+                        slot.isBooked ? "cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={slot.checked}
@@ -262,29 +273,31 @@ const SettingButton = ({ court, selectedDate }) => {
                         className="sr-only peer"
                         disabled={slot.isBooked}
                       />
-                      <div className={`group peer ring-0 ${
-                        slot.isBooked 
-                          ? 'bg-blue-400' 
-                          : (slot.checked ? 'bg-emerald-500' : 'bg-rose-400')
+                      <div
+                        className={`group peer ring-0 ${
+                          slot.isBooked
+                            ? "bg-blue-400"
+                            : slot.checked
+                            ? "bg-emerald-500"
+                            : "bg-rose-400"
                         } rounded-full outline-none duration-300 after:duration-300 w-24 h-12 shadow-md peer-focus:outline-none after:rounded-full after:absolute after:bg-gray-50 after:outline-none after:h-10 after:w-10 after:top-1 after:left-1 after:flex after:justify-center after:items-center ${
-                          slot.isBooked ? 'after:translate-x-12' : 'peer-checked:after:translate-x-12'
-                        } peer-hover:after:scale-95`}>
-                        {slot.isBooked ? (
-                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
-                            จองแล้ว
-                          </span>
-                        ) : (
-                          <span className="absolute inset-0 flex items-center justify-center text-black text-xs font-medium">
-                            {slot.checked ? 'เปิด' : 'ปิด'}
-                          </span>
-                        )}
+                          slot.isBooked
+                            ? "after:translate-x-12"
+                            : "peer-checked:after:translate-x-12"
+                        } peer-hover:after:scale-95`}
+                      >
+                        <span className="absolute inset-0 flex items-center justify-center text-white text-sm font-bold z-10">
+                          {slot.isBooked
+                            ? "จองแล้ว"
+                            : slot.checked
+                            ? "เปิด"
+                            : "ปิด"}
+                        </span>
                       </div>
                     </label>
                   </div>
                 ))}
               </div>
-
-
             </div>
           </div>
           <SheetFooter>
