@@ -57,7 +57,7 @@ const Linechat = () => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold">
-            {isLoggedIn ? "ติดต่อเจ้าหน้าที่" : "สแกนเพื่อติดต่อสอบถาม"}
+            {isLoggedIn ? "สแกนเพื่อสอบถามไลน์ริชเมนู" : "สแกนเพื่อสอบถามไลน์แชทบอท"}
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4">
