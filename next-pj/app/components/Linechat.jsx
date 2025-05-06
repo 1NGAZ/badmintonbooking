@@ -72,7 +72,7 @@ const Linechat = () => {
                 className="object-contain"
               />
               <p className="mt-4 text-center text-sm text-gray-600">
-                สแกน QR Code นี้เพื่อติดต่อเจ้าหน้าที่โดยตรง
+                สแกน QR Code นี้เพื่อเข้าใช้บริการไลน์ริชเมนู
                 <br />
                 บริการสำหรับสมาชิกเท่านั้น
               </p>
