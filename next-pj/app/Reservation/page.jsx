@@ -785,32 +785,23 @@ export default function ReservationTable() {
 
   const handleDeleteCourt = async (courtId) => {
     try {
-      // ตรวจสอบก่อนว่าสนามมีการจองที่มี status 2 หรือ 5 หรือไม่
-      const checkResponse = await axios.get(
-        `${API_URL}/courts/${courtId}/reservations`,
-        {
-          withCredentials: true,
-        }
-      );
+      // แสดง confirm dialog ก่อนลบ
+      const confirmResult = await Swal.fire({
+        title: "ยืนยันการลบสนาม",
+        text: "คุณต้องการลบสนามนี้ใช่หรือไม่?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "ใช่, ลบสนาม",
+        cancelButtonText: "ยกเลิก"
+      });
 
-      console.log("ข้อมูลการตรวจสอบสนาม:", checkResponse.data);
-
-      // ตรวจสอบว่ามีการจองที่มี statusId เป็น 2 (Pending) หรือ 5 (Reserved) หรือไม่
-      const hasActiveReservations = checkResponse.data?.timeSlots?.some(
-        slot => slot.statusId === 2 || slot.statusId === 5
-      );
-
-      if (hasActiveReservations) {
-        Swal.fire({
-          title: "ไม่สามารถลบสนามได้",
-          text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
-          icon: "warning",
-          draggable: true,
-        });
+      if (!confirmResult.isConfirmed) {
         return;
       }
 
-      // ถ้าไม่มีการจองที่มี status 2 หรือ 5 ให้ดำเนินการลบสนาม
+      // ลบสนามโดยตรง ไม่ต้องตรวจสอบการจองก่อน
       const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
         withCredentials: true,
       });
@@ -824,7 +815,20 @@ export default function ReservationTable() {
           title: "ลบสนามสำเร็จ",
           icon: "success",
           draggable: true,
-          // ... existing animation code ...
+          showClass: {
+            popup: `
+              animate__animated
+              animate__fadeInUp
+              animate__faster
+            `,
+          },
+          hideClass: {
+            popup: `
+              animate__animated
+              animate__fadeOutDown
+              animate__faster
+            `,
+          },
         });
       }
     } catch (error) {
