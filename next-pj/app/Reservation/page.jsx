@@ -783,49 +783,6 @@ export default function ReservationTable() {
     }
   };
 
-  // const handleDeleteCourt = async (courtId) => {
-  //   try {
-  //     const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
-  //       withCredentials: true,
-  //     });
-
-  //     if (response.status === 200) {
-  //       setReservationData((prevData) =>
-  //         prevData.filter((court) => court.id !== courtId)
-  //       );
-
-  //       Swal.fire({
-  //         title: "ลบสนามสำเร็จ",
-  //         icon: "success",
-  //         draggable: true,
-  //         showClass: {
-  //           popup: `
-  //             animate__animated
-  //             animate__fadeInUp
-  //             animate__faster
-  //           `,
-  //         },
-  //         hideClass: {
-  //           popup: `
-  //             animate__animated
-  //             animate__fadeOutDown
-  //             animate__faster
-  //           `,
-  //         },
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting court:", error);
-
-  //     Swal.fire({
-  //       title: "เกิดข้อผิดพลาด",
-  //       text: "ไม่สามารถลบสนามได้",
-  //       icon: "error",
-  //       draggable: true,
-  //     });
-  //   }
-  // };
-
   const handleDeleteCourt = async (courtId) => {
     try {
       // ตรวจสอบก่อนว่าสนามมีการจองที่มี status 5 หรือไม่
@@ -890,8 +847,8 @@ export default function ReservationTable() {
         });
       } else {
         Swal.fire({
-          title: "เกิดข้อผิดพลาด",
-          text: "ไม่สามารถลบสนามได้",
+          title: "ไม่สามารถลบสนามได้",
+          text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่",
           icon: "error",
           draggable: true,
         });
@@ -899,7 +856,7 @@ export default function ReservationTable() {
     }
   };
 
-  
+
   const redirectToLogin = () => {
     window.location.href = "/login";
   };
@@ -1610,7 +1567,7 @@ export default function ReservationTable() {
         {userData ? (
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle className="text-center">ชำระเงิน</DrawerTitle>
+              <DrawerTitle className="text-center">ยอดเงินที่ต้องชำระชำระเงิน {calculateTotalPrice()}บาท</DrawerTitle>
               <DrawerDescription className="text-center">
                 เมื่อชำระเงินเสร็จแล้วกรุณาแนปสลิปการโอนเงิน
               </DrawerDescription>
