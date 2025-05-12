@@ -794,7 +794,7 @@ export default function ReservationTable() {
         confirmButtonColor: "#d33",
         cancelButtonColor: "#3085d6",
         confirmButtonText: "ใช่, ลบสนาม",
-        cancelButtonText: "ยกเลิก"
+        cancelButtonText: "ยกเลิก",
       });
 
       if (!confirmResult.isConfirmed) {
@@ -837,7 +837,9 @@ export default function ReservationTable() {
 
       Swal.fire({
         title: "ไม่สามารถลบสนามได้",
-        text: error.response?.data?.message || "เกิดข้อผิดพลาดในการลบสนาม โปรดลองใหม่อีกครั้ง",
+        text:
+          error.response?.data?.message ||
+          "เกิดข้อผิดพลาดในการลบสนาม โปรดลองใหม่อีกครั้ง",
         icon: "error",
         draggable: true,
       });
@@ -1460,7 +1462,13 @@ export default function ReservationTable() {
           </tbody>
         </table>
       </div>
-
+      <span className="mt-2 text-sm text-red-500">
+        *กรุณา
+        <a href="/login" className="underline hover:text-red-700">
+          เข้าสู่ระบบ
+        </a>
+        ก่อนทำการจองสนาม
+      </span>
       {/* Drawer */}
       <Drawer open={open} onOpenChange={setOpen}>
         <div className="flex flex-wrap gap-4 items-center justify-center mt-4">
@@ -1518,7 +1526,6 @@ export default function ReservationTable() {
               </AlertDialogContent>
             </AlertDialog>
           )}
-
           <div className="flex items-center gap-2">
             <Button
               onClick={handleOpenDrawer}
