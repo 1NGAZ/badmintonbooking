@@ -793,8 +793,13 @@ export default function ReservationTable() {
         }
       );
 
-      // ถ้ามีการจองที่มี status 5 อยู่ จะไม่สามารถลบได้
-      if (checkResponse.data.hasActiveReservations) {
+      console.log("ข้อมูลการตรวจสอบสนาม:", checkResponse.data);
+
+      // ตรวจสอบว่าข้อมูลที่ได้รับมีรูปแบบถูกต้อง
+      if (
+        checkResponse.data &&
+        checkResponse.data.hasActiveReservations === true
+      ) {
         Swal.fire({
           title: "ไม่สามารถลบสนามได้",
           text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
@@ -804,7 +809,7 @@ export default function ReservationTable() {
         return;
       }
 
-      // ถ้าไม่มีการจองที่มี status 5 ดำเนินการลบสนาม
+      // ถ้าไม่มีการจองที่มี status 5 หรือข้อมูลไม่ถูกต้อง ให้ดำเนินการลบสนาม
       const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
         withCredentials: true,
       });
@@ -836,6 +841,7 @@ export default function ReservationTable() {
       }
     } catch (error) {
       console.error("Error deleting court:", error);
+      console.log("รายละเอียดข้อผิดพลาด:", error.response?.data);
 
       // ตรวจสอบว่าเป็น error จากการมีการจองหรือไม่
       if (error.response?.data?.hasActiveReservations) {
@@ -848,14 +854,15 @@ export default function ReservationTable() {
       } else {
         Swal.fire({
           title: "ไม่สามารถลบสนามได้",
-          text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่",
+          text:
+            error.response?.data?.message ||
+            "เกิดข้อผิดพลาดในการลบสนาม โปรดลองใหม่อีกครั้ง",
           icon: "error",
           draggable: true,
         });
       }
     }
   };
-
 
   const redirectToLogin = () => {
     window.location.href = "/login";
@@ -1567,7 +1574,9 @@ export default function ReservationTable() {
         {userData ? (
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle className="text-center">ยอดเงินที่ต้องชำระเงิน: <span className="text-red-60 font-bold">{calculateTotalPrice()}</span> บาท</DrawerTitle>
+              <DrawerTitle className="text-center">
+                ยอดเงินที่ต้องชำระเงิน: {calculateTotalPrice()} บาท
+              </DrawerTitle>
               <DrawerDescription className="text-center">
                 เมื่อชำระเงินเสร็จแล้วกรุณาแนปสลิปการโอนเงิน
               </DrawerDescription>
