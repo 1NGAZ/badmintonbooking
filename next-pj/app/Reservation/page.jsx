@@ -785,7 +785,7 @@ export default function ReservationTable() {
 
   const handleDeleteCourt = async (courtId) => {
     try {
-      // ตรวจสอบก่อนว่าสนามมีการจองที่มี status 5 หรือไม่
+      // ตรวจสอบก่อนว่าสนามมีการจองที่มี status 2 หรือ 5 หรือไม่
       const checkResponse = await axios.get(
         `${API_URL}/courts/${courtId}/reservations`,
         {
@@ -795,11 +795,12 @@ export default function ReservationTable() {
 
       console.log("ข้อมูลการตรวจสอบสนาม:", checkResponse.data);
 
-      // ตรวจสอบว่าข้อมูลที่ได้รับมีรูปแบบถูกต้อง
-      if (
-        checkResponse.data &&
-        checkResponse.data.hasActiveReservations === true
-      ) {
+      // ตรวจสอบว่ามีการจองที่มี statusId เป็น 2 (Pending) หรือ 5 (Reserved) หรือไม่
+      const hasActiveReservations = checkResponse.data?.timeSlots?.some(
+        slot => slot.statusId === 2 || slot.statusId === 5
+      );
+
+      if (hasActiveReservations) {
         Swal.fire({
           title: "ไม่สามารถลบสนามได้",
           text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
@@ -809,7 +810,7 @@ export default function ReservationTable() {
         return;
       }
 
-      // ถ้าไม่มีการจองที่มี status 5 หรือข้อมูลไม่ถูกต้อง ให้ดำเนินการลบสนาม
+      // ถ้าไม่มีการจองที่มี status 2 หรือ 5 ให้ดำเนินการลบสนาม
       const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
         withCredentials: true,
       });
@@ -823,44 +824,19 @@ export default function ReservationTable() {
           title: "ลบสนามสำเร็จ",
           icon: "success",
           draggable: true,
-          showClass: {
-            popup: `
-              animate__animated
-              animate__fadeInUp
-              animate__faster
-            `,
-          },
-          hideClass: {
-            popup: `
-              animate__animated
-              animate__fadeOutDown
-              animate__faster
-            `,
-          },
+          // ... existing animation code ...
         });
       }
     } catch (error) {
       console.error("Error deleting court:", error);
       console.log("รายละเอียดข้อผิดพลาด:", error.response?.data);
 
-      // ตรวจสอบว่าเป็น error จากการมีการจองหรือไม่
-      if (error.response?.data?.hasActiveReservations) {
-        Swal.fire({
-          title: "ไม่สามารถลบสนามได้",
-          text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
-          icon: "warning",
-          draggable: true,
-        });
-      } else {
-        Swal.fire({
-          title: "ไม่สามารถลบสนามได้",
-          text:
-            error.response?.data?.message ||
-            "เกิดข้อผิดพลาดในการลบสนาม โปรดลองใหม่อีกครั้ง",
-          icon: "error",
-          draggable: true,
-        });
-      }
+      Swal.fire({
+        title: "ไม่สามารถลบสนามได้",
+        text: error.response?.data?.message || "เกิดข้อผิดพลาดในการลบสนาม โปรดลองใหม่อีกครั้ง",
+        icon: "error",
+        draggable: true,
+      });
     }
   };
 
