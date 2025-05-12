@@ -1567,7 +1567,7 @@ export default function ReservationTable() {
         {userData ? (
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle className="text-center">ยอดเงินที่ต้องชำระชำระเงิน {calculateTotalPrice()}บาท</DrawerTitle>
+              <DrawerTitle className="text-center">ยอดเงินที่ต้องชำระเงิน: <span className="text-red-60 font-bold">{calculateTotalPrice()}</span> บาท</DrawerTitle>
               <DrawerDescription className="text-center">
                 เมื่อชำระเงินเสร็จแล้วกรุณาแนปสลิปการโอนเงิน
               </DrawerDescription>
