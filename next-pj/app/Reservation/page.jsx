@@ -783,8 +783,71 @@ export default function ReservationTable() {
     }
   };
 
+  // const handleDeleteCourt = async (courtId) => {
+  //   try {
+  //     const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
+  //       withCredentials: true,
+  //     });
+
+  //     if (response.status === 200) {
+  //       setReservationData((prevData) =>
+  //         prevData.filter((court) => court.id !== courtId)
+  //       );
+
+  //       Swal.fire({
+  //         title: "ลบสนามสำเร็จ",
+  //         icon: "success",
+  //         draggable: true,
+  //         showClass: {
+  //           popup: `
+  //             animate__animated
+  //             animate__fadeInUp
+  //             animate__faster
+  //           `,
+  //         },
+  //         hideClass: {
+  //           popup: `
+  //             animate__animated
+  //             animate__fadeOutDown
+  //             animate__faster
+  //           `,
+  //         },
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting court:", error);
+
+  //     Swal.fire({
+  //       title: "เกิดข้อผิดพลาด",
+  //       text: "ไม่สามารถลบสนามได้",
+  //       icon: "error",
+  //       draggable: true,
+  //     });
+  //   }
+  // };
+
   const handleDeleteCourt = async (courtId) => {
     try {
+      // ตรวจสอบก่อนว่าสนามมีการจองที่มี status 5 หรือไม่
+      const checkResponse = await axios.get(
+        `${API_URL}/courts/${courtId}/reservations`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      // ถ้ามีการจองที่มี status 5 อยู่ จะไม่สามารถลบได้
+      if (checkResponse.data.hasActiveReservations) {
+        Swal.fire({
+          title: "ไม่สามารถลบสนามได้",
+          text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
+          icon: "warning",
+          draggable: true,
+        });
+        return;
+      }
+
+      // ถ้าไม่มีการจองที่มี status 5 ดำเนินการลบสนาม
       const response = await axios.delete(`${API_URL}/courts/${courtId}`, {
         withCredentials: true,
       });
@@ -817,15 +880,26 @@ export default function ReservationTable() {
     } catch (error) {
       console.error("Error deleting court:", error);
 
-      Swal.fire({
-        title: "เกิดข้อผิดพลาด",
-        text: "ไม่สามารถลบสนามได้",
-        icon: "error",
-        draggable: true,
-      });
+      // ตรวจสอบว่าเป็น error จากการมีการจองหรือไม่
+      if (error.response?.data?.hasActiveReservations) {
+        Swal.fire({
+          title: "ไม่สามารถลบสนามได้",
+          text: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
+          icon: "warning",
+          draggable: true,
+        });
+      } else {
+        Swal.fire({
+          title: "เกิดข้อผิดพลาด",
+          text: "ไม่สามารถลบสนามได้",
+          icon: "error",
+          draggable: true,
+        });
+      }
     }
   };
 
+  
   const redirectToLogin = () => {
     window.location.href = "/login";
   };
