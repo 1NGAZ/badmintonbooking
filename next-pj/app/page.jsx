@@ -183,7 +183,7 @@ export default function Page() {
 
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
-            เว็บแอพพลิเคชั่นจองสนามแบดมินตัน
+            เว็บแอพพลิเคชั่นจองสนามแบดมินตันมทร.อีสาน
           </h1>
           <h2 className="text-2xl md:text-3xl text-white mb-8 drop-shadow-md">
             THE BADMINTON COURT RESERVATION WEB APPLICATION
