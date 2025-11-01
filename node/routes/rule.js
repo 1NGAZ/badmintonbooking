@@ -54,4 +54,5 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update Rule" });
   }
 });
+
 module.exports = router;

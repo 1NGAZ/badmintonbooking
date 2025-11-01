@@ -48,8 +48,8 @@ const Linechat = () => {
           <Image
             src="/line-icon.jpg"
             alt="Line"
-            width={50}
-            height={50}
+            width={64}
+            height={64}
             className="object-contain"
           />
         </Button>

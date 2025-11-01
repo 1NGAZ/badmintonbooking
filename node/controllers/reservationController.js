@@ -1,15 +1,16 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const axios = require("axios"); // เพิ่ม import axios
+const axios = require("axios");
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+//ฟังก์ชันที่ใช้สำหรับสร้างการจองโดยรับข้อมูลจาก req.body
 exports.createReservations = async (req, res) => {
   const {
     userId,
     selectedTimeSlots,
     promotionCode,
     promotionId: clientPromoId,
-  } = req.body; // เพิ่มการรับ promotionId จาก client
+  } = req.body; 
   const file = req.file;
 
   console.log("File uploaded:", req.file);
@@ -35,10 +36,10 @@ exports.createReservations = async (req, res) => {
       return res.status(400).json({ error: "กรุณาเลือกช่วงเวลาที่ต้องการจอง" });
     }
 
-    // เพิ่มส่วนนี้: ตรวจสอบและใช้โค้ดโปรโมชั่น (ถ้ามี)
+    // ตรวจสอบและใช้โค้ดโปรโมชั่น (ถ้ามี)
     let promotionId = null;
 
-    // ตรวจสอบว่า clientPromoId มีค่าและเป็นตัวเลขหรือไม่
+    // ตรวจสอบว่า PromoId มีค่าและเป็นตัวเลขหรือไม่
     if (clientPromoId) {
       const parsedId = parseInt(clientPromoId, 10);
       if (!isNaN(parsedId) && parsedId > 0) {
@@ -121,22 +122,6 @@ exports.createReservations = async (req, res) => {
       });
     }
 
-    // วนลูปสร้าง Reservation สำหรับแต่ละ TimeSlot
-    // const reservations = [];
-    // for (const { timeSlotId, courtId } of timeSlots) {
-    //   console.log('Creating reservation for:', { timeSlotId, courtId });
-
-    //   const reservation = await prisma.reservation.create({
-    //     data: {
-    //       userId: parseInt(userId, 10),
-    //       courtId: parseInt(courtId, 10),
-    //       timeSlotId: parseInt(timeSlotId, 10),
-    //       statusId: 2, // 2 = รอดำเนินการ
-    //       attachment: file.filename,
-    //       promotionId: promotionId, // เพิ่ม promotionId ในการสร้าง reservation
-    //     },
-    //   });
-
     const reservations = [];
     for (const { timeSlotId, courtId } of timeSlots) {
       console.log("Creating reservation for:", { timeSlotId, courtId });
@@ -173,7 +158,7 @@ exports.createReservations = async (req, res) => {
     res.status(201).json({
       message: "การจองทั้งหมดอยู่ในสถานะรอดำเนินการ",
       reservations,
-      usedPromotion: promotionId ? true : false, // เพิ่มข้อมูลว่าใช้โปรโมชั่นหรือไม่
+      usedPromotion: promotionId ? true : false, 
     });
   } catch (error) {
     console.error(error);

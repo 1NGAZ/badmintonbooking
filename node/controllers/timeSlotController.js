@@ -100,10 +100,6 @@ const createTimeSlotsForDateController = async () => {
 };
 
 
-
-
-
-
 // ฟังก์ชันช่วยจัดรูปแบบวันที่เป็น YYYY-MM-DD
 function formatDate(date) {
   const year = date.getFullYear();

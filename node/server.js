@@ -35,7 +35,7 @@ const HOST = '0.0.0.0';
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://fix-old-version.dugk5u7droojn.amplifyapp.com",
+  origin: ["https://fix-old-version.dugk5u7droojn.amplifyapp.com", "http://localhost:3000"],
   credentials: true,
 }));
 
@@ -101,6 +101,8 @@ cron.schedule('0 0 * * *', async () => {
     console.error('Daily timeslot creation failed:', error);
   }
 });
+
+
 
 // function setup
 const ensureAdminExists = async () => {

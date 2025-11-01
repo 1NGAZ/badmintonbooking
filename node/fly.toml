@@ -2,7 +2,7 @@
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
-app = 'node-dark-morning-7683'
+app = 'badminton-booking-backend'
 primary_region = 'sin'
 
 [build]

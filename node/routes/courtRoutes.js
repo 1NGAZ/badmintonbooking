@@ -98,35 +98,85 @@ router.put("/:courtId/timeslots/reset", async (req, res) => {
 
 // เพิ่ม endpoint นี้ต่อจาก endpoints ที่มีอยู่
 // 🗑️ ลบสนามและ TimeSlots ที่เกี่ยวข้อง
+// router.delete("/:courtId", async (req, res) => {
+//     try {
+//         const { courtId } = req.params;
+
+//         // 1. ลบ Reservations ที่เกี่ยวข้องกับ TimeSlots ของสนามนี้ก่อน
+//         await prisma.reservation.deleteMany({
+//             where: {
+//                 timeSlot: {
+//                     courtId: Number(courtId)
+//                 }
+//             }
+//         });
+
+//         // 2. ลบ TimeSlots ที่เกี่ยวข้องกับสนาม
+//         await prisma.timeSlot.deleteMany({
+//             where: { courtId: Number(courtId) }
+//         });
+
+//         // 3. ลบสนาม
+//         const deletedCourt = await prisma.court.delete({
+//             where: { id: Number(courtId) }
+//         });
+
+//         res.json({ message: "ลบสนามเรียบร้อยแล้ว", court: deletedCourt });
+//     } catch (error) {
+//         console.error("Error deleting court:", error);
+//         res.status(500).json({ error: "ไม่สามารถลบสนามได้" });
+//     }
+// });
+
 router.delete("/:courtId", async (req, res) => {
-    try {
-        const { courtId } = req.params;
+  try {
+      const { courtId } = req.params;
 
-        // 1. ลบ Reservations ที่เกี่ยวข้องกับ TimeSlots ของสนามนี้ก่อน
-        await prisma.reservation.deleteMany({
-            where: {
-                timeSlot: {
-                    courtId: Number(courtId)
-                }
-            }
-        });
+      // ตรวจสอบว่ามีการจองที่กำลังดำเนินการอยู่หรือไม่
+      const activeTimeSlots = await prisma.timeSlot.findMany({
+          where: {
+              courtId: Number(courtId),
+              statusId: {
+                  in: [2, 5] // 2 = Pending, 5 = Reserved
+              }
+          }
+      });
 
-        // 2. ลบ TimeSlots ที่เกี่ยวข้องกับสนาม
-        await prisma.timeSlot.deleteMany({
-            where: { courtId: Number(courtId) }
-        });
+      // ถ้ามีการจองที่กำลังดำเนินการอยู่ ไม่อนุญาตให้ลบสนาม
+      if (activeTimeSlots.length > 0) {
+          return res.status(400).json({ 
+              error: "ไม่สามารถลบสนามได้",
+              message: "สนามนี้มีการจองที่กำลังดำเนินการอยู่ ไม่สามารถลบได้",
+              hasActiveReservations: true
+          });
+      }
 
-        // 3. ลบสนาม
-        const deletedCourt = await prisma.court.delete({
-            where: { id: Number(courtId) }
-        });
+      // 1. ลบ Reservations ที่เกี่ยวข้องกับ TimeSlots ของสนามนี้ก่อน
+      await prisma.reservation.deleteMany({
+          where: {
+              timeSlot: {
+                  courtId: Number(courtId)
+              }
+          }
+      });
 
-        res.json({ message: "ลบสนามเรียบร้อยแล้ว", court: deletedCourt });
-    } catch (error) {
-        console.error("Error deleting court:", error);
-        res.status(500).json({ error: "ไม่สามารถลบสนามได้" });
-    }
+      // 2. ลบ TimeSlots ที่เกี่ยวข้องกับสนาม
+      await prisma.timeSlot.deleteMany({
+          where: { courtId: Number(courtId) }
+      });
+
+      // 3. ลบสนาม
+      const deletedCourt = await prisma.court.delete({
+          where: { id: Number(courtId) }
+      });
+
+      res.json({ message: "ลบสนามเรียบร้อยแล้ว", court: deletedCourt });
+  } catch (error) {
+      console.error("Error deleting court:", error);
+      res.status(500).json({ error: "ไม่สามารถลบสนามได้" });
+  }
 });
+
 
 router.post("/", async (req, res) => {
   try {
